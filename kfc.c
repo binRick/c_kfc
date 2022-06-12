@@ -52,14 +52,29 @@
 \033[48;5;12m  \033[0m\
 \033[48;5;13m  \033[0m\
 \033[48;5;14m  \033[0m\
-\033[48;5;15m  \033[0m\
+\033[48;5;15m  \033[0m\n\
 \033[48;5;17m  \033[0m\
+\033[48;5;19m  \033[0m\
 \n"
 
 static char *seq;           /* path to palette source directory  */
 static char *conf;          /* path to configuration file */
 static char *mode = "dark"; /* selected mode string */
 static char *sval = NULL;   /* selected palette string */
+
+
+static void usage(void){
+  fprintf(stderr, "\
+usage: kfc [-L] [-r|-s palette] [-l|-p|-v]\n \
+-L          Set light themes (modifier for -s/-r)\n \
+-r          Select a random palette (dark theme by default)\n \
+-s palette  Select a palette (dark theme by default)\n \
+-l          List all palettes (dark themes by default)\n \
+-p          Print current palette\n \
+-v          Show version information\n");
+  exit(1);
+}
+
 
 static void find_palettes(void) {
   if (access(PALETTES_DIR, F_OK) == 0) {
@@ -161,6 +176,7 @@ int main(int argc, char **argv) {
 
   if (argc == 1) {
     fprintf(stderr, "No argument(s) provided\n");
+    usage();
     return(1);
   }
 
@@ -202,6 +218,11 @@ int main(int argc, char **argv) {
         return(1);
       }
       sval = optarg;
+      break;
+    case 'h':
+      usage();
+      return(0);
+
       break;
     case '?': return(1);
     }

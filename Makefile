@@ -1,3 +1,4 @@
+default: all
 SED=$(shell command -v gsed||command -v sed)
 UNCRUSTIFY=$(shell command -v uncrustify)
 PWD=$(shell command -v pwd)
@@ -18,10 +19,15 @@ uncrustify-clean:
 
 tidy: uncrustify uncrustify-clean fix-dbg
 
-all: kfc
+all: kfc kfc-test
 
 kfc: kfc.c Makefile
 	$(CC) -O3 $(CFLAGS) -o $@ $< -lX11 $(LDFLAGS)
+
+kfc-test:
+	@./kfc -r -p;sleep 1
+	@./kfc -s base16-outrun -p;sleep 1
+	@./kfc -s vscode -p
 
 install: all
 	install -Dm755 kfc $(DESTDIR)$(BINDIR)/kfc
