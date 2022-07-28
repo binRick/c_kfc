@@ -13,3 +13,6 @@
 [submodule "submodules/c_string_buffer"]
 	path = submodules/c_string_buffer
 	url = https://github.com/sagiegurari/c_string_buffer
+[submodule "submodules/kitty-themes"]
+	path = submodules/kitty-themes
+	url = https://github.com/dexpota/kitty-themes.git

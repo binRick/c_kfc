@@ -54,9 +54,7 @@
 \033[48;5;12m  \033[0m\
 \033[48;5;13m  \033[0m\
 \033[48;5;14m  \033[0m\
-\033[48;5;15m  \033[0m\n\
-\033[48;5;17m  \033[0m\
-\033[48;5;19m  \033[0m\
+\033[48;5;15m  \033[0m\
 \n"
 
 static char *seq;                        /* path to palette source directory  */
@@ -264,6 +262,7 @@ int main(int argc, char **argv) {
     }
     printf("Loading embedded palette %s of %db\n", P->name, P->size);
     load_palette_name(P->name);
+    fprintf(stdout, "%s", PALETTE);
     exit(0);
   }else{
     len = strlen(seq)
