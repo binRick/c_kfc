@@ -11,9 +11,16 @@ CFLAGS += -std=c99 -Wall -Wextra -pedantic -Wno-newline-eof
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 CC     ?= gcc
+CREATE_PALETTE_INCLUDES_SCRIPT := create-palette-includes-c.sh
 
-build-palettes-incbin:
-	@./create_incbins.sh
+debug-palette-includes-c:
+	@env DEBUG_MODE=1 ./$(CREATE_PALETTE_INCLUDES_SCRIPT)
+
+view-palette-includes-c:
+	@env ./$(CREATE_PALETTE_INCLUDES_SCRIPT)
+
+write-palette-includes-c:
+	@./$(CREATE_PALETTE_INCLUDES_SCRIPT) > palette-includes.c
 
 uncrustify:
 	@$(UNCRUSTIFY) -c $(ETC_DIR)/uncrustify.cfg --replace $(TIDIED_FILES) 
