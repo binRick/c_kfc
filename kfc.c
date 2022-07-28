@@ -13,6 +13,8 @@
 #define DEBUG_CONFIG_DIR       false
 #define _POSIX_C_SOURCE        200809L
 #define PALETTES_DIR           "/usr/local/share/kfc/palettes"
+#include "palette-includes.c"
+#include "palette-includes-utils.c"
 #define SEQUENCE               "printf \"\
 \\033]4;0;#$(echo $color00)\\033\\ \
 \\033]4;1;#$(echo $color01)\\033\\ \
