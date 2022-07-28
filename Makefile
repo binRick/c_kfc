@@ -24,6 +24,9 @@ BINDIR ?= $(PREFIX)/bin
 CC     ?= gcc
 CREATE_PALETTE_INCLUDES_SCRIPT := create-palette-includes-c.sh
 
+test-embedded-palettes:
+	@clear;kfc -e|xargs -I % env bash -c "clear && kfc -S % && sleep 3;"
+
 debug-palette-includes-c:
 	@env DEBUG_MODE=1 ./$(CREATE_PALETTE_INCLUDES_SCRIPT)
 

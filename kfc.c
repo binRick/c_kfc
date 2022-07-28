@@ -220,10 +220,10 @@ int main(int argc, char **argv) {
     case 'r': rflag++;            break;
     case 'p': pflag++;            break;
     case 'e':
-      printf("Listing embedded\n");
+      fprintf(stderr, "Listing embedded\n");
       struct inc_palette_t *tmp = palette_t_list;
       for (size_t i = 0; i < 1000 && tmp->data != NULL; tmp++, i++) {
-        printf(" - %s (%db)\n", tmp->name, tmp->size);
+        printf("%s\n", tmp->name);
       }
       break;
     case 'R':
