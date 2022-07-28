@@ -16,3 +16,9 @@
 [submodule "submodules/kitty-themes"]
 	path = submodules/kitty-themes
 	url = https://github.com/dexpota/kitty-themes.git
+[submodule "submodules/kitty-themes-kovidgoyal"]
+	path = submodules/kitty-themes-kovidgoyal
+	url = https://github.com/kovidgoyal/kitty-themes
+[submodule "submodules/theme.sh"]
+	path = submodules/theme.sh
+	url = https://github.com/lemnos/theme.sh

@@ -4,7 +4,7 @@ PALETTES_LIMIT=1000
 DEBUG_MODE=${DEBUG_MODE:-0}
 PALETTES=
 INCBIN_PREFIX=inc_palette_
-PALETTE_DIRS="palettes/dark palettes/kitty-themes palettes/iTerm2-Color-Schemes"
+PALETTE_DIRS="palettes/light palettes/dark palettes/kitty-themes"
 
 PALETTE_INCLUDES_C_PREFIX="#pragma once\n#include \"palette-includes.h\"\n"
 get_file_bytes() {

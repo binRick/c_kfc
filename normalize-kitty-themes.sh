@@ -2,9 +2,16 @@
 set -eou pipefail
 DEBUG_MODE=${DEBUG_MODE:-0}
 PALETTES_LIMIT=100000
+PALETTE_THEME_DIRS="\
+submodules/kitty-themes-kovidgoyal/themes\
+ submodules/iTerm2-Color-Schemes/kitty\
+ submodules/kitty-themes/themes\
+ submodules/theme.sh\
+"
+
 
 ls_palettes() {
-	find submodules/iTerm2-Color-Schemes/kitty submodules/kitty-themes/themes -type f | sort -u | head -n $PALETTES_LIMIT
+	find submodules/kitty-themes-kovidgoyal/themes submodules/iTerm2-Color-Schemes/kitty submodules/kitty-themes/themes -type f | sort -u | head -n $PALETTES_LIMIT
 }
 
 normalize_content() {
