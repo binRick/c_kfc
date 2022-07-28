@@ -59,11 +59,11 @@
 \033[48;5;19m  \033[0m\
 \n"
 
-static char *seq;                    /* path to palette source directory  */
-static char *conf;                   /* path to configuration file */
-static char *mode          = "dark"; /* selected mode string */
-static char *sval          = NULL;   /* selected palette string */
-static char *embedded_sval = NULL;   /* selected embedded palette string */
+static char *seq;                        /* path to palette source directory  */
+static char *conf;                       /* path to configuration file */
+static char *mode          = "dark";     /* selected mode string */
+static char *sval          = NULL;       /* selected palette string */
+static char *embedded_sval = NULL;       /* selected embedded palette string */
 
 
 static void usage(void){
@@ -72,7 +72,8 @@ usage: kfc [-L] [-r|-s palette] [-l|-p|-v]\n \
 -L          Set light themes (modifier for -s/-r)\n \
 -r          Select a random palette (dark theme by default)\n \
 -s palette  Select a palette (dark theme by default)\n \
--E palette  Select an embedded palette\n \
+-S palette  Select an embedded palette\n \
+-P property Select an embedded palette property (cursorcolor, title, etc)\n \
 -l          List all palettes (dark themes by default)\n \
 -p          Print current palette\n \
 -e          List Embedded Palettes\n \
@@ -179,6 +180,7 @@ int main(int argc, char **argv) {
   size_t len;
   char   *sel, *tmp;
 
+
   if (argc == 1) {
     fprintf(stderr, "No argument(s) provided\n");
     usage();
@@ -210,7 +212,9 @@ int main(int argc, char **argv) {
   strcat(conf, "/current");
   find_palettes();
 
-  while ((cval = getopt(argc, argv, "erlLpvsS:")) != -1) {
+  int ri;
+
+  while ((cval = getopt(argc, argv, "RerlLpvsS:")) != -1) {
     switch (cval) {
     case 'v': puts("kfc " KFC_VERSION);  break;
     case 'L': mode = "light";     break;
@@ -224,13 +228,17 @@ int main(int argc, char **argv) {
         printf(" - %s (%db)\n", tmp->name, tmp->size);
       }
       break;
+    case 'R':
+      ri = random_palette_index();
+      char *n = get_palette_name_t_by_index(ri);
+      embedded_sval = n;
+      break;
     case 'S':
       if (rflag) {
         fprintf(stderr, "Cannot specify -r with -s\n");
         return(1);
       }
       embedded_sval = optarg;
-      load_palette_name(embedded_sval);
       break;
     case 's':
       if (rflag) {
@@ -245,7 +253,7 @@ int main(int argc, char **argv) {
 
       break;
     case '?': return(1);
-    }
+    } /* switch */
   }
 
   if (embedded_sval != NULL) {
@@ -255,6 +263,8 @@ int main(int argc, char **argv) {
       exit(1);
     }
     printf("Loading embedded palette %s of %db\n", P->name, P->size);
+    load_palette_name(P->name);
+    exit(0);
   }else{
     len = strlen(seq)
           + sizeof("/")

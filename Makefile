@@ -18,6 +18,7 @@ TIDIED_FILES = \
 			   palette-includes-utils.c \
 			   palette-includes.h
 CFLAGS += -std=c99 -Wall -Wextra -pedantic -Wno-newline-eof
+#-Wno-pedantic
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 CC     ?= gcc
@@ -40,7 +41,7 @@ uncrustify-clean:
 
 tidy: uncrustify uncrustify-clean fix-dbg
 
-all: kfc kfc-test
+all: kfc 
 
 kfc: kfc.c Makefile
 	$(CC) $(INCLUDE_PATHS) $(INCLUDED_SRCS) -O3 $(CFLAGS) -o $@ $< $(LDFLAGS)
