@@ -13,8 +13,8 @@
 #define DEBUG_CONFIG_DIR       false
 #define _POSIX_C_SOURCE        200809L
 #define PALETTES_DIR           "/usr/local/share/kfc/palettes"
-#include "palette-includes.c"
 #include "palette-includes-utils.c"
+#include "palette-includes.c"
 #define SEQUENCE               "printf \"\
 \\033]4;0;#$(echo $color00)\\033\\ \
 \\033]4;1;#$(echo $color01)\\033\\ \
@@ -59,10 +59,11 @@
 \033[48;5;19m  \033[0m\
 \n"
 
-static char *seq;           /* path to palette source directory  */
-static char *conf;          /* path to configuration file */
-static char *mode = "dark"; /* selected mode string */
-static char *sval = NULL;   /* selected palette string */
+static char *seq;                    /* path to palette source directory  */
+static char *conf;                   /* path to configuration file */
+static char *mode          = "dark"; /* selected mode string */
+static char *sval          = NULL;   /* selected palette string */
+static char *embedded_sval = NULL;   /* selected embedded palette string */
 
 
 static void usage(void){
@@ -71,8 +72,10 @@ usage: kfc [-L] [-r|-s palette] [-l|-p|-v]\n \
 -L          Set light themes (modifier for -s/-r)\n \
 -r          Select a random palette (dark theme by default)\n \
 -s palette  Select a palette (dark theme by default)\n \
+-E palette  Select an embedded palette\n \
 -l          List all palettes (dark themes by default)\n \
 -p          Print current palette\n \
+-e          List Embedded Palettes\n \
 -v          Show version information\n");
   exit(1);
 }
@@ -207,13 +210,28 @@ int main(int argc, char **argv) {
   strcat(conf, "/current");
   find_palettes();
 
-  while ((cval = getopt(argc, argv, "rlLpvs:")) != -1) {
+  while ((cval = getopt(argc, argv, "erlLpvsS:")) != -1) {
     switch (cval) {
     case 'v': puts("kfc " KFC_VERSION);  break;
     case 'L': mode = "light";     break;
     case 'l': lflag++;            break;
     case 'r': rflag++;            break;
     case 'p': pflag++;            break;
+    case 'e':
+      printf("Listing embedded\n");
+      struct inc_palette_t *tmp = palette_t_list;
+      for (size_t i = 0; i < 1000 && tmp->data != NULL; tmp++, i++) {
+        printf(" - %s (%db)\n", tmp->name, tmp->size);
+      }
+      break;
+    case 'S':
+      if (rflag) {
+        fprintf(stderr, "Cannot specify -r with -s\n");
+        return(1);
+      }
+      embedded_sval = optarg;
+      load_palette_name(embedded_sval);
+      break;
     case 's':
       if (rflag) {
         fprintf(stderr, "Cannot specify -r with -s\n");
@@ -230,37 +248,46 @@ int main(int argc, char **argv) {
     }
   }
 
-  len = strlen(seq)
-        + sizeof("/")
-        + strlen(mode)
-        + (sval ? strlen(sval) + 1 : 0);
-
-  sel = malloc(sizeof(char) * len);
-
-  if (lflag) {
-    snprintf(sel, len, "%s/%s", seq, mode);
-    list_palette(sel);
-  }
-
-  if (rflag) {
-    snprintf(sel, len, "%s/%s", seq, mode);
-    random_palette(sel);
-    len = strlen(sel)
+  if (embedded_sval != NULL) {
+    struct inc_palette_t *P = get_palette_t_by_name(embedded_sval);
+    if (P == NULL) {
+      printf("Embedded palette %s not found\n", embedded_sval);
+      exit(1);
+    }
+    printf("Loading embedded palette %s of %db\n", P->name, P->size);
+  }else{
+    len = strlen(seq)
           + sizeof("/")
-          + strlen(sval);
-    sel = (char *)realloc(sel, sizeof(char) * len);
-  }
+          + strlen(mode)
+          + (sval ? strlen(sval) + 1 : 0);
 
-  if (sval) {
-    snprintf(sel, len, "%s/%s/%s", seq, mode, sval);
-    select_palette(sel);
-  }
+    sel = malloc(sizeof(char) * len);
 
-  if (pflag) {
-    print_palette();
-  }
+    if (lflag) {
+      snprintf(sel, len, "%s/%s", seq, mode);
+      list_palette(sel);
+    }
 
-  free(sel);
+    if (rflag) {
+      snprintf(sel, len, "%s/%s", seq, mode);
+      random_palette(sel);
+      len = strlen(sel)
+            + sizeof("/")
+            + strlen(sval);
+      sel = (char *)realloc(sel, sizeof(char) * len);
+    }
+
+    if (sval) {
+      snprintf(sel, len, "%s/%s/%s", seq, mode, sval);
+      select_palette(sel);
+    }
+
+    if (pflag) {
+      print_palette();
+    }
+
+    free(sel);
+  }
 
   return(0);
 } /* main */

@@ -6,6 +6,13 @@ PALETTES=
 INCBIN_PREFIX=inc_palette_
 
 PALETTE_INCLUDES_C_PREFIX="#pragma once\n#include \"palette-includes.h\"\n"
+get_file_bytes(){
+    local cmd="stat -f%z $1"
+    if ! eval $cmd 2>/dev/null; then
+        cmd="stat --printf=\"%s\" $1"
+    fi
+    eval "$cmd"
+}
 
 ls_palettes(){
   if [[ "$PALETTES" == "" ]]; then
@@ -28,7 +35,7 @@ palette_names_list(){
 palette_file_palette_t_list_item(){
   local file="$1"
   local name="$(palette_file_to_inc_name $file)"
-  local size="$(stat -f%z $file)"
+  local size="$(get_file_bytes $file)"
   local data="xxx"
   local inc_name="$(palette_file_to_inc_name $file)"
   echo -ne "{ .name = \"$(basename $file)\", .size = $size, .file = \"$file\", .data = ${INCBIN_PREFIX}${inc_name}_data },"

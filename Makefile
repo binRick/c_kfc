@@ -4,8 +4,18 @@ UNCRUSTIFY=$(shell command -v uncrustify)
 PWD=$(shell command -v pwd)
 DIR=$(shell $(PWD))
 ETC_DIR=$(DIR)/etc
+INCLUDE_PATHS = \
+				-I submodules/c_stringfn/include \
+				-I submodules/c_string_buffer/include \
+				-I submodules/c_fsio/include
+INCLUDED_SRCS = \
+				submodules/c_stringfn/src/stringfn.c \
+				submodules/c_string_buffer/src/stringbuffer.c \
+				submodules/c_fsio/src/fsio.c
 TIDIED_FILES = \
 			   kfc.c \
+			   palette-includes.c \
+			   palette-includes-utils.c \
 			   palette-includes.h
 CFLAGS += -std=c99 -Wall -Wextra -pedantic -Wno-newline-eof
 PREFIX ?= /usr/local
@@ -33,7 +43,7 @@ tidy: uncrustify uncrustify-clean fix-dbg
 all: kfc kfc-test
 
 kfc: kfc.c Makefile
-	$(CC) -O3 $(CFLAGS) -o $@ $< $(LDFLAGS)
+	$(CC) $(INCLUDE_PATHS) $(INCLUDED_SRCS) -O3 $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 kfc-test:
 	@./kfc -r -p;sleep 1
