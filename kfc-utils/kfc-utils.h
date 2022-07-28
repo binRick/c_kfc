@@ -1,12 +1,21 @@
 #pragma once
+#include <ctype.h>
+#include <libproc.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+//////////////////////////////////////////
+int kfc0(void);
+
+//////////////////////////////////////////
+#pragma once
 #define INCBIN_SILENCE_BITCODE_WARNING
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
 ///////////////////////////////////////////////////////////////////
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 ///////////////////////////////////////////////////////////////////
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////

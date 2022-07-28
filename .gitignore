@@ -2,3 +2,8 @@ kfc
 *.a
 *.o
 .make-log-*
+.cache
+.vscode
+.attic
+.src
+build

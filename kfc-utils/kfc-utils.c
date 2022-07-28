@@ -1,23 +1,35 @@
 #pragma once
-/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////
 #include <assert.h>
+#include <assert.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
-/////////////////////////////////////////////////////////////////////
+#include <unistd.h>
+/////////////////////////////////////
 #define DEBUG_PALETTES         false
 #define DEBUG_PALETTE_CODES    false
-/////////////////////////////////////////////////////////////////////
-#include "palette-includes.c"
-#include "palette-includes.h"
-/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////
+#include "kfc-utils/kfc-utils-palettes.c"
+#include "kfc-utils/kfc-utils.h"
 #include "submodules/c_fsio/include/fsio.h"
 #include "submodules/c_string_buffer/include/stringbuffer.h"
 #include "submodules/c_stringfn/include/stringfn.h"
+
+
+/////////////////////////////////////
+int kfc0(void) {
+  printf("kfc0............\n");
+  return(0);
+}
 /////////////////////////////////////////////////////////////////////
 static struct palette_code_value_translations_t palette_code_value_translations[] = {
   { .name = "cursorstyle",   .src = "under",     .dst = "3 q", },
