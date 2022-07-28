@@ -5,11 +5,15 @@ PWD=$(shell command -v pwd)
 DIR=$(shell $(PWD))
 ETC_DIR=$(DIR)/etc
 TIDIED_FILES = \
-			   kfc.c
-CFLAGS += -std=c99 -Wall -Wextra -pedantic
+			   kfc.c \
+			   palette-includes.h
+CFLAGS += -std=c99 -Wall -Wextra -pedantic -Wno-newline-eof
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 CC     ?= gcc
+
+build-palettes-incbin:
+	@./create_incbins.sh
 
 uncrustify:
 	@$(UNCRUSTIFY) -c $(ETC_DIR)/uncrustify.cfg --replace $(TIDIED_FILES) 
@@ -22,7 +26,7 @@ tidy: uncrustify uncrustify-clean fix-dbg
 all: kfc kfc-test
 
 kfc: kfc.c Makefile
-	$(CC) -O3 $(CFLAGS) -o $@ $< -lX11 $(LDFLAGS)
+	$(CC) -O3 $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 kfc-test:
 	@./kfc -r -p;sleep 1
