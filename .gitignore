@@ -1,3 +1,4 @@
 kfc
 *.a
 *.o
+.make-log-*
