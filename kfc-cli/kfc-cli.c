@@ -1,5 +1,6 @@
 #define DEBUG_MODE     false
 #define KFC_VERSION    "0.1.2"
+#define DEBUG_MEMORY
 ////////////////////////////////////////////
 #include <dirent.h>
 #include <getopt.h>
@@ -11,21 +12,39 @@
 #include <time.h>
 #include <unistd.h>
 ////////////////////////////////////////////
+#ifdef DEBUG_MEMORY
+#include "debug-memory/debug_memory.h"
+#endif
+////////////////////////////////////////////
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 ////////////////////////////////////////////
-extern struct inc_palette_t palette_t_list[];
 struct ctx_t {
   char *embedded_sval;
   bool debug_mode;
   int  random_palette_index;
   char *random_palette_name;
+  module(kfc_utils) * kfc_utils;
 } ctx = {
   .embedded_sval        = NULL,
   .debug_mode           = NULL,
   .random_palette_index = 0,
+  .kfc_utils            = NULL,
 };
+
+
+void __attribute__((constructor)) premain(){
+  ctx.kfc_utils = require(kfc_utils);
+}
+
+void __attribute__((destructor)) postmain(){
+  clib_module_free(ctx.kfc_utils);
+#ifdef DEBUG_MEMORY
+  printf("\nChecking for memory leak\n");
+  print_allocated_memory();
+#endif
+}
 
 
 ////////////////////////////////////////////
@@ -63,7 +82,7 @@ int main(int argc, char **argv) {
       break;
     case 'l':
       fprintf(stderr, "Listing embedded\n");
-      struct inc_palette_t *tmp = palette_t_list;
+      struct inc_palette_t *tmp = ctx.kfc_utils->palettes;
       for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
         printf("%s\n", tmp->name);
       }
@@ -99,11 +118,11 @@ int main(int argc, char **argv) {
     if (ctx.debug_mode) {
       fprintf(stderr, "%s", PALETTE);
     }
+    free(ctx.embedded_sval);
     return(0);
   }else{
     usage();
     return(1);
   }
-
   return(0);
 } /* main */

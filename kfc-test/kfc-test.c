@@ -1,6 +1,8 @@
 #define DEBUG_MODE    false
 #define DEBUG_MEMORY
+#ifdef DEBUG_MEMORY
 #include "debug-memory/debug_memory.h"
+#endif
 #include "kfc-test/kfc-test.h"
 #include "kfc-utils/kfc-utils.h"
 

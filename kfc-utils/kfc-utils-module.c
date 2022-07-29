@@ -12,6 +12,7 @@ static inline void kfc_utils_debug(char *message);
 
 //////////////////////////////////////
 int kfc_utils_init(module(kfc_utils) *exports) {
+  fprintf(stderr, "[%d]module init>\n", getpid());
   clib_module_init(kfc_utils, exports);
   exports->palettes            = palette_t_list;
   exports->palettes_v          = get_palettes_v();
@@ -19,34 +20,12 @@ int kfc_utils_init(module(kfc_utils) *exports) {
   exports->palettes_data_bytes = get_palettes_data_bytes();
   exports->palettes_qty        = vector_size(exports->palettes_v);
   exports->mode                = LOGGER_NONE;
-  exports->info                = kfc_utils_info;
-  exports->error               = kfc_utils_error;
-  exports->debug               = kfc_utils_debug;
   return(0);
 }
 
 
 void kfc_utils_deinit(module(kfc_utils) *exports) {
+  fprintf(stderr, "[%d]module cleanup>\n", getpid());
   clib_module_deinit(kfc_utils);
 }
 
-
-static inline void kfc_utils_info(char *message) {
-  if (require(kfc_utils)->mode >= LOGGER_INFO) {
-    fprintf(stdout, " info: %s\n", message);
-  }
-}
-
-
-static inline void kfc_utils_error(char *message) {
-  if (require(kfc_utils)->mode >= LOGGER_ERROR) {
-    fprintf(stderr, "error: %s\n", message);
-  }
-}
-
-
-static inline void kfc_utils_debug(char *message) {
-  if (require(kfc_utils)->mode >= LOGGER_DEBUG) {
-    fprintf(stderr, "debug: %s\n", message);
-  }
-}
