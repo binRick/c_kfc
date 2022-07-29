@@ -1,6 +1,15 @@
 #define DEBUG_MODE    false
+#define DEBUG_MEMORY
+#include "debug-memory/debug_memory.h"
 #include "kfc-test/kfc-test.h"
 #include "kfc-utils/kfc-utils.h"
+
+void __attribute__((destructor)) postmain(){
+#ifdef DEBUG_MEMORY
+  printf("\nChecking for memory leak\n");
+  print_allocated_memory();
+#endif
+}
 
 
 TEST t_kfc_utils_module(void){

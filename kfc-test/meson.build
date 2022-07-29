@@ -10,7 +10,7 @@ kfc_include_dirs = [
 kfc_include_cargs = [
   ]
 kfc_test_deps = [
-    kfc_utils_dep,
+  kfc_utils_dep,
   debug_memory_dep,
 ]
 if get_option('enable-binaries')

@@ -26,6 +26,7 @@
 #include "submodules/c_vector/include/vector.h"
 #include "submodules/meson_deps/submodules/bytes/bytes.h"
 #include "submodules/meson_deps/submodules/c_vector/include/vector.h"
+#include "submodules/meson_deps/submodules/debug-memory/debug_memory.h"
 #include "submodules/meson_deps/submodules/libfort/src/fort.h"
 /////////////////////////////////////
 static struct palette_code_value_translations_t palette_code_value_translations[] = {
@@ -84,6 +85,8 @@ static struct palette_code_t                    palette_codes[] = {
   { 0 },
 };
 
+#define TABLE_LIMIT    5
+
 
 /////////////////////////////////////////////////////////////////////
 char *get_palette_properties_table(const char *PALETTE_NAME){
@@ -108,19 +111,33 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
   struct palette_property_t *palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
 
   for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
+    char                      *translated_value;
     struct palette_property_t *pp = (struct palette_property_t *)vector_get(palette_properties_v, i);
+    if (palette_item_name_is_translated(pp->name)) {
+      translated_value = translate_palette_item_value(pp->name, pp->value);
+    }else{
+      translated_value = strdup("");
+    }
     ft_printf_ln(table,
                  "%s|%s|%s|%s",
                  pp->name,
                  pp->value,
                  get_palette_item_code(pp->name),
-                 palette_item_name_is_translated(pp->name) ? translate_palette_item_value(pp->name, pp->value) : ""
+                 translated_value
                  );
 
     ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
     ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
     ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
+    if (translated_value) {
+      free(translated_value);
+    }
+    free(pp->name);
+    free(pp->value);
+    free(pp);
   }
+
+  vector_release(palette_properties_v);
 
   char *table_s = ft_to_string(table);
 
@@ -151,19 +168,28 @@ char *get_palettes_table() {
 
   struct Vector *palettes_v = require(kfc_utils)->palettes_v;
 
-  for (size_t i = 0; i < vector_size(palettes_v); i++) {
-    struct inc_palette_t *p = (struct inc_palette_t *)vector_get(palettes_v, i);
+  for (size_t i = 0; i < vector_size(palettes_v) && i < TABLE_LIMIT; i++) {
+    struct inc_palette_t *p  = (struct inc_palette_t *)vector_get(palettes_v, i);
+    struct Vector        *pp = get_palette_name_properties_v(p->name);
     ft_printf_ln(table,
                  "%s|%d|%s|%lu|",
                  p->name,
                  p->size,
                  p->file,
-                 vector_size(get_palette_name_properties_v(p->name))
+                 vector_size(pp)
                  );
 
     ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
     ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
     ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
+    for (size_t i = 0; i < vector_size(pp); i++) {
+      struct palette_property_t *_pp = vector_get(pp, i);
+      free(_pp->name);
+      free(_pp->value);
+      free(_pp);
+    }
+
+    vector_release(pp);
   }
 
   char *table_s = ft_to_string(table);
@@ -193,6 +219,7 @@ struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME){
     pp->name  = strdup(items.strings[0]);
     pp->value = strdup(items.strings[1]);
     vector_push(v, pp);
+    stringfn_release_strings_struct(items);
   }
   return(v);
 }
@@ -374,8 +401,15 @@ bool load_palette_name(const char *PALETTE_NAME){
     stringbuffer_append_string(palette_codes_b, translated_value);
     stringbuffer_append_string(palette_codes_b, CODE_SUFFIX);
     stringfn_release_strings_struct(items);
-    free(item_key);
-    free(item_val);
+    if (item_key) {
+      free(item_key);
+    }
+    if (item_val) {
+      free(item_val);
+    }
+    if (translated_value) {
+      free(translated_value);
+    }
   }
   stringfn_release_strings_struct(lines);
   stringbuffer_append_string(palette_codes_b, CODES_SUFFIX);
