@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
     }
     printf("Loading embedded palette %s of %db\n", P->name, P->size);
     load_palette_name(P->name);
-    fprintf(stdout, "%s", PALETTE);
+    //fprintf(stdout, "%s", PALETTE);
     exit(0);
   }
 

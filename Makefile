@@ -31,11 +31,25 @@ VENV_DIR=$(DIR)/.venv
 SCRIPTS_DIR=$(DIR)/scripts
 ACTIVE_APP_DIR=$(DIR)/active-window
 SOURCE_VENV_CMD = source $(VENV_DIR)/bin/activate
+CREATE_PALETTE_INCLUDES_SCRIPT := scripts/create-palette-includes-c.sh
 ##############################################################
 TIDIED_FILES = \
 			   */*.h */*.c
 ##############################################################
 all: build test
+
+
+test-embedded-palettes:
+	@clear;kfc -e|xargs -I % env bash -c "clear && kfc-cli -S % && sleep 3;"
+
+debug-palette-includes-c:
+	@env DEBUG_MODE=1 $(CREATE_PALETTE_INCLUDES_SCRIPT)
+
+view-palette-includes-c:
+	@env $(CREATE_PALETTE_INCLUDES_SCRIPT)
+
+write-palette-includes-c:
+	@$(CREATE_PALETTE_INCLUDES_SCRIPT) > kfc-utils/kfc-utils-palettes.c
 
 clean:
 	@rm -rf build
@@ -64,6 +78,7 @@ fix-dbg:
 rm-make-logs:
 	@rm .make-log* 2>/dev/null||true
 tidy: rm-make-logs uncrustify uncrustify-clean fix-dbg
+	@shfmt -w scripts/*.sh
 
 dev-all: all
 

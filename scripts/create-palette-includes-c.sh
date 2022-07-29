@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -eou pipefail
-PALETTES_LIMIT=1000
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd ../.
+PALETTES_LIMIT=${PALETTES_LIMIT:-10000}
 DEBUG_MODE=${DEBUG_MODE:-0}
 PALETTES=
 INCBIN_PREFIX=inc_palette_
 PALETTE_DIRS="palettes/light palettes/dark palettes/kitty-themes"
+PALETTE_INCLUDES_C_PREFIX="#pragma once\n#include \"kfc-utils.h\"\n"
 
-PALETTE_INCLUDES_C_PREFIX="#pragma once\n#include \"palette-includes.h\"\n"
 get_file_bytes() {
 	local cmd="stat -f%z $1"
 	if ! eval $cmd 2>/dev/null; then
@@ -17,9 +19,9 @@ get_file_bytes() {
 
 ls_palettes() {
 	if [[ "$PALETTES" == "" ]]; then
-		PALETTES="$(find $PALETTE_DIRS -type f | sort -u | head -n $PALETTES_LIMIT)"
+		PALETTES="$(find $PALETTE_DIRS -type f | sort -u)"
 	fi
-	echo -e "$PALETTES"
+	echo -e "$PALETTES" | head -n $PALETTES_LIMIT
 }
 
 get_palettes_qty() {
@@ -37,7 +39,6 @@ palette_file_palette_t_list_item() {
 	local file="$1"
 	local name="$(palette_file_to_inc_name $file)"
 	local size="$(get_file_bytes $file)"
-	local data="xxx"
 	local inc_name="$(palette_file_to_inc_name $file)"
 	echo -ne "{ .name = \"$(basename $file)\", .size = $size, .file = \"$file\", .data = ${INCBIN_PREFIX}${inc_name}_data },"
 }
@@ -89,8 +90,8 @@ main() {
 	fi
 	ls_palettes | while read -r file; do
 		local inc=$(palette_file_to_inc_name $file)
-        if grep -q "^${inc}$" $names_f; then continue; fi
-        echo -e "$inc" >> $names_f
+		if grep -q "^${inc}$" $names_f; then continue; fi
+		echo -e "$inc" >>$names_f
 		local inc_line=$(get_palette_inc_line $file)
 		local char_item="$(palette_name_char_list_item "$inc")"
 		local struct_item="$(palette_file_palette_t_list_item "$file")"

@@ -1,5 +1,5 @@
 #pragma once
-#include "kfc-utils/kfc-utils.h"
+#include "kfc-utils.h"
 
 const size_t PALETTES_QTY = 675;
 INCTXT(3024, "palettes/dark/3024");
