@@ -23,6 +23,7 @@ int kfc0(void);
 #define CODE_PREFIX      ANSI_ESC_CODE ""
 #define CODE_SUFFIX      ANSI_ESC_CODE "\\"
 #define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
+
 ///////////////////////////////////////////////////////////////////
 struct palette_code_value_translations_t {
   char *name;
@@ -51,3 +52,21 @@ bool palette_item_name_is_translated(const char *ITEM_NAME);
 char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE);
 
 ///////////////////////////////////////////////////////////////////
+#define PALETTE    "\
+\033[48;5;0m  \033[0m\
+\033[48;5;1m  \033[0m\
+\033[48;5;2m  \033[0m\
+\033[48;5;3m  \033[0m\
+\033[48;5;4m  \033[0m\
+\033[48;5;5m  \033[0m\
+\033[48;5;6m  \033[0m\
+\033[48;5;7m  \033[0m\n\
+\033[48;5;8m  \033[0m\
+\033[48;5;9m  \033[0m\
+\033[48;5;10m  \033[0m\
+\033[48;5;11m  \033[0m\
+\033[48;5;12m  \033[0m\
+\033[48;5;13m  \033[0m\
+\033[48;5;14m  \033[0m\
+\033[48;5;15m  \033[0m\
+\n"

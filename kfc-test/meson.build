@@ -10,7 +10,6 @@ kfc_include_dirs = [
 kfc_include_cargs = [
   ]
 kfc_test_deps = [
-  greatest_dep,
   kfc_utils_dep,
   debug_memory_dep,
 ]

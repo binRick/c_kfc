@@ -1,6 +1,6 @@
 kfc_utils_srcs = [
+  'kfc-utils-palettes.c',
   'kfc-utils.c',
-  'kfc-utils.h',
 ]
 kfc_utils_link_flags = []
 kfc_utils_c_args = []
@@ -13,23 +13,17 @@ kfc_utils_deps = [
   cargs_dep,
   c_string_buffer_dep,
   which_dep,
-  subprocess_dep,
   strdup_dep,
-  assertf_dep,
   wildcardcmp_dep,
   parson_dep,
   c_fsio_dep,  
   string_utils_dep,
   libterminput_dep,
   chan_dep,
-  generic_print_dep,
   bytes_dep,
   b64_dep,
-  rwimg_dep,
-  logh_dep,
   dbg_dep,
   c_timer_dep,
-  gd_dep,
   progress_dep,
   bench_dep,
   ms_dep,
@@ -42,7 +36,7 @@ kfc_utils_dirs = [
 ]
 
 
-kfc_utils_lib = library('kfc-utils',
+kfc_utils_lib = static_library('kfc-utils',
   kfc_utils_srcs,
   install: false,
   dependencies: kfc_utils_deps,

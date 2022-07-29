@@ -18,14 +18,15 @@
 #define DEBUG_PALETTES         false
 #define DEBUG_PALETTE_CODES    false
 /////////////////////////////////////
-#include "kfc-utils/kfc-utils-palettes.c"
 #include "kfc-utils/kfc-utils.h"
 #include "submodules/c_fsio/include/fsio.h"
 #include "submodules/c_string_buffer/include/stringbuffer.h"
 #include "submodules/c_stringfn/include/stringfn.h"
-
-
 /////////////////////////////////////
+extern struct inc_palette_t palette_t_list[];
+extern const size_t         PALETTES_QTY;
+
+
 int kfc0(void) {
   printf("kfc0............\n");
   return(0);

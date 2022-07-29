@@ -7,7 +7,9 @@ inc = [include_directories(
   'kfc-utils',
   'kfc-test',
   '.',
-  'submodules','submodules/meson_deps',
+  'submodules',
+  'submodules/meson_deps',
+  'submodules/meson_deps/submodules',
   'submodules/meson_deps/submodules/c_ansi',
 )]
 #############################################################################

@@ -20,8 +20,9 @@ if get_option('enable-binaries')
      dependencies: kfc_cli_deps,
      include_directories: kfc_include_dirs,
      c_args: kfc_include_cargs,
+     install: true,
   )
   if get_option('enable-binary-clis')
-    test('kfc-cli', passh_program, args: [kfc_cli_exec])
+    test('kfc-cli', passh_program, args: [kfc_cli_exec,'-e'])
   endif
 endif
