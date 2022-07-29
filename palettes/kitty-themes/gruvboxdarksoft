@@ -1,7 +1,3 @@
-=name:=Gruvbox=Dark=Soft
-=author:=Pavel=Pertsev
-=license:=MIT/X11
-=upstream:=https://raw.githubusercontent.com/gruvbox-community/gruvbox-contrib/master/kitty/gruvbox-dark-soft.conf
 selection_foreground=ebdbb2
 selection_background=d65d0e
 background=32302f

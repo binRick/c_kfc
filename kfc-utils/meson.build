@@ -30,6 +30,7 @@ kfc_utils_deps = [
   c_timer_dep,
   progress_dep,
   bench_dep,
+  timestamp_dep,
   ms_dep,
   tempdir_dep,
   fort_dep,  

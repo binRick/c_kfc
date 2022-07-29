@@ -1,6 +1,3 @@
-=Farin=Colorscheme=for=Kitty
-=Based=on=https://github.com/mlopes/dotfiles/blob/xps2018/.XdefaultsL113
-==By=https://github.com/mlopes
 selection_foreground=1e1e1e
 selection_background=aaaaaa
 url_color=657b83

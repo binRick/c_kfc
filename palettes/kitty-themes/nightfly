@@ -1,6 +1,3 @@
-=name:=Nightfly
-=license:=MIT
-=upstream:=https://github.com/bluz71/vim-nightfly-guicolors/blob/master/terminal_themes/kitty-theme.conf
 background=011627
 foreground=acb4c2
 cursor=9ca1aa

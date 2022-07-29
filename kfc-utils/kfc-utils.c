@@ -17,10 +17,11 @@
 /////////////////////////////////////
 #define DEBUG_PALETTES         false
 #define DEBUG_PALETTE_CODES    false
-#define TABLE_LIMIT            999999
+#define PALETTES_QTY_LIMIT     999
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
+#include "submodules/bench/bench.h"
 #include "submodules/c_fsio/include/fsio.h"
 #include "submodules/c_string_buffer/include/stringbuffer.h"
 #include "submodules/c_stringfn/include/stringfn.h"
@@ -29,7 +30,9 @@
 #include "submodules/meson_deps/submodules/c_vector/include/vector.h"
 #include "submodules/meson_deps/submodules/debug-memory/debug_memory.h"
 #include "submodules/meson_deps/submodules/libfort/src/fort.h"
+#include "submodules/timestamp/timestamp.h"
 /////////////////////////////////////
+static module(kfc_utils) * KFC;
 static struct palette_code_value_translations_t palette_code_value_translations[] = {
   { .name = "cursorstyle",   .src = "under",     .dst = "3 q", },
   { .name = "cursorstyle",   .src = "block",     .dst = "1 q", },
@@ -48,43 +51,68 @@ static struct palette_code_value_translations_t palette_code_value_translations[
   { .name = "mouse",         .src = "motion",    .dst = "3h",  },
   { .name = "mouse",         .src = "click",     .dst = "0h",  },
   { .name = "mouse",         .src = "off",       .dst = "0l",  },
+  { .name = "reset",         .src = "yes",       .dst = "c",   },
   { 0 },
 };
 static struct palette_code_t                    palette_codes[] = {
-  { .name = "color00",              .code = "]4;0;#",  },
-  { .name = "color01",              .code = "]4;1;#",  },
-  { .name = "color02",              .code = "]4;2;#",  },
-  { .name = "color03",              .code = "]4;3;#",  },
-  { .name = "color04",              .code = "]4;4;#",  },
-  { .name = "color05",              .code = "]4;5;#",  },
-  { .name = "color06",              .code = "]4;6;#",  },
-  { .name = "color07",              .code = "]4;7;#",  },
-  { .name = "color08",              .code = "]4;8;#",  },
-  { .name = "color09",              .code = "]4;9;#",  },
-  { .name = "color10",              .code = "]4;10;#", },
-  { .name = "color11",              .code = "]4;11;#", },
-  { .name = "color12",              .code = "]4;12;#", },
-  { .name = "color13",              .code = "]4;13;#", },
-  { .name = "color14",              .code = "]4;14;#", },
-  { .name = "color15",              .code = "]4;15;#", },
-  { .name = "foreground",           .code = "]10;#",   },
-  { .name = "background",           .code = "]11;#",   },
-  { .name = "selection_background", .code = "]17;#",   },
-  { .name = "selection_foreground", .code = "]19;#",   },
-  { .name = "title",                .code = "]2;",     },
-  { .name = "cursor",               .code = "]12;#",   },
-  { .name = "cursorvisible",        .code = "[?25",    },
-  { .name = "cursorstyle",          .code = "[",       },
-  { .name = "cursorblink",          .code = "[?12",    },
-  { .name = "altscreen",            .code = "[?47",    },
-  { .name = "screen",               .code = "[?5",     },
-  { .name = "icontitle",            .code = "]0;",     },
-  { .name = "icon",                 .code = "]1;",     },
-  { .name = "title",                .code = "]2;",     },
-  { .name = "reportfocus",          .code = "[?1004",  },
-  { .name = "mouse",                .code = "[?100",   },
+  { .name = "color00",              .code = "]4;0;#",              },
+  { .name = "color01",              .code = "]4;1;#",              },
+  { .name = "color02",              .code = "]4;2;#",              },
+  { .name = "color03",              .code = "]4;3;#",              },
+  { .name = "color04",              .code = "]4;4;#",              },
+  { .name = "color05",              .code = "]4;5;#",              },
+  { .name = "color06",              .code = "]4;6;#",              },
+  { .name = "color07",              .code = "]4;7;#",              },
+  { .name = "color08",              .code = "]4;8;#",              },
+  { .name = "color09",              .code = "]4;9;#",              },
+  { .name = "color10",              .code = "]4;10;#",             },
+  { .name = "color11",              .code = "]4;11;#",             },
+  { .name = "color12",              .code = "]4;12;#",             },
+  { .name = "color13",              .code = "]4;13;#",             },
+  { .name = "color14",              .code = "]4;14;#",             },
+  { .name = "color15",              .code = "]4;15;#",             },
+  { .name = "foreground",           .code = "]10;#",               },
+  { .name = "background",           .code = "]11;#",               },
+  { .name = "selection_background", .code = "]17;#",               },
+  { .name = "selection_foreground", .code = "]19;#",               },
+  { .name = "title",                .code = "]2;",                 },
+  { .name = "cursor",               .code = "]12;#",               },
+  { .name = "cursorvisible",        .code = "[?25",                },
+  { .name = "cursorstyle",          .code = "[",                   },
+  { .name = "cursorblink",          .code = "[?12",                },
+  { .name = "altscreen",            .code = "[?47",                },
+  { .name = "screen",               .code = "[?5",                 },
+  { .name = "icontitle",            .code = "]0;",                 },
+  { .name = "icon",                 .code = "]1;",                 },
+  { .name = "title",                .code = "]2;",                 },
+  { .name = "reportfocus",          .code = "[?1004",              },
+  { .name = "mouse",                .code = "[?100",               },
+  { .name = "notification",         .code = "]99;i=1:d=1:p=body;", },
+  { .name = "reset",                .code = "",                    },
   { 0 },
 };
+
+void __attribute__((constructor)) __kfc_utils_constructor(){
+  KFC       = require(kfc_utils);
+  KFC->mode = KFC_LOG_DEBUG;
+
+  if (KFC->mode >= KFC_LOG_DEBUG) {
+    printf("<%d> [%s] palettes qty:%lu\n",
+           getpid(),
+           __FUNCTION__,
+           KFC->get_palettes_qty()
+           );
+  }
+}
+void __attribute__((destructor)) __kfc__utils_destructor(){
+  clib_module_free(KFC);
+#ifdef DEBUG_MEMORY
+  if (KFC->mode >= KFC_LOG_DEBUG) {
+    fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
+  }
+  print_allocated_memory();
+#endif
+}
 
 
 /////////////////////////////////////////////////////////////////////
@@ -107,7 +135,9 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
               "Code",
               "Translated"
               );
-  struct palette_property_t *palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
+  struct palette_property_t *palette_properties_v;
+
+  palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
 
   for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
     char                      *translated_value;
@@ -131,9 +161,15 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
     if (translated_value) {
       free(translated_value);
     }
-    free(pp->name);
-    free(pp->value);
-    free(pp);
+    if (pp) {
+      if (pp->name) {
+        free(pp->name);
+      }
+      if (pp->value) {
+        free(pp->value);
+      }
+      free(pp);
+    }
   }
 
   vector_release(palette_properties_v);
@@ -146,7 +182,8 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
 
 
 char *get_palettes_table() {
-  ft_table_t *table = ft_create_table();
+  unsigned long started_ts = timestamp();
+  ft_table_t    *table     = ft_create_table();
 
   ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
   ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
@@ -159,21 +196,19 @@ char *get_palettes_table() {
   ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_BG_COLOR, FT_COLOR_BLACK);
 
   ft_write_ln(table,
-              "Name",
+              "Palette",
               "Size",
               "File",
-              "Properties"
+              "# Props"
               );
 
-  struct Vector *palettes_v = require(kfc_utils)->palettes_v;
-
-  for (size_t i = 0; i < vector_size(palettes_v) && i < TABLE_LIMIT; i++) {
-    struct inc_palette_t *p  = vector_get(palettes_v, i);
+  for (size_t i = 0; i < vector_size(KFC->palettes_v) && i < PALETTES_QTY_LIMIT; i++) {
+    struct inc_palette_t *p  = vector_get(require(kfc_utils)->palettes_v, i);
     struct Vector        *pp = get_palette_name_properties_v(p->name);
     ft_printf_ln(table,
-                 "%s|%d|%s|%lu",
+                 "%s|%s|%s|%lu",
                  p->name,
-                 p->size,
+                 bytes_to_string(p->size),
                  p->file,
                  vector_size(pp)
                  );
@@ -187,13 +222,14 @@ char *get_palettes_table() {
 
     for (size_t i = 0; i < vector_size(pp); i++) {
       struct palette_property_t *_pp = vector_get(pp, i);
-      if (_pp->name) {
-        free(_pp->name);
-      }
-      if (_pp->value) {
-        free(_pp->value);
-      }
+
       if (_pp) {
+        if (_pp->name) {
+          free(_pp->name);
+        }
+        if (_pp->value) {
+          free(_pp->value);
+        }
         free(_pp);
       }
     }
@@ -204,6 +240,9 @@ char *get_palettes_table() {
   char *table_s = ft_to_string(table);
 
   ft_destroy_table(table);
+  unsigned long ended_ts = timestamp();
+
+  printf("dur:%lu\n", ended_ts - started_ts);
   return(table_s);
 } /* get_palettes_table */
 /////////////////////////////////////////////////////////////////////
@@ -258,7 +297,7 @@ struct Vector *get_palettes_v(){
   struct Vector        *v   = vector_new();
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL && i < PALETTES_QTY_LIMIT; tmp++, i++) {
     vector_push(v, (void *)tmp);
   }
   return(v);
@@ -266,34 +305,30 @@ struct Vector *get_palettes_v(){
 
 
 int kfc_utils_module_test(void) {
-  module(kfc_utils) * kfc_utils = require(kfc_utils);
-
-  kfc_utils->mode = LOGGER_DEBUG;
-  printf("palettes vector qty:%lu\n", vector_size(kfc_utils->palettes_v));
-  printf("palette names vector qty:%lu\n", vector_size(kfc_utils->palette_names_v));
-  printf("palettes data bytes:%s\n", bytes_to_string(kfc_utils->palettes_data_bytes));
-
-  printf("palettes table:\n%s\n", kfc_utils->get_palettes_table());
+  KFC->mode = KFC_LOG_DEBUG;
+  printf("palettes vector qty:%lu\n", vector_size(KFC->palettes_v));
+  printf("palette names vector qty:%lu\n", vector_size(KFC->palette_names_v));
+  printf("palettes data bytes:%s\n", bytes_to_string(KFC->palettes_data_bytes));
+  printf("palettes table:\n%s\n", KFC->get_palettes_table());
   for (size_t i = 0; i < 2; i++) {
-    struct inc_palette_t *p = kfc_utils->get_palette_t_by_index(i);
+    struct inc_palette_t *p = KFC->get_palette_t_by_index(i);
     printf("palette #%lu> %s\n%s\n", i, p->name, get_palette_properties_table(p->name));
   }
+  printf("palette #%s\n%s\n", "vscode", KFC->get_palette_properties_table("vscode"));
 
-  printf("palette #%s\n%s\n", "vscode", kfc_utils->get_palette_properties_table("vscode"));
-
-  size_t i     = kfc_utils->random_palette_index();
-  char   *name = kfc_utils->get_palette_name_by_index(i);
+  size_t i     = KFC->random_palette_index();
+  char   *name = KFC->get_palette_name_by_index(i);
   printf("random palette index:%lu> |%s|%s|%s|\n",
          i,
          name,
-         (kfc_utils->get_palette_t_by_index(i))->name,
-         kfc_utils->get_palette_t_by_name(name)->name
+         (KFC->get_palette_t_by_index(i))->name,
+         KFC->get_palette_t_by_name(name)->name
          );
   if (name) {
     free(name);
   }
 
-  clib_module_free(kfc_utils);
+  clib_module_free(KFC);
   return(0);
 }
 
@@ -336,7 +371,7 @@ size_t random_palette_index(){
 
 
 char *get_palette_name_by_index(const int INDEX){
-  return(strdup(palette_t_list[INDEX].name));
+  return(palette_t_list[INDEX].name);
 }
 
 struct inc_palette_t *get_palette_t_by_index(const size_t INDEX){
@@ -391,7 +426,7 @@ bool load_palette_name(const char *PALETTE_NAME){
       continue;
     }
     char *code = get_palette_item_code(items.strings[0]);
-    if (code == NULL || strlen(code) == 0) {
+    if (code == NULL) {
       continue;
     }
     char *item_key = strdup(items.strings[0]);

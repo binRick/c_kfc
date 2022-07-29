@@ -16,7 +16,7 @@ ls_palettes() {
 }
 
 normalize_content() {
-	tr -s ' ' | tr ' ' '=' | tr -d '#' | grep '='
+	tr -s ' ' | tr ' ' '=' | tr -d '#' | grep '=' | grep '^[a-z].*=.*'
 }
 
 main() {

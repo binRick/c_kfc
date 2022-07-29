@@ -1,3 +1,4 @@
+reset=yes
 background=1e1e1e
 foreground=d4d4d4
 cursor=f44747
@@ -22,11 +23,10 @@ selection_foreground=4ec9b0
 cursor=569cd6
 cursorstyle=bar
 cursorblink=off
-altscreen=off
 title=vscode title
 icon=vscode icon
 icontitle=vscode icontitle
 cursorvisible=on
-screen=off
 reportfocus=on
 mouse=off
+notification=hello

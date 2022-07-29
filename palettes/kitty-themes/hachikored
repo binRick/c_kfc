@@ -1,9 +1,5 @@
-=name:=Hachiko=
-=author:=Mert18=
-=Cursor=colors
 cursor=FF7979
 cursor_text_color=111111
-=Color=Schemes
 active_tab_foreground=FFFAFA
 active_tab_background=B1003C
 active_tab_font_style=bold

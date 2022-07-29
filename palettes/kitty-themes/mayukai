@@ -1,12 +1,3 @@
-=name:=Mayukai
-=author:=Gulajava=Ministudio
-=license:=MIT
-=upstream:=https://github.com/elianiva/mayukai-terminal-themes/blob/master/kitty.conf
-=blurb:=Mayukai=Theme=is=dark=and=yellow=bluish=mirage=theme=with
-=bright=colors=for=easy=readibility=syntax.=
-=This=theme=is=inspired=from=mixed=color=swatch=in=Ayu=Theme,
-=Material=Theme,=Monokai,=Andromeda,=and=Gruvbox=Darktooth=Original=Colors.=
-:=The=basic=colors
 background=1b1c24
 foreground=cbccc6
 color0=191e2a

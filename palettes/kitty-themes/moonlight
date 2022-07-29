@@ -1,9 +1,3 @@
-=vim:ft=kitty
-=name:=moonlight
-=author:=Ramon=Saraiva
-=license:=MIT=License
-=upstream:=https://raw.githubusercontent.com/ramonsaraiva/kitty-moonlight/main/moonlight.conf
-=blurb:=A=port=of=moonlight=vscode=extension=for=kitty=terminal
 foreground=e4f3fa
 background=212337
 selection_foreground=e4f3fa

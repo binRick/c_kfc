@@ -1,4 +1,3 @@
-=1984=orwellian=theme=by=Bertie=Blackman,=https://github.com/covertbert/iterm2-1984/
 foreground=f1f1f1
 background=2e2923
 selection_foreground=000000
@@ -19,8 +18,6 @@ color12=356fe4
 color13=fcbe95
 color14=3fc4ce
 color15=f1f1f1
-=URL=styles
 url_color=e74946
 url_style=single
-=Cursor=styles
 cursor=3fc4ce

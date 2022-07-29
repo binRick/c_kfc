@@ -6,23 +6,28 @@
 #include "module/module.h"
 #include "module/require.h"
 ////////////////////////////////////
+size_t get_palettes_qty();
 
 enum kfc_utils_mode {
-  LOGGER_NONE,
-  LOGGER_INFO,
-  LOGGER_ERROR,
-  LOGGER_DEBUG,
+  KFC_LOG_NONE,
+  KFC_LOG_INFO,
+  KFC_LOG_ERROR,
+  KFC_LOG_DEBUG,
+  KFC_LOG_QTY,
 };
+#define KFC_LOG_DEFAULT    KFC_LOG_INFO
 
 // Module Type Interface
 module(kfc_utils) {
   define(kfc_utils, CLIB_MODULE);
   //////////////////////////////////////////////////////////////////////////////////////
   //     Config
+  //////////////////////////////////////////////////////////////////////////////////////
   enum kfc_utils_mode mode;
   //////////////////////////////////////////////////////////////////////////////////////
   //     Properties
-  size_t               palettes_qty, palettes_data_bytes;
+  //////////////////////////////////////////////////////////////////////////////////////
+  size_t               palettes_qty, palettes_data_bytes, palettes_limit_qty;
   struct Vector        *palettes_v, *palette_names_v;
   struct inc_palette_t **palettes;
   //////////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +39,8 @@ module(kfc_utils) {
   char                 *(*get_palette_properties_table)(const char *PALETTE_NAME);
   char                 *(*get_palette_name_by_index)(const size_t PALETTE_INDEX);
   size_t               (*random_palette_index)();
+  size_t               (*get_palettes_qty)();
+  struct Vector        (*get_palettes_v)();
   //////////////////////////////////////////////////////////////////////////////////////
 };
 
@@ -43,11 +50,11 @@ void kfc_utils_deinit(module(kfc_utils) * exports);
 // Default Module Exports
 exports(kfc_utils) {
   .palettes_qty                 = 0,
+  .palettes_limit_qty           = 999,
   .palettes_data_bytes          = 0,
-  .palettes                     = NULL,
   .palettes_v                   = NULL,
   .palette_names_v              = NULL,
-  .mode                         = LOGGER_NONE,
+  .mode                         = KFC_LOG_DEFAULT,
   .init                         = kfc_utils_init,
   .deinit                       = kfc_utils_deinit,
   .get_palettes_table           = get_palettes_table,
@@ -56,4 +63,6 @@ exports(kfc_utils) {
   .get_palette_t_by_name        = get_palette_t_by_name,
   .get_palette_t_by_index       = get_palette_t_by_index,
   .get_palette_name_by_index    = get_palette_name_by_index,
+  .get_palettes_qty             = get_palettes_qty,
+  .get_palettes_v               = get_palettes_v,
 };

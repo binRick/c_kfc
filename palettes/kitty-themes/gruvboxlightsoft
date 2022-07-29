@@ -1,7 +1,3 @@
-=name:=Gruvbox=Light=Soft
-=author:=Pavel=Pertsev
-=license:=MIT/X11
-=upstream:=https://raw.githubusercontent.com/gruvbox-community/gruvbox-contrib/master/kitty/gruvbox-light-soft.conf
 selection_foreground=3c3836
 selection_background=d65d0e
 background=f2e5bc

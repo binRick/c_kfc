@@ -23,6 +23,6 @@ if get_option('enable-binaries')
      install: true,
   )
   if get_option('enable-binary-clis')
-    test('kfc-cli', passh_program, args: [kfc_cli_exec,'-l'])
+    test('kfc-cli', kfc_cli_exec, args: ['--help'])
   endif
 endif

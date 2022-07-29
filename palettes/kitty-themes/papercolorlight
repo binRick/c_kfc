@@ -1,14 +1,1 @@
-=vim:ft=kitty
-=name:=PaperColor=Light
-=author:=Nikyle=Nguyen
-=license:=[MIT=License](https://opensource.org/licenses/MIT)
-=blurb:=Light=color=scheme=inspired=by=Google's=Material=Design=
-=special
-=black
-=red
-=green
-=yellow
-=blue
-=magenta
-=cyan
-=white
+
