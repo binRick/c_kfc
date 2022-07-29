@@ -8,14 +8,10 @@
 #include <string.h>
 #include <sys/time.h>
 //////////////////////////////////////////
-int kfc0(void);
-
-//////////////////////////////////////////
 #pragma once
 #define INCBIN_SILENCE_BITCODE_WARNING
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
-///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
@@ -23,12 +19,15 @@ int kfc0(void);
 #define CODE_PREFIX      ANSI_ESC_CODE ""
 #define CODE_SUFFIX      ANSI_ESC_CODE "\\"
 #define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
-
 ///////////////////////////////////////////////////////////////////
 struct palette_code_value_translations_t {
   char *name;
   char *src;
   char *dst;
+};
+struct palette_property_t {
+  char *name;
+  char *value;
 };
 struct palette_code_t {
   char *name;
@@ -41,13 +40,25 @@ struct inc_palette_t {
   const char *data;
 };
 ///////////////////////////////////////////////////////////////////
+extern struct inc_palette_t palette_t_list[];
+const size_t                PALETTES_QTY;
+///////////////////////////////////////////////////////////////////
+int kfc_utils_module_test(void);
 void __setup_palettes(void) __attribute__((constructor));
 void __debug_palettes(void);
 void __debug_palette_codes(void);
 struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME);
+struct inc_palette_t *get_palette_t_by_index(const size_t INDEX);
+struct Vector *get_palettes_v();
+struct Vector *get_palette_names_v();
+struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME);
+char *get_palette_properties_table(const char *PALETTE_NAME);
+char *get_palette_item_code(const char *PALETTE_ITEM_NAME);
+char *get_palettes_table();
+size_t get_palettes_data_bytes();
 bool load_palette_name(const char *PALETTE_NAME);
-int random_palette_index();
-char *get_palette_name_t_by_index(const int INDEX);
+size_t random_palette_index();
+char *get_palette_name_by_index(const int INDEX);
 bool palette_item_name_is_translated(const char *ITEM_NAME);
 char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE);
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "kfc-utils.h"
-
 const size_t PALETTES_QTY = 675;
+
 INCTXT(3024, "palettes/dark/3024");
 INCTXT(ashes, "palettes/dark/ashes");
 INCTXT(base16_3024, "palettes/dark/base16-3024");

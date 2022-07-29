@@ -18,20 +18,16 @@
 #define DEBUG_PALETTES         false
 #define DEBUG_PALETTE_CODES    false
 /////////////////////////////////////
+#include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 #include "submodules/c_fsio/include/fsio.h"
 #include "submodules/c_string_buffer/include/stringbuffer.h"
 #include "submodules/c_stringfn/include/stringfn.h"
+#include "submodules/c_vector/include/vector.h"
+#include "submodules/meson_deps/submodules/bytes/bytes.h"
+#include "submodules/meson_deps/submodules/c_vector/include/vector.h"
+#include "submodules/meson_deps/submodules/libfort/src/fort.h"
 /////////////////////////////////////
-extern struct inc_palette_t palette_t_list[];
-extern const size_t         PALETTES_QTY;
-
-
-int kfc0(void) {
-  printf("kfc0............\n");
-  return(0);
-}
-/////////////////////////////////////////////////////////////////////
 static struct palette_code_value_translations_t palette_code_value_translations[] = {
   { .name = "cursorstyle",   .src = "under",     .dst = "3 q", },
   { .name = "cursorstyle",   .src = "block",     .dst = "1 q", },
@@ -90,12 +86,188 @@ static struct palette_code_t                    palette_codes[] = {
 
 
 /////////////////////////////////////////////////////////////////////
+char *get_palette_properties_table(const char *PALETTE_NAME){
+  ft_table_t *table = ft_create_table();
+
+  ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
+  ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
+  ft_set_tbl_prop(table, FT_TPROP_TOP_MARGIN, 0);
+  ft_set_tbl_prop(table, FT_TPROP_BOTTOM_MARGIN, 0);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_CENTER);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_BG_COLOR, FT_COLOR_BLACK);
+
+  ft_write_ln(table,
+              "Property",
+              "Value",
+              "Code",
+              "Translated"
+              );
+  struct palette_property_t *palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
+
+  for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
+    struct palette_property_t *pp = (struct palette_property_t *)vector_get(palette_properties_v, i);
+    ft_printf_ln(table,
+                 "%s|%s|%s|%s",
+                 pp->name,
+                 pp->value,
+                 get_palette_item_code(pp->name),
+                 palette_item_name_is_translated(pp->name) ? translate_palette_item_value(pp->name, pp->value) : ""
+                 );
+
+    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
+    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
+    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
+  }
+
+  char *table_s = ft_to_string(table);
+
+  ft_destroy_table(table);
+  return(table_s);
+} /* get_palette_properties_table */
+
+
+char *get_palettes_table() {
+  ft_table_t *table = ft_create_table();
+
+  ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
+  ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
+  ft_set_tbl_prop(table, FT_TPROP_TOP_MARGIN, 0);
+  ft_set_tbl_prop(table, FT_TPROP_BOTTOM_MARGIN, 0);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_CENTER);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_BG_COLOR, FT_COLOR_BLACK);
+
+  ft_write_ln(table,
+              "Name",
+              "Size"
+              "File"
+              "Properties"
+              );
+
+  struct Vector *palettes_v = require(kfc_utils)->palettes_v;
+
+  for (size_t i = 0; i < vector_size(palettes_v); i++) {
+    struct inc_palette_t *p = (struct inc_palette_t *)vector_get(palettes_v, i);
+    ft_printf_ln(table,
+                 "%s|%d|%s|%lu|",
+                 p->name,
+                 p->size,
+                 p->file,
+                 vector_size(get_palette_name_properties_v(p->name))
+                 );
+
+    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
+    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
+    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
+  }
+
+  char *table_s = ft_to_string(table);
+
+  ft_destroy_table(table);
+  return(table_s);
+} /* list_windows */
+/////////////////////////////////////////////////////////////////////
+struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME){
+  struct Vector        *v = vector_new();
+  struct inc_palette_t *p = get_palette_t_by_name(PALETTE_NAME);
+
+  if (p == NULL) {
+    return(v);
+  }
+  struct StringFNStrings lines = stringfn_split_lines_and_trim(p->data);
+
+  for (size_t i = 0; i < lines.count; i++) {
+    struct StringFNStrings items = stringfn_split(lines.strings[i], '=');
+    if (items.count != 2) {
+      continue;
+    }
+    if (strlen(items.strings[0]) == 0) {
+      continue;
+    }
+    struct palette_property_t *pp = malloc(sizeof(struct palette_property_t));
+    pp->name  = strdup(items.strings[0]);
+    pp->value = strdup(items.strings[1]);
+    vector_push(v, pp);
+  }
+  return(v);
+}
+
+
+size_t get_palettes_data_bytes(){
+  size_t               s    = 0;
+  struct inc_palette_t *tmp = palette_t_list;
+
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+    s += (size_t)strlen(tmp->data);
+  }
+  return(s);
+}
+struct Vector *get_palette_names_v(){
+  struct Vector        *v   = vector_new();
+  struct inc_palette_t *tmp = palette_t_list;
+
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+    vector_push(v, (char *)tmp->name);
+  }
+  return(v);
+}
+struct Vector *get_palettes_v(){
+  struct Vector        *v   = vector_new();
+  struct inc_palette_t *tmp = palette_t_list;
+
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+    vector_push(v, (void *)tmp);
+  }
+  return(v);
+}
+
+
+int kfc_utils_module_test(void) {
+  module(kfc_utils) * kfc_utils = require(kfc_utils);
+
+  kfc_utils->mode = LOGGER_DEBUG;
+  kfc_utils->info("hello");
+  kfc_utils->error("oops");
+  kfc_utils->debug("help");
+  printf("palettes vector qty:%lu\n", vector_size(kfc_utils->palettes_v));
+  printf("palette names vector qty:%lu\n", vector_size(kfc_utils->palette_names_v));
+  printf("palettes data bytes:%s\n", bytes_to_string(kfc_utils->palettes_data_bytes));
+
+  printf("palettes table:\n%s\n", kfc_utils->get_palettes_table());
+  for (size_t i = 0; i < 2; i++) {
+    struct inc_palette_t *p = kfc_utils->get_palette_t_by_index(i);
+    printf("palette #%lu> %s\n%s\n", i, p->name, get_palette_properties_table(p->name));
+  }
+
+  printf("palette #%s\n%s\n", "vscode", kfc_utils->get_palette_properties_table("vscode"));
+
+  size_t i     = kfc_utils->random_palette_index();
+  char   *name = kfc_utils->get_palette_name_by_index(i);
+  printf("random palette index:%lu> |%s|%s|%s|\n",
+         i,
+         name,
+         (kfc_utils->get_palette_t_by_index(i))->name,
+         kfc_utils->get_palette_t_by_name(name)->name
+         );
+  free(name);
+
+  clib_module_free(kfc_utils);
+  return(0);
+}
+
+
+/////////////////////////////////////////////////////////////////////
 
 
 bool palette_item_name_is_translated(const char *ITEM_NAME){
   struct palette_code_value_translations_t *tmp = palette_code_value_translations;
 
-  for (size_t i = 0; i < 1000 && tmp->name != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
     if (strcmp(ITEM_NAME, tmp->name) == 0) {
       return(true);
     }
@@ -110,7 +282,7 @@ char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE
   }
 
   struct palette_code_value_translations_t *tmp = palette_code_value_translations;
-  for (size_t i = 0; i < 1000 && tmp->name != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
     if (strcmp(ITEM_NAME, tmp->name) == 0 && strcmp(ITEM_VALUE, tmp->src) == 0) {
       return(strdup(tmp->dst));
     }
@@ -120,19 +292,24 @@ char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE
 }
 
 
-int random_palette_index(){
+size_t random_palette_index(){
   srand(time(NULL) + getpid());
-  return(rand() % (PALETTES_QTY));
+  return((size_t)(rand() % (PALETTES_QTY)));
 }
 
 
-char *get_palette_name_t_by_index(const int INDEX){
+char *get_palette_name_by_index(const int INDEX){
   return(strdup(palette_t_list[INDEX].name));
 }
+
+struct inc_palette_t *get_palette_t_by_index(const size_t INDEX){
+  return(&(palette_t_list[INDEX]));
+}
+
 struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME){
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < 1000 && tmp->data != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
     if (strcmp(PALETTE_NAME, tmp->name) == 0) {
       return(tmp);
     }
@@ -144,7 +321,7 @@ struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME){
 char *get_palette_item_code(const char *PALETTE_ITEM_NAME){
   struct palette_code_t *tmp = palette_codes;
 
-  for (size_t i = 0; i < 1000 && tmp->name != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
     if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0) {
       return(tmp->code);
     }
@@ -221,7 +398,7 @@ void __debug_palette_codes(void){
 void __debug_palettes(void){
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < 1000000 && tmp->data != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
     printf("__setup_palette: palette #%lu/%lu\n |name:%s|size:%d|file:%s|content:\n'%s'\n===================\n",
            i + 1,
            PALETTES_QTY,
@@ -245,3 +422,4 @@ void __setup_palettes(void){
     fprintf(stderr, "Loaded %lu Included Palettes\n", PALETTES_QTY);
   }
 }
+

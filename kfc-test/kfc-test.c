@@ -1,10 +1,10 @@
 #define DEBUG_MODE    false
-#include "kfc-test.h"
-#include "kfc-utils.h"
+#include "kfc-test/kfc-test.h"
+#include "kfc-utils/kfc-utils.h"
 
 
-TEST t_kfc(void){
-  int res = kfc0();
+TEST t_kfc_utils_module(void){
+  int res = kfc_utils_module_test();
 
   ASSERT_EQ(res, 0);
   PASS();
@@ -12,7 +12,7 @@ TEST t_kfc(void){
 
 
 SUITE(s_kfc){
-  RUN_TEST(t_kfc);
+  RUN_TEST(t_kfc_utils_module);
   PASS();
 }
 
