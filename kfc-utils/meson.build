@@ -27,6 +27,8 @@ kfc_utils_deps = [
   wildcardcmp_dep,
   parson_dep,
   c_fsio_dep,  
+  ansi_rgb_utils_dep,  
+  hsluv_c_dep,  
   string_utils_dep,
   libterminput_dep,
   chan_dep,

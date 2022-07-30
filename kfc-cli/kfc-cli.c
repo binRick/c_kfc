@@ -20,9 +20,11 @@
 ////////////////////////////////////////////
 #include "bytes/bytes.h"
 #include "cargs/include/cargs.h"
+#include "hsluv-c/src/hsluv.h"
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
+#include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
 ////////////////////////////////////////////
 #define KFC    ctx.kfc_utils
@@ -38,9 +40,20 @@ static int kfc_cli_print_invalid_palette_properties(void);
 static int kfc_cli_print_unique_palette_properties(void);
 static int kfc_cli_detect_terminal_type(void);
 static int kfc_cli_test_kitty_socket(void);
+static int kfc_cli_test_colors(void);
+static int kfc_cli_bright_backgrounds(void);
+static int kfc_cli_dark_backgrounds(void);
 
 ////////////////////////////////////////////
 static struct cag_option options[] = {
+  { .identifier  = 'k', .access_letters = "k",
+    .access_name = "dark-backgrounds", .value_name = NULL, .description = "Dark Backgrounds" },
+  { .identifier  = 'b', .access_letters = "b",
+    .access_name = "bright-backgrounds", .value_name = NULL, .description = "Bright Backgrounds" },
+  { .identifier  = 'B', .access_letters = "B",
+    .access_name = "max-brightness", .value_name = "MAX_BRIGHTNESS", .description = "Max Brightness (0.00 - 100)" },
+  { .identifier  = 'C', .access_letters = "C",
+    .access_name = "test-colors", .value_name = NULL, .description = "Test Colors" },
   { .identifier  = 'K', .access_letters = "K",
     .access_name = "test-kitty-socket", .value_name = NULL, .description = "Test Kitty Socket" },
   { .identifier  = 'D', .access_letters = "D",
@@ -89,11 +102,15 @@ static struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]             = { .handler = kfc_cli_detect_terminal_type,             },
   [KFC_CLI_MODE_TEST_KITTY_SOCKET]                = { .handler = kfc_cli_test_kitty_socket,                },
   [KFC_CLI_MODE_PRINT_USAGE]                      = { .handler = kfc_cli_print_usage,                      },
+  [KFC_CLI_MODE_TEST_COLORS]                      = { .handler = kfc_cli_test_colors,                      },
+  [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]               = { .handler = kfc_cli_bright_backgrounds,               },
+  [KFC_CLI_MODE_DARK_BACKGROUNDS]                 = { .handler = kfc_cli_dark_backgrounds,                 },
 };
 static struct ctx_t {
   char            *palette_name, *random_palette_name, *palette_property, *palette_value;
   size_t          random_palette_index;
   bool            debug_mode;
+  float           max_brightness;
   enum kfc_mode_t mode;
   module(kfc_utils) * kfc_utils;
 } ctx = {
@@ -101,6 +118,7 @@ static struct ctx_t {
   .debug_mode           = false,
   .random_palette_index = 1,
   .palette_property     = NULL,
+  .max_brightness       = DEFAULT_MAX_BRIGHTNESS,
   .palette_value        = NULL,
   .kfc_utils            = NULL,
   .mode                 = KFC_CLI_MODE_LOAD_PALETTE,
@@ -166,7 +184,11 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
+    case 'C': ctx.mode                = KFC_CLI_MODE_TEST_COLORS; break;
     case 'K': ctx.mode                = KFC_CLI_MODE_TEST_KITTY_SOCKET; break;
+    case 'b': ctx.mode                = KFC_CLI_MODE_BRIGHT_BACKGROUNDS; break;
+    case 'k': ctx.mode                = KFC_CLI_MODE_DARK_BACKGROUNDS; break;
+    case 'B': ctx.max_brightness      = atof(cag_option_get_value(&context)); break;
     case 'L': ctx.mode                = KFC_CLI_MODE_LOAD_PALETTE; break;
     case 'P': ctx.palette_property    = cag_option_get_value(&context); break;
     case 'V': ctx.palette_value       = cag_option_get_value(&context); break;
@@ -304,5 +326,59 @@ int main(int argc, char **argv) {
   printf("Unknown mode #%d\n", ctx.mode);
   return(1);
 } /* main */
+
+
+static int kfc_cli_test_colors(void){
+  printf("max_brightness: %f\n", ctx.max_brightness);
+  char *hex;
+  char *pname = "vscode";
+  pname = "github";
+  pname = "vscode";
+  struct palette_property_t *p = get_palette_name_properties_v(pname);
+  for (size_t i = 0; i < vector_size(p); i++) {
+    struct palette_property_t *pp = vector_get(p, i);
+    if (strcmp("background", pp->name) == 0) {
+      bool is_dark = palette_background_is_brightness_type(pp->translated_value, BACKGROUND_BRIGHTNESS_DARK, ctx.max_brightness);
+      printf("palette %s with background %s is dark?: %s",
+             pname, pp->translated_value,
+             is_dark ? "Yes" : "No"
+             );
+    }
+    FREE_PALETTE_PROPERTIES(pp);
+  }
+
+  return(EXIT_SUCCESS);
+} /* kfc_cli_test_colors */
+
+
+static int kfc_cli_bright_backgrounds(void){
+  struct Vector *v  = get_palette_names_by_brightness_type(BACKGROUND_BRIGHTNESS_BRIGHT, ctx.max_brightness);
+  size_t        qty = vector_size(v);
+
+  for (size_t i = 0; i < vector_size(v); i++) {
+    char *pn = vector_get(v, i);
+    puts(pn);
+    free(pn);
+  }
+  vector_release(v);
+  printf("[bright] max_brightness: %f> %lu palettes\n", ctx.max_brightness, qty);
+  return(EXIT_SUCCESS);
+}
+
+
+static int kfc_cli_dark_backgrounds(void){
+  struct Vector *v  = get_palette_names_by_brightness_type(BACKGROUND_BRIGHTNESS_DARK, ctx.max_brightness);
+  size_t        qty = vector_size(v);
+
+  for (size_t i = 0; i < vector_size(v); i++) {
+    char *pn = vector_get(v, i);
+    puts(pn);
+    free(pn);
+  }
+  vector_release(v);
+  printf("[dark] max_brightness: %f> %lu palettes\n", ctx.max_brightness, qty);
+  return(EXIT_SUCCESS);
+}
+
 
 #undef KFC

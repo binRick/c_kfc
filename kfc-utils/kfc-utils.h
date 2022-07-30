@@ -18,10 +18,32 @@
 #define CODE_PREFIX      ANSI_ESC_CODE ""
 #define CODE_SUFFIX      ANSI_ESC_CODE "\\"
 #define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
+#define FREE_PALETTE_PROPERTIES(pp)    do { \
+    if (pp) {                               \
+      if (pp->name) {                       \
+        free(pp->name);                     \
+      }                                     \
+      if (pp->translated_name) {            \
+        free(pp->translated_name);          \
+      }                                     \
+      if (pp->value) {                      \
+        free(pp->value);                    \
+      }                                     \
+      if (pp->translated_value) {           \
+        free(pp->translated_value);         \
+      }                                     \
+      free(pp);                             \
+    }                                       \
+} while (0)
 ///////////////////////////////////////////////////////////////////
 struct palette_name_translations_t { char *src; char *dst; };
 struct palette_code_value_translations_t { char *name; char *src; char *dst; };
 struct palette_code_t { char *name; char *code; };
+enum background_brightness_type_t {
+  BACKGROUND_BRIGHTNESS_BRIGHT,
+  BACKGROUND_BRIGHTNESS_DARK,
+  BACKGROUND_BRIGHTNESS_QTY,
+};
 enum terminal_types_t {
   TERMINAL_TYPE_KITTY,
   TERMINAL_TYPE_ALACRITTY,
@@ -76,6 +98,7 @@ struct Vector *get_palettes_v();
 struct Vector *get_palette_names_v();
 struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME);
 struct inc_palette_t *get_palette_t_by_index(const size_t INDEX);
+char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME);
 size_t get_palettes_data_bytes();
 size_t load_palette_name(const char *PALETTE_NAME);
 size_t random_palette_index();
@@ -88,9 +111,11 @@ struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME);
 struct Vector *get_unique_palette_property_names();
 struct Vector *get_unique_palette_property_names();
 struct Vector *get_invalid_palette_property_names();
+struct Vector *get_palette_names_by_brightness_type(int BACKGROUND_BRIGHTNESS_TYPE, float BRIGHTNESS_THRESHOLD);
 char *get_palette_item_code(const char *PALETTE_ITEM_NAME);
 bool palette_item_name_is_translated(const char *ITEM_NAME);
 char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE);
+bool palette_background_is_brightness_type(char *BACKGROUND_COLOR, int BACKGROUND_BRIGHTNESS_TYPE, double BRIGHTNESS_THRESHOLD);
 
 ///////////////////////////////////////////////////////////////////
 ///     terminal utilities

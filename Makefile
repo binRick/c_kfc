@@ -36,7 +36,9 @@ CREATE_PALETTE_INCLUDES_SCRIPT := scripts/create-palette-includes-c.sh
 TIDIED_FILES = \
 			   */*.h */*.c
 ##############################################################
-all: build test
+all: build muon test
+
+do-muon: do-muon-setup do-muon-build
 
 do-muon-setup:
 	@muon setup build-muon
@@ -50,12 +52,11 @@ do-muon-build:
 do-muon-install:
 	@cd build-muon && muon install
 
-
 do-muon-test:
 	@cd build-muon && muon test
 
 build-muon: do-muon-setup do-muon-build do-muon-test
-muon: build-muon do-muon-install
+muon: do-muon-setup do-muon-build
 
 test-embedded-palettes:
 	@clear;kfc -e|xargs -I % env bash -c "clear && kfc-cli -S % && sleep 3;"
@@ -69,9 +70,9 @@ view-palette-includes-c:
 write-palette-includes-c:
 	@$(CREATE_PALETTE_INCLUDES_SCRIPT) > kfc-utils/kfc-utils-palettes.c
 
-clean:
-	@rm -rf build
-muon: do-build-meson
+clean: do-muon-clean
+	@rm -rf build .cache
+muon: do-muon
 do-meson: 
 	@eval cd . && {  meson build || { meson build --reconfigure || { meson build --wipe; } && meson build; }; }
 do-install: all
@@ -82,7 +83,7 @@ do-test:
 	@passh meson test -C build -v --print-errorlogs
 install: do-install
 test: do-test
-build: do-meson do-build
+build: do-meson do-build muon
 uncrustify:
 	@$(UNCRUSTIFY) -c submodules/meson_deps/etc/uncrustify.cfg --replace $(TIDIED_FILES) 
 uncrustify-clean:
@@ -104,14 +105,14 @@ pull:
 	@git pull
 
 palettes-hash:
-	@grep '^INCTXT(' kfc-utils/kfc-utils-palettes.c |cut -d'"' -f2|xargs md5sum|md5sum|cut -d' ' -f1
+	@(grep '^INCTXT(' kfc-utils/kfc-utils-palettes.c |cut -d'"' -f2|xargs md5sum; md5sum kfc*/*.c kfc*/*.h meson.build */meson.build|md5sum)|md5sum|cut -d' ' -f1
 dev: nodemon
 nodemon:
 	@$(PASSH) -L .nodemon.log $(NODEMON) -i build \
 		--delay 1 \
 		-i submodules -w "*/*.c" -w "*/*.h" -w Makefle -w "*/meson.build" \
 		-e c,h,sh,Makefile,build \
-			-x sh -- -c 'passh make && passh make muon||true'
+			-x sh -- -c 'passh make||true'
 meson-introspect-all:
 	@meson introspect --all -i meson.build
 meson-introspect-targets:

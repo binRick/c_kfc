@@ -33,13 +33,14 @@
 #include "c_vector/include/vector.h"
 #include "debug-memory/debug_memory.h"
 #include "djbhash/src/djbhash.h"
+#include "hsluv-c/src/hsluv.h"
 #include "libfort/src/fort.h"
+#include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
 #include "termpaint.h"
 #include "termpaintx.h"
 #include "timestamp/timestamp.h"
 /////////////////////////////////////
-static char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME);
 static char *get_palette_item_sequence(const struct palette_property_t *pp);
 static char *get_palette_name_sequence(const char *PALETTE_NAME);
 static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME);
@@ -150,23 +151,6 @@ static struct palette_code_t                                                  pa
   { .name = "reset",                .code = "",                    },
   { 0 },
 };
-#define FREE_PALETTE_PROPERTIES(pp)    do { \
-    if (pp) {                               \
-      if (pp->name) {                       \
-        free(pp->name);                     \
-      }                                     \
-      if (pp->translated_name) {            \
-        free(pp->translated_name);          \
-      }                                     \
-      if (pp->value) {                      \
-        free(pp->value);                    \
-      }                                     \
-      if (pp->translated_value) {           \
-        free(pp->translated_value);         \
-      }                                     \
-      free(pp);                             \
-    }                                       \
-} while (0)
 
 static void __attribute__((constructor)) __kfc_utils_constructor(){
   if (getenv("DEBUG_MODE") != NULL) {
@@ -314,6 +298,85 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
   vector_release(palette_properties_v);
   return(table_seq_s);
 } /* get_palette_properties_table */
+
+
+struct Vector *get_palette_names_by_brightness_type(int BACKGROUND_BRIGHTNESS_TYPE, float BRIGHTNESS_THRESHOLD){
+  struct Vector             *v               = vector_new();
+  struct Vector             *palette_names_v = get_palette_names_v();
+  struct Vector             *palette_properties_v;
+  struct palette_property_t *pp;
+
+  for (size_t ii = 0; ii < vector_size(palette_names_v); ii++) {
+    char *pname = (char *)vector_get(palette_names_v, ii);
+    palette_properties_v = get_palette_name_properties_v(pname);
+    bool found = false;
+    for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
+      pp = vector_get(palette_properties_v, i);
+      if (found == false && strcmp("background", pp->name) == 0) {
+        switch (BACKGROUND_BRIGHTNESS_TYPE) {
+        case BACKGROUND_BRIGHTNESS_DARK:
+          if (palette_background_is_brightness_type(pp->translated_value, BACKGROUND_BRIGHTNESS_DARK, BRIGHTNESS_THRESHOLD)) {
+            vector_push(v, strdup(pname));
+            found = true;
+          }
+          break;
+        case BACKGROUND_BRIGHTNESS_BRIGHT:
+          if (palette_background_is_brightness_type(pp->translated_value, BACKGROUND_BRIGHTNESS_BRIGHT, BRIGHTNESS_THRESHOLD)) {
+            vector_push(v, strdup(pname));
+            found = true;
+          }
+          break;
+        default:
+          fprintf(stderr, "Invalid brightness type\n");
+          break;
+        }
+      }
+      FREE_PALETTE_PROPERTIES(pp);
+    }
+  }
+  return(v);
+}
+
+
+bool palette_background_is_brightness_type(char *BACKGROUND_COLOR, int BACKGROUND_BRIGHTNESS_TYPE, double BRIGHTNESS_THRESHOLD){
+  char   *hex = NULL;
+  double hsluv[3];
+
+  if (false == stringfn_starts_with(BACKGROUND_COLOR, "#")) {
+    asprintf(&hex, "#%s", BACKGROUND_COLOR);
+  }else{
+    asprintf(&hex, "%s", BACKGROUND_COLOR);
+  }
+
+  short   ok;
+  int32_t val   = rgba_from_string(hex, &ok);
+  rgba_t  _rgba = rgba_new(val);
+
+  rgb2hsluv(_rgba.r, _rgba.g, _rgba.b, &hsluv[0], &hsluv[2], &hsluv[2]);
+  if (false) {
+    fprintf(stderr, "[rgb2hsluv] <type:%d> %s [r:%f|g:%f|b:%f-]-> hue: %f, saturation: %f, lightness: %f|threshold:%f|\n",
+            BACKGROUND_BRIGHTNESS_TYPE,
+            hex,
+            _rgba.r, _rgba.g, _rgba.b,
+            hsluv[0], hsluv[2], hsluv[2], BRIGHTNESS_THRESHOLD);
+  }
+  switch (BACKGROUND_BRIGHTNESS_TYPE) {
+  case BACKGROUND_BRIGHTNESS_DARK:
+    return((hsluv[2] < BRIGHTNESS_THRESHOLD) ? true : false);
+
+    break;
+  case BACKGROUND_BRIGHTNESS_BRIGHT:
+    return((hsluv[2] > BRIGHTNESS_THRESHOLD) ? true : false);
+
+    break;
+  default:
+    fprintf(stderr, "Invalid brightness type\n");
+    return(false);
+
+    break;
+  }
+  return(false);
+} /* palette_background_is_brightness_type */
 
 
 char *get_palettes_table() {
@@ -578,19 +641,24 @@ static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME){
 }
 
 
-static char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME){
-  struct inc_palette_t   *P                  = get_palette_t_by_name(PALETTE_NAME);
-  struct Vector          *palette_properties = get_palette_name_properties_v(PALETTE_NAME);
-  struct StringFNStrings lines               = stringfn_split_lines_and_trim((char *)P->data);
+char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME){
+  struct Vector *palette_properties = get_palette_name_properties_v(PALETTE_NAME);
 
   for (size_t i = 0; i < vector_size(palette_properties); i++) {
     struct palette_property_t *pp = vector_get(palette_properties, i);
     if (strcmp(PALETTE_PROPERTY_NAME, pp->name) == 0) {
       char *s = strdup(pp->value);
-      FREE_PALETTE_PROPERTIES(pp);
+      vector_release(palette_properties);
+      free(pp->name);
+      free(pp->translated_name);
+      free(pp->value);
+      free(pp->translated_value);
+      free(pp);
       return(s);
     }
+    FREE_PALETTE_PROPERTIES(pp);
   }
+  vector_release(palette_properties);
   return(NULL);
 }
 
