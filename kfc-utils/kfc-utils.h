@@ -103,6 +103,8 @@ size_t get_palettes_data_bytes();
 size_t load_palette_name(const char *PALETTE_NAME);
 size_t random_palette_index();
 char *get_palette_name_by_index(const int INDEX);
+struct Vector *kfc_utils_select_palettes(void);
+char *kfc_utils_select_palette(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities

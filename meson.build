@@ -13,6 +13,7 @@ inc = [include_directories(
   'submodules/meson_deps/submodules',
   'submodules/meson_deps/submodules/c_ansi',
   'submodules/meson_deps/submodules/c_darwin',
+  'submodules/meson_deps/submodules/reproc',
 )]
 palettes_hash = run_command(make_program, 'palettes-hash', check: true).stdout().strip()
 #############################################################################

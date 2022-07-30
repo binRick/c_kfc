@@ -9,3 +9,4 @@ kfc
 build
 .nodemon.log
 .bin/
+.e

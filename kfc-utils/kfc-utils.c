@@ -33,6 +33,7 @@
 #include "c_vector/include/vector.h"
 #include "debug-memory/debug_memory.h"
 #include "djbhash/src/djbhash.h"
+#include "exec-fzf/exec-fzf.h"
 #include "hsluv-c/src/hsluv.h"
 #include "libfort/src/fort.h"
 #include "rgba/src/rgba.h"
@@ -163,11 +164,11 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   KFC->mode = KFC_LOG_DEBUG;
 
   if (KFC_UTILS_DEBUG_MODE == true) {
-    printf("<%d> [%s] palettes qty:%lu\n",
-           getpid(),
-           __FUNCTION__,
-           KFC->get_palettes_qty()
-           );
+    log_debug("<%d> [%s] palettes qty:%lu",
+              getpid(),
+              __FUNCTION__,
+              KFC->get_palettes_qty()
+              );
   }
   if (strcmp(PALETTES_HASH, "") != 0) {
     char *ymd = get_cache_ymd();
@@ -180,7 +181,7 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
                PALETTES_HASH
                );
       if (KFC_UTILS_DEBUG_MODE == true) {
-        printf("palettes table hash %s|%s\n", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
+        log_debug("palettes table hash %s|%s", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
       }
     }
   }
@@ -191,18 +192,16 @@ static void __attribute__((destructor)) __kfc__utils_destructor(){
   djbhash_destroy(&invalid_palette_property_names_h);
   djbhash_destroy(&valid_palette_property_names_h);
   djbhash_destroy(&palette_properties_h);
-#ifdef DEBUG_MEMORY
-  if (KFC->mode >= KFC_LOG_DEBUG) {
-    fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
-  }
-  print_allocated_memory();
-#endif
 }
 
 
 char *get_palette_properties_table(const char *PALETTE_NAME){
   struct palette_property_t *palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
-  ft_table_t                *table                = ft_create_table();
+
+  if (vector_size(palette_properties_v) < 1) {
+    return("No properties found");
+  }
+  ft_table_t *table = ft_create_table();
 
   ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
   ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
@@ -217,8 +216,8 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
   ft_write_ln(table,
               "Property",
               "Value",
-              "Valid Property",
-              "Property is Translated",
+              "Valid Prop",
+              "Translated Prop",
               "Value is Translated",
               "Prefix",
               "Code",
@@ -243,16 +242,16 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
                  pp->escaped_sequence
                  );
 
-    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_RED);
-    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_RED);
+    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_MAGENTA);
+    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
     ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, pp->is_valid_name ? FT_COLOR_GREEN : FT_COLOR_RED);
     ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
-    ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, pp->is_translated ? FT_COLOR_GREEN : FT_COLOR_RED);
-    ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
-    ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
+    ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_BLUE);
+    ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, pp->is_translated ? FT_COLOR_GREEN : FT_COLOR_RED);
     ft_set_cell_prop(table, i + 1, 5, FT_CPROP_CONT_FG_COLOR, FT_COLOR_CYAN);
     ft_set_cell_prop(table, i + 1, 6, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_RED);
     ft_set_cell_prop(table, i + 1, 7, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_CYAN);
+    ft_set_cell_prop(table, i + 1, 7, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
     ft_set_cell_prop(table, i + 1, 8, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
     ft_set_cell_prop(table, i + 1, 8, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
     ft_set_cell_prop(table, i + 1, 9, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
@@ -327,7 +326,7 @@ struct Vector *get_palette_names_by_brightness_type(int BACKGROUND_BRIGHTNESS_TY
           }
           break;
         default:
-          fprintf(stderr, "Invalid brightness type\n");
+          log_error("Invalid brightness type");
           break;
         }
       }
@@ -354,23 +353,23 @@ bool palette_background_is_brightness_type(char *BACKGROUND_COLOR, int BACKGROUN
 
   rgb2hsluv(_rgba.r, _rgba.g, _rgba.b, &hsluv[0], &hsluv[2], &hsluv[2]);
   if (false) {
-    fprintf(stderr, "[rgb2hsluv] <type:%d> %s [r:%f|g:%f|b:%f-]-> hue: %f, saturation: %f, lightness: %f|threshold:%f|\n",
-            BACKGROUND_BRIGHTNESS_TYPE,
-            hex,
-            _rgba.r, _rgba.g, _rgba.b,
-            hsluv[0], hsluv[2], hsluv[2], BRIGHTNESS_THRESHOLD);
+    log_info("[rgb2hsluv] <type:%d> %s [r:%f|g:%f|b:%f-]-> hue: %f, saturation: %f, lightness: %f|threshold:%f|",
+             BACKGROUND_BRIGHTNESS_TYPE,
+             hex,
+             _rgba.r, _rgba.g, _rgba.b,
+             hsluv[0], hsluv[2], hsluv[2], BRIGHTNESS_THRESHOLD);
   }
   switch (BACKGROUND_BRIGHTNESS_TYPE) {
   case BACKGROUND_BRIGHTNESS_DARK:
-    return((hsluv[2] < BRIGHTNESS_THRESHOLD) ? true : false);
+    return((hsluv[2] <= BRIGHTNESS_THRESHOLD) ? true : false);
 
     break;
   case BACKGROUND_BRIGHTNESS_BRIGHT:
-    return((hsluv[2] > BRIGHTNESS_THRESHOLD) ? true : false);
+    return((hsluv[2] >= BRIGHTNESS_THRESHOLD) ? true : false);
 
     break;
   default:
-    fprintf(stderr, "Invalid brightness type\n");
+    log_error("Invalid brightness type");
     return(false);
 
     break;
@@ -389,10 +388,10 @@ char *get_palettes_table() {
         char *cache_file_content = fsio_read_text_file(cache_file);
         if (cache_file_content != NULL) {
           if (KFC_UTILS_DEBUG_MODE) {
-            fprintf(stderr, "<%d> [%s] returning %s cached table from cache file: %s\n",
-                    getpid(), __FUNCTION__,
-                    bytes_to_string(cache_file_size),
-                    cache_file);
+            log_info("<%d> [%s] returning %s cached table from cache file: %s",
+                     getpid(), __FUNCTION__,
+                     bytes_to_string(cache_file_size),
+                     cache_file);
           }
           return(cache_file_content);
         }
@@ -450,7 +449,7 @@ char *get_palettes_table() {
   ft_destroy_table(table);
   unsigned long ended_ts = timestamp();
 
-  fprintf(stderr, "palettes table dur:%lu\n", ended_ts - started_ts);
+  log_debug("palettes table dur:%lu", ended_ts - started_ts);
   if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
     fsio_write_text_file(cache_file, table_s);
   }
@@ -462,7 +461,7 @@ struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME){
   struct inc_palette_t *p = get_palette_t_by_name(PALETTE_NAME);
 
   if (p == NULL) {
-    fprintf(stderr, "No properties for palette %s found\n", PALETTE_NAME);
+    log_error("No properties for palette %s found", PALETTE_NAME);
     return(v);
   }
   struct StringFNStrings lines = stringfn_split_lines_and_trim(p->data);
@@ -808,16 +807,16 @@ bool kfc_utils_test_kitty_socket(){
   for (size_t i = 0; i < vector_size(kitty_listen_ons); i++) {
     char              *LO  = vector_get(kitty_listen_ons, i);
     kitty_listen_on_t *KLO = parse_kitten_listen_on(LO);
-    printf("connecting to> %s:%d\n", KLO->host, KLO->port);
+    log_debug("connecting to> %s:%d", KLO->host, KLO->port);
     char              *BACKGROUND_COLOR     = kitty_get_color("background", KLO->host, KLO->port);
     char              *kitty_query_terminal = kitty_tcp_cmd((const char *)KLO->host, KLO->port, KITTY_QUERY_TERMINAL_CMD);
-    fprintf(stderr,
-            AC_RESETALL AC_BLUE "Listen on #%lu/%lu: %s\n" AC_RESETALL,
-            i + 1, vector_size(kitty_listen_ons),
-            (char *)vector_get(kitty_listen_ons, i)
-            );
-    printf("bg color:%s\n", BACKGROUND_COLOR);
-    printf("query terminal: %s\n", kitty_query_terminal);
+    log_debug(
+      AC_RESETALL AC_BLUE "Listen on #%lu/%lu: %s" AC_RESETALL,
+      i + 1, vector_size(kitty_listen_ons),
+      (char *)vector_get(kitty_listen_ons, i)
+      );
+    log_debug("bg color:%s", BACKGROUND_COLOR);
+    log_debug("query terminal: %s", kitty_query_terminal);
     /*
      * char *kitty_ls_colors = kitty_tcp_cmd((const char *)KLO->host, KLO->port, __KITTY_GET_COLORS_CMD__);
      * printf("ls colors: %s\n",kitty_ls_colors);
@@ -841,3 +840,61 @@ static char *get_cache_ymd(){
   asprintf(&buf, "%s", tmbuf);
   return(buf);
 }
+
+
+char *kfc_utils_select_palette(void){
+  char              *selected_palette = NULL;
+  struct Vector     *v                = vector_new();
+  struct Vector     *palette_names_v  = get_palette_names_v();
+  struct fzf_exec_t *fzf_exec         = setup_fzf_exec();
+
+  assert(fzf_exec != NULL);
+  {
+    fzf_exec->debug_mode      = false;
+    fzf_exec->header          = "Select Palette";
+    fzf_exec->select_multiple = false;
+    fzf_exec->height          = 30;
+    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+      vector_push(fzf_exec->input_options, (char *)vector_get(palette_names_v, i));
+    }
+  }
+
+  int res = execute_fzf_process(fzf_exec);
+
+  assert(res == 0);
+  if (vector_size(fzf_exec->selected_options) == 1) {
+    selected_palette = (char *)vector_get(fzf_exec->selected_options, 0);
+  }
+  release_fzf_exec(fzf_exec);
+  return(selected_palette);
+}
+
+struct Vector *kfc_utils_select_palettes(void){
+  struct Vector     *v               = vector_new();
+  struct Vector     *palette_names_v = get_palette_names_v();
+  struct fzf_exec_t *fzf_exec        = setup_fzf_exec();
+
+  assert(fzf_exec != NULL);
+  {
+    fzf_exec->debug_mode      = false;
+    fzf_exec->header          = "Select Palettes";
+    fzf_exec->select_multiple = true;
+    fzf_exec->height          = 30;
+    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+      vector_push(fzf_exec->input_options, (char *)vector_get(palette_names_v, i));
+    }
+  }
+
+  int res = execute_fzf_process(fzf_exec);
+
+  assert(res == 0);
+
+//  log_info("Selected %lu/%lu options", vector_size(fzf_exec->selected_options), vector_size(fzf_exec->input_options));
+  for (size_t i = 0; i < vector_size(fzf_exec->selected_options); i++) {
+    //  log_info(" - %s", (char*)vector_get(fzf_exec->selected_options,i));
+    vector_push(v, (char *)vector_get(fzf_exec->selected_options, i));
+  }
+  release_fzf_exec(fzf_exec);
+  return(v);
+}
+

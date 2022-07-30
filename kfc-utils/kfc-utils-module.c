@@ -11,8 +11,8 @@
 //////////////////////////////////////
 int kfc_utils_module_init(module(kfc_utils) *exports) {
   clib_module_init(kfc_utils, exports);
-  exports->mode = KFC_LOG_DEFAULT;
-  if (require(kfc_utils)->mode >= KFC_LOG_DEBUG) {
+  exports->mode = ((KFC_MODULE_DEBUG_MODE == true) || getenv("DEBUG_MODE") != NULL) ? KFC_LOG_DEBUG : KFC_LOG_DEFAULT;
+  if (exports->mode >= KFC_LOG_DEBUG) {
     fprintf(stderr, "<%d> [%s] <module init> started\n", getpid(), __FUNCTION__);
   }
   exports->palettes            = palette_t_list;
@@ -20,7 +20,7 @@ int kfc_utils_module_init(module(kfc_utils) *exports) {
   exports->palette_names_v     = get_palette_names_v();
   exports->palettes_data_bytes = get_palettes_data_bytes();
   exports->palettes_qty        = vector_size(exports->palettes_v);
-  if (KFC_MODULE_DEBUG_MODE == true) {
+  if (exports->mode >= KFC_LOG_DEBUG) {
     fprintf(stderr, "<%d> [%s] <module init> Loaded %lu Palettes\n",
             getpid(), __FUNCTION__,
             exports->get_palettes_qty()

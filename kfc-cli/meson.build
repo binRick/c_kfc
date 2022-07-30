@@ -17,6 +17,8 @@ kfc_cli_deps = [
   kfc_utils_dep,
   bytes_dep,
   hsluv_c_dep,
+  logh_dep,
+  reproc_dep,
   debug_memory_dep,
 ]
 if get_option('enable-binaries')
