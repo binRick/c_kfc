@@ -14,6 +14,7 @@ kfc_utils_deps = [
   c_string_buffer_dep,
   fort_dep,
   c_vector_dep,
+  ansi_utils_dep,
   debug_memory_dep,
   which_dep,
   strdup_dep,

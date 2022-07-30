@@ -5,6 +5,7 @@
 #include "bench/bench.h"
 #include "c_vector/include/vector.h"
 #include "kfc-utils/kfc-utils-module.h"
+#define KFC_MODULE_DEBUG_MODE    false
 
 
 //////////////////////////////////////
@@ -19,7 +20,7 @@ int kfc_utils_init(module(kfc_utils) *exports) {
   exports->palette_names_v     = get_palette_names_v();
   exports->palettes_data_bytes = get_palettes_data_bytes();
   exports->palettes_qty        = vector_size(exports->palettes_v);
-  if (require(kfc_utils)->mode >= KFC_LOG_DEBUG) {
+  if (KFC_MODULE_DEBUG_MODE == true) {
     fprintf(stderr, "<%d> [%s] <module init> Loaded %lu Palettes\n",
             getpid(), __FUNCTION__,
             exports->get_palettes_qty()
@@ -31,8 +32,12 @@ int kfc_utils_init(module(kfc_utils) *exports) {
 
 //////////////////////////////////////
 void kfc_utils_deinit(module(kfc_utils) *exports) {
-  if (require(kfc_utils)->mode >= KFC_LOG_DEBUG) {
-    fprintf(stderr, "<%d> [%s] <module cleanup>\n", getpid(), __FUNCTION__);
+  if (KFC_MODULE_DEBUG_MODE == true) {
+    fprintf(stderr, "<%d> [%s] [mode:%d] <module cleanup>\n",
+            getpid(),
+            __FUNCTION__,
+            require(kfc_utils)->mode
+            );
   }
 
   clib_module_deinit(kfc_utils);

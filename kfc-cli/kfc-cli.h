@@ -19,6 +19,7 @@ static int kfc_cli_print_usage(void);
 static int kfc_cli_print_palettes_table(void);
 static int kfc_cli_print_palette_table(void);
 static int kfc_cli_print_version(void);
+static int kfc_cli_print_palette_properties_table(void);
 
 ////////////////////////////////////////////
 enum kfc_mode_t {
@@ -26,6 +27,7 @@ enum kfc_mode_t {
   KFC_CLI_MODE_LIST_PALETTES,
   KFC_CLI_MODE_LOAD_PALETTE,
   KFC_CLI_MODE_PRINT_PALETTES_TABLE,
+  KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE,
   KFC_CLI_MODE_PRINT_PALETTE_TABLE,
   KFC_CLI_MODE_PRINT_VERSION,
   KFC_CLI_MODES_QTY,

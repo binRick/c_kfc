@@ -20,6 +20,10 @@
 #define CODE_SUFFIX      ANSI_ESC_CODE "\\"
 #define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
 ///////////////////////////////////////////////////////////////////
+struct palette_name_translations_t {
+  char *src;
+  char *dst;
+};
 struct palette_code_value_translations_t {
   char *name;
   char *src;
@@ -27,7 +31,21 @@ struct palette_code_value_translations_t {
 };
 struct palette_property_t {
   char *name;
+  char *translated_name;
+  char *code;
+  bool is_valid_name;
+  char *prefix;
+  char *suffix;
+  char *escaped_prefix;
+  char *escaped_suffix;
+  char *escaped_code;
   char *value;
+  char *escaped_value;
+  bool is_translated;
+  char *translated_value;
+  char *escaped_translated_value;
+  char *sequence;
+  char *escaped_sequence;
 };
 struct palette_code_t {
   char *name;

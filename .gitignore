@@ -7,3 +7,4 @@ kfc
 .attic
 .src
 build
+.nodemon.log

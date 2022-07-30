@@ -1,7 +1,7 @@
 #pragma once
 #include "kfc-utils.h"
 
-const size_t PALETTES_QTY = 676;
+const size_t PALETTES_QTY = 677;
 INCTXT(3024, "palettes/dark/3024");
 INCTXT(ashes, "palettes/dark/ashes");
 INCTXT(base16_3024, "palettes/dark/base16-3024");
@@ -178,6 +178,7 @@ INCTXT(dkeg_view, "palettes/dark/dkeg-view");
 INCTXT(dkeg_wintry, "palettes/dark/dkeg-wintry");
 INCTXT(gruvbox, "palettes/dark/gruvbox");
 INCTXT(hybrid_material, "palettes/dark/hybrid-material");
+INCTXT(invalid, "palettes/dark/invalid");
 INCTXT(monokai, "palettes/dark/monokai");
 INCTXT(sexy_astromouse, "palettes/dark/sexy-astromouse");
 INCTXT(sexy_belge, "palettes/dark/sexy-belge");
@@ -753,7 +754,7 @@ struct inc_palette_t palette_t_list[] = {
   { .name = "base16-zenburn",                 .size = 290, .file = "palettes/dark/base16-zenburn",                         .data = inc_palette_base16_zenburn_data                 },
   { .name = "base16tooth",                    .size = 290, .file = "palettes/dark/base16tooth",                            .data = inc_palette_base16tooth_data                    },
   { .name = "darktooth",                      .size = 455, .file = "palettes/dark/darktooth",                              .data = inc_palette_darktooth_data                      },
-  { .name = "dev",                            .size = 17,  .file = "palettes/dark/dev",                                    .data = inc_palette_dev_data                            },
+  { .name = "dev",                            .size = 27,  .file = "palettes/dark/dev",                                    .data = inc_palette_dev_data                            },
   { .name = "dkeg-5725",                      .size = 290, .file = "palettes/dark/dkeg-5725",                              .data = inc_palette_dkeg_5725_data                      },
   { .name = "dkeg-amiox",                     .size = 290, .file = "palettes/dark/dkeg-amiox",                             .data = inc_palette_dkeg_amiox_data                     },
   { .name = "dkeg-bark",                      .size = 290, .file = "palettes/dark/dkeg-bark",                              .data = inc_palette_dkeg_bark_data                      },
@@ -817,6 +818,7 @@ struct inc_palette_t palette_t_list[] = {
   { .name = "dkeg-wintry",                    .size = 290, .file = "palettes/dark/dkeg-wintry",                            .data = inc_palette_dkeg_wintry_data                    },
   { .name = "gruvbox",                        .size = 290, .file = "palettes/dark/gruvbox",                                .data = inc_palette_gruvbox_data                        },
   { .name = "hybrid-material",                .size = 290, .file = "palettes/dark/hybrid-material",                        .data = inc_palette_hybrid_material_data                },
+  { .name = "invalid",                        .size = 49,  .file = "palettes/dark/invalid",                                .data = inc_palette_invalid_data                        },
   { .name = "monokai",                        .size = 290, .file = "palettes/dark/monokai",                                .data = inc_palette_monokai_data                        },
   { .name = "sexy-astromouse",                .size = 290, .file = "palettes/dark/sexy-astromouse",                        .data = inc_palette_sexy_astromouse_data                },
   { .name = "sexy-belge",                     .size = 290, .file = "palettes/dark/sexy-belge",                             .data = inc_palette_sexy_belge_data                     },

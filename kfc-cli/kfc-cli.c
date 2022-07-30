@@ -26,10 +26,12 @@
 #define KFC    ctx.kfc_utils
 ////////////////////////////////////////////
 static struct cag_option options[] = {
+  { .identifier  = 'L', .access_letters = "L",
+    .access_name = "load-palette", .value_name = NULL, .description = "Load Palette" },
   { .identifier  = 'l', .access_letters = "l",
-    .access_name = "list-palettes", .value_name = "LIST_PALETTES_MODE", .description = "List Palettes" },
+    .access_name = "list-palettes", .value_name = NULL, .description = "List Palettes" },
   { .identifier  = 'd', .access_letters = "d",
-    .access_name = "debug", .value_name = "DEBUG_MODE", .description = "Debug Mode" },
+    .access_name = "debug", .value_name = NULL, .description = "Debug Mode" },
   { .identifier  = 'p', .access_letters = "p",
     .access_name = "palette", .value_name = "PALETTE_NAME", .description = "Specified Palette" },
   { .identifier  = 'V', .access_letters = "V",
@@ -38,12 +40,14 @@ static struct cag_option options[] = {
     .access_name = "palette-property", .value_name = "PALETTE_PROPERTY",
     .description = "Specified Palette Property" },
   { .identifier  = 'v', .access_letters = "v",
-    .access_name = "version", .value_name = "VERSION_MODE", .description = "Print Version" },
+    .access_name = "version", .value_name = NULL, .description = "Print Version" },
+  { .identifier  = 'T', .access_letters = "T",
+    .access_name = "palette-properties-table", .value_name = NULL, .description = "Print Palette Properties Table" },
   { .identifier  = 't', .access_letters = "t",
-    .access_name = "palettes-table", .value_name = "PALETTES_TABLE", .description = "Print Palettes Table" },
+    .access_name = "palettes-table", .value_name = NULL, .description = "Print Palettes Table" },
   { .identifier  = 'r', .access_letters = "r",
-    .access_name = "random-palette", .value_name = "RANDOM_PALETTE", .description = "Load Random Palette" },
-  { .identifier  = 'L', .access_letters = "L",
+    .access_name = "random-palette", .value_name = NULL, .description = "Load Random Palette" },
+  { .identifier  = 'q', .access_letters = "q",
     .access_name = "limit-palettes-qty", .value_name = "PALETTES_QTY", .description = "Limit Palettes Qty" },
   { .identifier  = 'h', .access_letters = "h",
     .access_name = "help", .description = "Shows the command help" }
@@ -51,11 +55,12 @@ static struct cag_option options[] = {
 static struct kfc_mode_handlers_t {
   int (*handler)(void);
 } kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
-  [KFC_CLI_MODE_LIST_PALETTES]        = { .handler = kfc_cli_list_palettes,        },
-  [KFC_CLI_MODE_LOAD_PALETTE]         = { .handler = kfc_cli_load_palette,         },
-  [KFC_CLI_MODE_PRINT_PALETTES_TABLE] = { .handler = kfc_cli_print_palettes_table, },
-  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]  = { .handler = kfc_cli_print_palette_table,  },
-  [KFC_CLI_MODE_PRINT_VERSION]        = { .handler = kfc_cli_print_version,        },
+  [KFC_CLI_MODE_LIST_PALETTES]                  = { .handler = kfc_cli_list_palettes,                  },
+  [KFC_CLI_MODE_LOAD_PALETTE]                   = { .handler = kfc_cli_load_palette,                   },
+  [KFC_CLI_MODE_PRINT_PALETTES_TABLE]           = { .handler = kfc_cli_print_palettes_table,           },
+  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]            = { .handler = kfc_cli_print_palette_table,            },
+  [KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE] = { .handler = kfc_cli_print_palette_properties_table, },
+  [KFC_CLI_MODE_PRINT_VERSION]                  = { .handler = kfc_cli_print_version,                  },
 };
 static struct ctx_t {
   char            *palette_name, *random_palette_name, *palette_property, *palette_value;
@@ -66,25 +71,31 @@ static struct ctx_t {
 } ctx = {
   .palette_name         = NULL,
   .debug_mode           = false,
-  .random_palette_index = -1,
+  .random_palette_index = 1,
   .palette_property     = NULL,
   .palette_value        = NULL,
   .kfc_utils            = NULL,
-  .mode                 = -1,
+  .mode                 = KFC_CLI_MODE_LOAD_PALETTE,
 };
 
 void __attribute__((constructor)) __kfc_cli_constructor(){
   KFC       = require(kfc_utils);
-  KFC->mode = ctx.debug_mode ? KFC_LOG_DEBUG : KFC_LOG_ERROR;
-  printf("palettes vector qty:%lu\n", KFC->get_palettes_qty());
+  KFC->mode = (ctx.debug_mode == true) ? KFC_LOG_DEBUG : KFC_LOG_ERROR;
+  if (ctx.debug_mode == true) {
+    printf("palettes vector qty:%lu\n", KFC->get_palettes_qty());
+  }
 }
 
 void __attribute__((destructor)) __kfc_cli_destructor(){
   clib_module_free(KFC);
 #ifdef DEBUG_MEMORY
-  fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
+  if (ctx.debug_mode == true) {
+    fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
+  }
   print_allocated_memory();
-  fprintf(stderr, "<%d> [%s] OK\n", getpid(), __FUNCTION__);
+  if (ctx.debug_mode == true) {
+    fprintf(stderr, "<%d> [%s] OK\n", getpid(), __FUNCTION__);
+  }
 #endif
 }
 
@@ -96,27 +107,29 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
-    case 'p': ctx.mode = KFC_CLI_MODE_LOAD_PALETTE;
-      ctx.palette_name = cag_option_get_value(&context);
-      break;
+    case 'L': ctx.mode                = KFC_CLI_MODE_LOAD_PALETTE; break;
     case 'P': ctx.palette_property    = cag_option_get_value(&context); break;
     case 'V': ctx.palette_value       = cag_option_get_value(&context); break;
-    case 'L': KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
+    case 'q': KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
     case 'l': ctx.mode                = KFC_CLI_MODE_LIST_PALETTES; break;
     case 'v': ctx.mode                = KFC_CLI_MODE_PRINT_VERSION; break;
-    case 'r': ctx.mode                = KFC_CLI_MODE_LOAD_PALETTE;
-      ctx.random_palette_index        = random_palette_index();
-      ctx.palette_name                = get_palette_name_by_index(ctx.random_palette_index);
+    case 't': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTES_TABLE; break;
+    case 'T': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE; break;
+    case 'd': ctx.debug_mode          = true; break;
+    case 'p':
+      ctx.palette_name = cag_option_get_value(&context);
       break;
-    case 't': ctx.mode       = KFC_CLI_MODE_PRINT_PALETTES_TABLE; break;
-    case 'd': ctx.debug_mode = true; break;
+    case 'r':
+      ctx.random_palette_index = random_palette_index();
+      ctx.palette_name         = get_palette_name_by_index(ctx.random_palette_index);
+      break;
     case 'h':
       fprintf(stderr, AC_RESETALL AC_YELLOW AC_BOLD "Usage: kfc-cli [OPTION]\n" AC_RESETALL);
       cag_option_print(options, CAG_ARRAY_SIZE(options), stdout);
       exit(EXIT_SUCCESS);
     }
   }
-  KFC->mode = ctx.debug_mode ? KFC_LOG_DEBUG : KFC->mode;
+  KFC->mode = (ctx.debug_mode == true) ? KFC_LOG_DEBUG : KFC->mode;
   return(EXIT_SUCCESS);
 }
 
@@ -127,8 +140,23 @@ static int kfc_cli_print_version(void){
 }
 
 
+static int kfc_cli_print_palette_properties_table(void){
+  if (ctx.palette_name == NULL) {
+    fprintf(stdout, "Must Specify Palette Name\n");
+    return(1);
+  }
+  if (ctx.debug_mode == true) {
+    fprintf(stdout, "Printing Palette %s Properties Table\n", ctx.palette_name);
+  }
+  char *tbl = KFC->get_palette_properties_table(ctx.palette_name);
+  printf("%s", tbl);
+
+  return(0);
+}
+
+
 static int kfc_cli_print_palette_table(void){
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode == true) {
     fprintf(stderr, "Printing Palette Table\n");
   }
   return(0);
@@ -136,7 +164,7 @@ static int kfc_cli_print_palette_table(void){
 
 
 static int kfc_cli_print_palettes_table(void){
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode == true) {
     fprintf(stderr, "Printing Palettes Table\n");
   }
   printf("palettes table:\n%s", KFC->get_palettes_table());
@@ -145,7 +173,7 @@ static int kfc_cli_print_palettes_table(void){
 
 
 static int kfc_cli_list_palettes(void){
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode == true) {
     fprintf(stderr, "Listing embedded\n");
   }
   struct inc_palette_t *p;
@@ -159,16 +187,14 @@ static int kfc_cli_list_palettes(void){
 static int kfc_cli_load_palette(void){
   if (ctx.palette_name != NULL) {
     struct inc_palette_t *P = get_palette_t_by_name(ctx.palette_name);
-    if (ctx.debug_mode) {
+    if (ctx.debug_mode == true) {
       fprintf(stderr, "Loading embedded palette %s of %db\n", P->name, P->size);
     }
     if (P == NULL) {
       printf("Embedded palette %s not found\n", ctx.palette_name);
     }else{
       load_palette_name(P->name);
-      if (ctx.debug_mode) {
-        fprintf(stderr, "%s", PALETTE);
-      }
+      fprintf(stdout, "%s\n", P->name);
     }
   }
   return(0);
@@ -178,6 +204,9 @@ static int kfc_cli_load_palette(void){
 int main(int argc, char **argv) {
   parse_args(argc, argv);
   if (ctx.mode < KFC_CLI_MODES_QTY) {
+    if (ctx.debug_mode == true) {
+      printf("Loading mode #%d\n", ctx.mode);
+    }
     return(kfc_mode_handlers[ctx.mode].handler());
   }
   printf("Unknown mode #%d\n", ctx.mode);
