@@ -23,6 +23,7 @@
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
+#include "tempdir.c/tempdir.h"
 ////////////////////////////////////////////
 #define KFC    ctx.kfc_utils
 ////////////////////////////////////////////
@@ -104,7 +105,6 @@ static struct ctx_t {
   .kfc_utils            = NULL,
   .mode                 = KFC_CLI_MODE_LOAD_PALETTE,
 };
-
 void __attribute__((constructor)) __kfc_cli_constructor(){
   KFC       = require(kfc_utils);
   KFC->mode = (ctx.debug_mode == true) ? KFC_LOG_DEBUG : KFC_LOG_ERROR;

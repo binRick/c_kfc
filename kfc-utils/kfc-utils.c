@@ -8,10 +8,14 @@
 #include <termios.h>
 #include <unistd.h>
 /////////////////////////////////////
-#define DEBUG_PALETTES          false
-#define DEBUG_PALETTE_CODES     false
-#define KFC_UTILS_DEBUG_MODE    false
-#define PALETTES_QTY_LIMIT      999
+#define DEBUG_PALETTES         false
+#define DEBUG_PALETTE_CODES    false
+#define PALETTES_QTY_LIMIT     999
+#ifndef __PALETTES_HASH__
+#define PALETTES_HASH          ""
+#else
+#define PALETTES_HASH          __PALETTES_HASH__
+#endif
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
@@ -23,12 +27,14 @@
 #include "bytes/bytes.h"
 #include "c_ansi/ansi-utils/ansi-utils.h"
 #include "c_fsio/include/fsio.h"
+#include "c_fsio/include/fsio.h"
 #include "c_string_buffer/include/stringbuffer.h"
 #include "c_stringfn/include/stringfn.h"
 #include "c_vector/include/vector.h"
 #include "debug-memory/debug_memory.h"
 #include "djbhash/src/djbhash.h"
 #include "libfort/src/fort.h"
+#include "tempdir.c/tempdir.h"
 #include "termpaint.h"
 #include "termpaintx.h"
 #include "timestamp/timestamp.h"
@@ -40,11 +46,21 @@ static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME);
 static char *get_translated_palette_property_name(const char *PALETTE_PROPERTY_NAME);
 static void __kfc_utils_constructor(void) __attribute__((constructor));
 static void __kfc_utils_destructor(void) __attribute__((destructor));
+static char *get_cache_ymd();
 
 /////////////////////////////////////
+static bool                KFC_UTILS_DEBUG_MODE = false;
+static char                *PALETTES_CACHE_FILE = NULL;
 static module(kfc_utils) * KFC;
-static struct djbhash                                                         palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
-static struct djbhash_node                                                    *hash_item;
+static struct djbhash      palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
+static struct djbhash_node *hash_item;
+enum palette_cache_items_t { PALETTES_TABLE,
+                             PALETTES_CACHE_QTY,
+};
+static struct kfc_utils_cache_files_t { char *name; char *path; }             PALETTE_CACHE_FILES[] = {
+  [PALETTES_TABLE] = { .name = "palettes-table-cache", },
+                     { 0 },
+};
 static struct terminal_type_names_t { const char *name, *env_key, *env_val; } terminal_type_names[] = {
   [TERMINAL_TYPE_KITTY]     = { .name = "kitty",     .env_key = "KITTY_PID",        .env_val = NULL,             },
   [TERMINAL_TYPE_ALACRITTY] = { .name = "alacritty", .env_key = "ALACRITTY_SOCKET", .env_val = NULL,             },
@@ -153,6 +169,9 @@ static struct palette_code_t                                                  pa
 } while (0)
 
 static void __attribute__((constructor)) __kfc_utils_constructor(){
+  if (getenv("DEBUG_MODE") != NULL) {
+    KFC_UTILS_DEBUG_MODE = true;
+  }
   djbhash_init(&palette_properties_h);
   djbhash_init(&valid_palette_property_names_h);
   djbhash_init(&invalid_palette_property_names_h);
@@ -165,6 +184,21 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
            __FUNCTION__,
            KFC->get_palettes_qty()
            );
+  }
+  if (strcmp(PALETTES_HASH, "") != 0) {
+    char *ymd = get_cache_ymd();
+    for (size_t i = 0; i < PALETTES_CACHE_QTY; i++) {
+      asprintf(&PALETTE_CACHE_FILES[i].path,
+               "%s%s-%s-%s.txt",
+               gettempdir(),
+               PALETTE_CACHE_FILES[i].name,
+               ymd,
+               PALETTES_HASH
+               );
+      if (KFC_UTILS_DEBUG_MODE == true) {
+        printf("palettes table hash %s|%s\n", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
+      }
+    }
   }
 }
 
@@ -283,6 +317,25 @@ char *get_palette_properties_table(const char *PALETTE_NAME){
 
 
 char *get_palettes_table() {
+  char *cache_file = PALETTE_CACHE_FILES[PALETTES_TABLE].path;
+
+  if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+    if (fsio_file_exists(cache_file)) {
+      size_t cache_file_size = fsio_file_size(cache_file);
+      if (cache_file_size > 0) {
+        char *cache_file_content = fsio_read_text_file(cache_file);
+        if (cache_file_content != NULL) {
+          if (KFC_UTILS_DEBUG_MODE) {
+            fprintf(stderr, "<%d> [%s] returning %s cached table from cache file: %s\n",
+                    getpid(), __FUNCTION__,
+                    bytes_to_string(cache_file_size),
+                    cache_file);
+          }
+          return(cache_file_content);
+        }
+      }
+    }
+  }
   unsigned long started_ts = timestamp();
   ft_table_t    *table     = ft_create_table();
 
@@ -335,7 +388,9 @@ char *get_palettes_table() {
   unsigned long ended_ts = timestamp();
 
   fprintf(stderr, "palettes table dur:%lu\n", ended_ts - started_ts);
-
+  if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+    fsio_write_text_file(cache_file, table_s);
+  }
   return(table_s);
 } /* get_palettes_table */
 
@@ -702,4 +757,19 @@ bool kfc_utils_test_kitty_socket(){
   }
   vector_release(get_kitty_listen_ons);
   return(true);
+}
+
+
+static char *get_cache_ymd(){
+  struct timeval tv;
+  time_t         nowtime;
+  struct tm      *nowtm;
+  char           tmbuf[64], *buf;
+
+  gettimeofday(&tv, NULL);
+  nowtime = tv.tv_sec;
+  nowtm   = localtime(&nowtime);
+  strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d", nowtm);
+  asprintf(&buf, "%s", tmbuf);
+  return(buf);
 }

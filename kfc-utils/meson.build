@@ -4,7 +4,9 @@ kfc_utils_srcs = [
   'kfc-utils.c',
 ]
 kfc_utils_link_flags = []
-kfc_utils_c_args = []
+kfc_utils_c_args = [
+  '-D__PALETTES_HASH__="'+palettes_hash+'"',
+]
 kfc_utils_deps = [
   ansi_codes_dep,
   djbhash_dep,

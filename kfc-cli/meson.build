@@ -8,9 +8,11 @@ kfc_include_dirs = [
   inc,
 ]
 kfc_include_cargs = [
+  '-D__PALETTES_HASH__="'+palettes_hash+'"',
   ]
 kfc_cli_deps = [
   cargs_dep,
+  tempdir_dep,
   kfc_utils_dep,
   bytes_dep,
   debug_memory_dep,

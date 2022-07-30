@@ -103,7 +103,8 @@ dev-all: all
 pull:
 	@git pull
 
-
+palettes-hash:
+	@grep '^INCTXT(' kfc-utils/kfc-utils-palettes.c |cut -d'"' -f2|xargs md5sum|md5sum|cut -d' ' -f1
 dev: nodemon
 nodemon:
 	@$(PASSH) -L .nodemon.log $(NODEMON) -i build \
