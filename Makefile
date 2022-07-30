@@ -71,7 +71,7 @@ write-palette-includes-c:
 
 clean:
 	@rm -rf build
-
+muon: do-build-meson
 do-meson: 
 	@eval cd . && {  meson build || { meson build --reconfigure || { meson build --wipe; } && meson build; }; }
 do-install: all
@@ -110,7 +110,7 @@ nodemon:
 		--delay 1 \
 		-i submodules -w "*/*.c" -w "*/*.h" -w Makefle -w "*/meson.build" \
 		-e c,h,sh,Makefile,build \
-			-x sh -- -c 'passh make||true'
+			-x sh -- -c 'passh make && passh make muon||true'
 meson-introspect-all:
 	@meson introspect --all -i meson.build
 meson-introspect-targets:

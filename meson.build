@@ -11,6 +11,7 @@ inc = [include_directories(
   'submodules/meson_deps',
   'submodules/meson_deps/submodules',
   'submodules/meson_deps/submodules/c_ansi',
+  'submodules/meson_deps/submodules/c_darwin',
 )]
 #############################################################################
 subdir('submodules')

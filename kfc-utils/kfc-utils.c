@@ -1,18 +1,11 @@
 #pragma once
 /////////////////////////////////////
 #include <assert.h>
-#include <assert.h>
-#include <pthread.h>
 #include <stdbool.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string.h>
 #include <termios.h>
-#include <time.h>
-#include <unistd.h>
 #include <unistd.h>
 /////////////////////////////////////
 #define DEBUG_PALETTES          false
@@ -22,40 +15,58 @@
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
-#include "submodules/bench/bench.h"
-#include "submodules/c_ansi/ansi-utils/ansi-utils.h"
-#include "submodules/c_fsio/include/fsio.h"
-#include "submodules/c_string_buffer/include/stringbuffer.h"
-#include "submodules/c_stringfn/include/stringfn.h"
-#include "submodules/c_vector/include/vector.h"
-#include "submodules/meson_deps/submodules/bytes/bytes.h"
-#include "submodules/meson_deps/submodules/c_vector/include/vector.h"
-#include "submodules/meson_deps/submodules/debug-memory/debug_memory.h"
-#include "submodules/meson_deps/submodules/libfort/src/fort.h"
-#include "submodules/timestamp/timestamp.h"
 /////////////////////////////////////
-static module(kfc_utils) * KFC;
+#include "kitty/kitty.h"
+#include "process/process.h"
+/////////////////////////////////////
+#include "bench/bench.h"
+#include "bytes/bytes.h"
+#include "c_ansi/ansi-utils/ansi-utils.h"
+#include "c_fsio/include/fsio.h"
+#include "c_string_buffer/include/stringbuffer.h"
+#include "c_stringfn/include/stringfn.h"
+#include "c_vector/include/vector.h"
+#include "debug-memory/debug_memory.h"
+#include "djbhash/src/djbhash.h"
+#include "libfort/src/fort.h"
+#include "termpaint.h"
+#include "termpaintx.h"
+#include "timestamp/timestamp.h"
+/////////////////////////////////////
 static char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME);
 static char *get_palette_item_sequence(const struct palette_property_t *pp);
 static char *get_palette_name_sequence(const char *PALETTE_NAME);
 static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME);
 static char *get_translated_palette_property_name(const char *PALETTE_PROPERTY_NAME);
+static void __kfc_utils_constructor(void) __attribute__((constructor));
+static void __kfc_utils_destructor(void) __attribute__((destructor));
 
-static struct palette_name_translations_t       palette_name_translations[] = {
-  { .src = "color0", .dst = "color00", },
-  { .src = "color1", .dst = "color01", },
-  { .src = "color2", .dst = "color02", },
-  { .src = "color3", .dst = "color03", },
-  { .src = "color4", .dst = "color04", },
-  { .src = "color5", .dst = "color05", },
-  { .src = "color6", .dst = "color06", },
-  { .src = "color7", .dst = "color07", },
-  { .src = "color8", .dst = "color08", },
-  { .src = "color9", .dst = "color09", },
+/////////////////////////////////////
+static module(kfc_utils) * KFC;
+static struct djbhash                                                         palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
+static struct djbhash_node                                                    *hash_item;
+static struct terminal_type_names_t { const char *name, *env_key, *env_val; } terminal_type_names[] = {
+  [TERMINAL_TYPE_KITTY]     = { .name = "kitty",     .env_key = "KITTY_PID",        .env_val = NULL,             },
+  [TERMINAL_TYPE_ALACRITTY] = { .name = "alacritty", .env_key = "ALACRITTY_SOCKET", .env_val = NULL,             },
+  [TERMINAL_TYPE_ITERM2]    = { .name = "iterm2",    .env_key = "TERM_PROGRAM",     .env_val = "iTerm.app",      },
+  [TERMINAL_TYPE_TERMINAL]  = { .name = "terminal",  .env_key = "TERM_PROGRAM",     .env_val = "Apple_Terminal", },
+                              { 0 },
+};
+static struct palette_name_translations_t                                     palette_name_translations[] = {
+  { .src = "color0",      .dst = "color00", },
+  { .src = "color1",      .dst = "color01", },
+  { .src = "color2",      .dst = "color02", },
+  { .src = "color3",      .dst = "color03", },
+  { .src = "color4",      .dst = "color04", },
+  { .src = "color5",      .dst = "color05", },
+  { .src = "color6",      .dst = "color06", },
+  { .src = "color7",      .dst = "color07", },
+  { .src = "color8",      .dst = "color08", },
+  { .src = "color9",      .dst = "color09", },
+  { .src = "cursorcolor", .dst = "cursor",  },
   { 0 },
 };
-
-static struct palette_code_value_translations_t palette_code_value_translations[] = {
+static struct palette_code_value_translations_t                               palette_code_value_translations[] = {
   { .name = "cursorstyle",   .src = "under",     .dst = "3 q", },
   { .name = "cursorstyle",   .src = "block",     .dst = "1 q", },
   { .name = "cursorstyle",   .src = "bar",       .dst = "5 q", },
@@ -76,7 +87,7 @@ static struct palette_code_value_translations_t palette_code_value_translations[
   { .name = "reset",         .src = "yes",       .dst = "c",   },
   { 0 },
 };
-static struct palette_code_t                    palette_codes[] = {
+static struct palette_code_t                                                  palette_codes[] = {
   { .name = "color00",              .code = "]4;0;#",              },
   { .name = "color01",              .code = "]4;1;#",              },
   { .name = "color02",              .code = "]4;2;#",              },
@@ -93,6 +104,16 @@ static struct palette_code_t                    palette_codes[] = {
   { .name = "color13",              .code = "]4;13;#",             },
   { .name = "color14",              .code = "]4;14;#",             },
   { .name = "color15",              .code = "]4;15;#",             },
+  { .name = "color16",              .code = "]4;16;#",             },
+  { .name = "color17",              .code = "]4;17;#",             },
+  { .name = "color18",              .code = "]4;18;#",             },
+  { .name = "color19",              .code = "]4;19;#",             },
+  { .name = "color20",              .code = "]4;20;#",             },
+  { .name = "color21",              .code = "]4;21;#",             },
+  { .name = "color22",              .code = "]4;22;#",             },
+  { .name = "color23",              .code = "]4;23;#",             },
+  { .name = "color24",              .code = "]4;24;#",             },
+  { .name = "color25",              .code = "]4;25;#",             },
   { .name = "foreground",           .code = "]10;#",               },
   { .name = "background",           .code = "]11;#",               },
   { .name = "selection_background", .code = "]17;#",               },
@@ -113,28 +134,6 @@ static struct palette_code_t                    palette_codes[] = {
   { .name = "reset",                .code = "",                    },
   { 0 },
 };
-
-void __attribute__((constructor)) __kfc_utils_constructor(){
-  KFC       = require(kfc_utils);
-  KFC->mode = KFC_LOG_DEBUG;
-
-  if (KFC_UTILS_DEBUG_MODE == true) {
-    printf("<%d> [%s] palettes qty:%lu\n",
-           getpid(),
-           __FUNCTION__,
-           KFC->get_palettes_qty()
-           );
-  }
-}
-void __attribute__((destructor)) __kfc__utils_destructor(){
-  clib_module_free(KFC);
-#ifdef DEBUG_MEMORY
-  if (KFC->mode >= KFC_LOG_DEBUG) {
-    fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
-  }
-  print_allocated_memory();
-#endif
-}
 #define FREE_PALETTE_PROPERTIES(pp)    do { \
     if (pp) {                               \
       if (pp->name) {                       \
@@ -153,8 +152,36 @@ void __attribute__((destructor)) __kfc__utils_destructor(){
     }                                       \
 } while (0)
 
+static void __attribute__((constructor)) __kfc_utils_constructor(){
+  djbhash_init(&palette_properties_h);
+  djbhash_init(&valid_palette_property_names_h);
+  djbhash_init(&invalid_palette_property_names_h);
+  KFC       = require(kfc_utils);
+  KFC->mode = KFC_LOG_DEBUG;
 
-/////////////////////////////////////////////////////////////////////
+  if (KFC_UTILS_DEBUG_MODE == true) {
+    printf("<%d> [%s] palettes qty:%lu\n",
+           getpid(),
+           __FUNCTION__,
+           KFC->get_palettes_qty()
+           );
+  }
+}
+
+static void __attribute__((destructor)) __kfc__utils_destructor(){
+  clib_module_free(KFC);
+  djbhash_destroy(&invalid_palette_property_names_h);
+  djbhash_destroy(&valid_palette_property_names_h);
+  djbhash_destroy(&palette_properties_h);
+#ifdef DEBUG_MEMORY
+  if (KFC->mode >= KFC_LOG_DEBUG) {
+    fprintf(stderr, "<%d> [%s] Checking for memory leaks\n", getpid(), __FUNCTION__);
+  }
+  print_allocated_memory();
+#endif
+}
+
+
 char *get_palette_properties_table(const char *PALETTE_NAME){
   struct palette_property_t *palette_properties_v = get_palette_name_properties_v(PALETTE_NAME);
   ft_table_t                *table                = ft_create_table();
@@ -307,10 +334,11 @@ char *get_palettes_table() {
   ft_destroy_table(table);
   unsigned long ended_ts = timestamp();
 
-  printf("dur:%lu\n", ended_ts - started_ts);
+  fprintf(stderr, "palettes table dur:%lu\n", ended_ts - started_ts);
+
   return(table_s);
 } /* get_palettes_table */
-/////////////////////////////////////////////////////////////////////
+
 struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME){
   struct Vector        *v = vector_new();
   struct inc_palette_t *p = get_palette_t_by_name(PALETTE_NAME);
@@ -495,19 +523,6 @@ static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME){
 }
 
 
-char *get_palette_item_code(const char *PALETTE_ITEM_NAME){
-  struct palette_code_t *tmp = palette_codes;
-
-  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
-    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0) {
-      return(tmp->code);
-    }
-  }
-
-  return(NULL);
-}
-
-
 static char *get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME){
   struct inc_palette_t   *P                  = get_palette_t_by_name(PALETTE_NAME);
   struct Vector          *palette_properties = get_palette_name_properties_v(PALETTE_NAME);
@@ -539,6 +554,19 @@ static char *get_palette_item_sequence(const struct palette_property_t *pp){
 }
 
 
+char *get_palette_item_code(const char *PALETTE_ITEM_NAME){
+  struct palette_code_t *tmp = palette_codes;
+
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
+    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0) {
+      return(tmp->code);
+    }
+  }
+
+  return(NULL);
+}
+
+
 char *get_palette_name_sequence(const char *PALETTE_NAME){
   struct StringBuffer *sb = stringbuffer_new();
   struct Vector       *pp = get_palette_name_properties_v(PALETTE_NAME);
@@ -559,11 +587,119 @@ char *get_palette_name_sequence(const char *PALETTE_NAME){
 }
 
 
-bool load_palette_name(const char *PALETTE_NAME){
-  char *seq = get_palette_name_sequence(PALETTE_NAME);
-  int  qty  = fprintf(stdout, "%s", seq);
+size_t load_palette_name(const char *PALETTE_NAME){
+  char   *seq = get_palette_name_sequence(PALETTE_NAME);
+  size_t qty  = fprintf(stdout, "%s", seq);
 
   fflush(stdout);
-  return((qty > 0));
+  return(qty);
 } /* load_palette_name */
 
+
+void null_callback(void *ctx, termpaint_event *event) {
+  (void)ctx; (void)event;
+}
+
+
+char *kfc_utils_detect_terminal_type(){
+  if (getenv("ALACRITTY_SOCKET") != NULL) {
+    return("Alacritty");
+  }else if (getenv("ALACRITTY_LOG") != NULL) {
+    return("Alacritty");
+  }else if (getenv("KITTY_PID") != NULL) {
+    return("Kitty");
+  }else if (getenv("TERM_PROGRAM") != NULL) {
+    char *tp = getenv("TERM_PROGRAM");
+    if (strcmp(tp, "Apple_Terminal") == 0) {
+      return("Terminal");
+    }
+  }
+  char                  *t           = "UNKNOWN";
+  termpaint_integration *integration = termpaintx_full_integration("+kbdsigint +kbdsigtstp");
+  if (!integration) {
+    puts("Could not init termpaint");
+    return(NULL);
+  }
+
+  termpaint_terminal *terminal = termpaint_terminal_new(integration);
+  termpaint_terminal_set_log_mask(terminal, TERMPAINT_LOG_AUTO_DETECT_TRACE | TERMPAINT_LOG_TRACE_RAW_INPUT);
+  termpaint_terminal_set_event_cb(terminal, null_callback, NULL);
+  termpaintx_full_integration_set_terminal(integration, terminal);
+  termpaint_terminal_auto_detect(terminal);
+  termpaintx_full_integration_wait_for_ready_with_message(integration, 100,
+                                                          "Terminal auto detection is taking unusually long, press space to abort.");
+  char buff[1000];
+  char *self_reported_name_and_version = NULL;
+  termpaint_terminal_auto_detect_result_text(terminal, buff, sizeof(buff));
+  if (termpaint_terminal_self_reported_name_and_version(terminal)) {
+    t = strdup_escaped(termpaint_terminal_self_reported_name_and_version(terminal));
+  }
+  termpaint_terminal_free_with_restore(terminal);
+  return(t);
+}
+
+struct Vector *get_invalid_palette_property_names(){
+  struct Vector *v = vector_new();
+  struct Vector *p = get_unique_palette_property_names();
+
+  djbhash_reset_iterator(&invalid_palette_property_names_h);
+  djbhash_reset_iterator(&valid_palette_property_names_h);
+  for (size_t i = 0; i < vector_size(p); i++) {
+    char *n = vector_get(p, i);
+    if (is_valid_palette_item_name(n) == false) {
+      djbhash_set(&invalid_palette_property_names_h, n, n, DJBHASH_STRING);
+      vector_push(v, strdup(n));
+    }else{
+      djbhash_set(&valid_palette_property_names_h, n, n, DJBHASH_STRING);
+    }
+    free(n);
+  }
+  return(v);
+}
+
+struct Vector *get_unique_palette_property_names(){
+  struct Vector             *v               = vector_new();
+  struct Vector             *palette_names_v = get_palette_names_v();
+  struct palette_property_t *palette_properties_v;
+
+  djbhash_reset_iterator(&palette_properties_h);
+  for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+    palette_properties_v = get_palette_name_properties_v((char *)vector_get(palette_names_v, i));
+    for (size_t ii = 0; ii < vector_size(palette_properties_v); ii++) {
+      struct palette_property_t *pp = vector_get(palette_properties_v, ii);
+      if ((hash_item = djbhash_find(&palette_properties_h, pp->translated_name)) != NULL) {
+      }else{
+        djbhash_set(&palette_properties_h, pp->translated_name, "", DJBHASH_STRING);
+        vector_push(v, strdup(pp->translated_name));
+      }
+      FREE_PALETTE_PROPERTIES(pp);
+    }
+  }
+  return(v);
+}
+
+
+bool kfc_utils_test_kitty_socket(){
+  struct Vector *kitty_listen_ons = get_kitty_listen_ons();
+
+  for (size_t i = 0; i < vector_size(kitty_listen_ons); i++) {
+    char              *LO  = vector_get(kitty_listen_ons, i);
+    kitty_listen_on_t *KLO = parse_kitten_listen_on(LO);
+    printf("connecting to> %s:%d\n", KLO->host, KLO->port);
+    char              *BACKGROUND_COLOR     = kitty_get_color("background", KLO->host, KLO->port);
+    char              *kitty_query_terminal = kitty_tcp_cmd((const char *)KLO->host, KLO->port, KITTY_QUERY_TERMINAL_CMD);
+    fprintf(stderr,
+            AC_RESETALL AC_BLUE "Listen on #%lu/%lu: %s\n" AC_RESETALL,
+            i + 1, vector_size(kitty_listen_ons),
+            (char *)vector_get(kitty_listen_ons, i)
+            );
+    printf("bg color:%s\n", BACKGROUND_COLOR);
+    printf("query terminal: %s\n", kitty_query_terminal);
+    /*
+     * char *kitty_ls_colors = kitty_tcp_cmd((const char *)KLO->host, KLO->port, __KITTY_GET_COLORS_CMD__);
+     * printf("ls colors: %s\n",kitty_ls_colors);
+     */
+  }
+  vector_release(get_kitty_listen_ons);
+  return(true);
+}

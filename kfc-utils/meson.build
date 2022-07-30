@@ -8,6 +8,9 @@ kfc_utils_c_args = []
 kfc_utils_deps = [
   ansi_codes_dep,
   djbhash_dep,
+  termpaint_dep,
+  process_dep,
+  kitty_dep,
   c_stringfn_dep,
   tiny_regex_c_dep,
   module_dep,

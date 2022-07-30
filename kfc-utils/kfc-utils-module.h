@@ -44,8 +44,8 @@ module(kfc_utils) {
   //////////////////////////////////////////////////////////////////////////////////////
 };
 
-int  kfc_utils_init(module(kfc_utils) * exports);
-void kfc_utils_deinit(module(kfc_utils) * exports);
+int  kfc_utils_module_init(module(kfc_utils) * exports);
+void kfc_utils_module_deinit(module(kfc_utils) * exports);
 
 // Default Module Exports
 exports(kfc_utils) {
@@ -55,8 +55,8 @@ exports(kfc_utils) {
   .palettes_v                   = NULL,
   .palette_names_v              = NULL,
   .mode                         = KFC_LOG_DEFAULT,
-  .init                         = kfc_utils_init,
-  .deinit                       = kfc_utils_deinit,
+  .init                         = kfc_utils_module_init,
+  .deinit                       = kfc_utils_module_deinit,
   .get_palettes_table           = get_palettes_table,
   .random_palette_index         = random_palette_index,
   .get_palette_properties_table = get_palette_properties_table,

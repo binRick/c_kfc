@@ -8,3 +8,4 @@ kfc
 .src
 build
 .nodemon.log
+.bin/

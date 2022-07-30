@@ -12,6 +12,7 @@ kfc_include_cargs = [
 kfc_cli_deps = [
   cargs_dep,
   kfc_utils_dep,
+  bytes_dep,
   debug_memory_dep,
 ]
 if get_option('enable-binaries')

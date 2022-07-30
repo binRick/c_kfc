@@ -9,7 +9,7 @@
 
 
 //////////////////////////////////////
-int kfc_utils_init(module(kfc_utils) *exports) {
+int kfc_utils_module_init(module(kfc_utils) *exports) {
   clib_module_init(kfc_utils, exports);
   exports->mode = KFC_LOG_DEFAULT;
   if (require(kfc_utils)->mode >= KFC_LOG_DEBUG) {
@@ -31,7 +31,7 @@ int kfc_utils_init(module(kfc_utils) *exports) {
 
 
 //////////////////////////////////////
-void kfc_utils_deinit(module(kfc_utils) *exports) {
+void kfc_utils_module_deinit(module(kfc_utils) *exports) {
   if (KFC_MODULE_DEBUG_MODE == true) {
     fprintf(stderr, "<%d> [%s] [mode:%d] <module cleanup>\n",
             getpid(),

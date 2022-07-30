@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/time.h>
 //////////////////////////////////////////
-#pragma once
 #define INCBIN_SILENCE_BITCODE_WARNING
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
@@ -20,14 +19,15 @@
 #define CODE_SUFFIX      ANSI_ESC_CODE "\\"
 #define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
 ///////////////////////////////////////////////////////////////////
-struct palette_name_translations_t {
-  char *src;
-  char *dst;
-};
-struct palette_code_value_translations_t {
-  char *name;
-  char *src;
-  char *dst;
+struct palette_name_translations_t { char *src; char *dst; };
+struct palette_code_value_translations_t { char *name; char *src; char *dst; };
+struct palette_code_t { char *name; char *code; };
+enum terminal_types_t {
+  TERMINAL_TYPE_KITTY,
+  TERMINAL_TYPE_ALACRITTY,
+  TERMINAL_TYPE_ITERM2,
+  TERMINAL_TYPE_TERMINAL,
+  TERMINAL_TYPES_QTY,
 };
 struct palette_property_t {
   char *name;
@@ -47,10 +47,6 @@ struct palette_property_t {
   char *sequence;
   char *escaped_sequence;
 };
-struct palette_code_t {
-  char *name;
-  char *code;
-};
 struct inc_palette_t {
   int        size;
   const char *name;
@@ -59,26 +55,52 @@ struct inc_palette_t {
 };
 ///////////////////////////////////////////////////////////////////
 extern struct inc_palette_t palette_t_list[];
-const size_t                PALETTES_QTY;
+extern const size_t         PALETTES_QTY;
+///////////////////////////////////////////////////////////////////
+///     general utilities
 ///////////////////////////////////////////////////////////////////
 int kfc_utils_module_test(void);
-void __setup_palettes(void) __attribute__((constructor));
 void __debug_palettes(void);
 void __debug_palette_codes(void);
-struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME);
-struct inc_palette_t *get_palette_t_by_index(const size_t INDEX);
+
+///////////////////////////////////////////////////////////////////
+///     table utilities
+///////////////////////////////////////////////////////////////////
+char *get_palettes_table();
+char *get_palette_properties_table(const char *PALETTE_NAME);
+
+///////////////////////////////////////////////////////////////////
+///     palette utilities
+///////////////////////////////////////////////////////////////////
 struct Vector *get_palettes_v();
 struct Vector *get_palette_names_v();
-struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME);
-char *get_palette_properties_table(const char *PALETTE_NAME);
-char *get_palette_item_code(const char *PALETTE_ITEM_NAME);
-char *get_palettes_table();
+struct inc_palette_t *get_palette_t_by_name(const char *PALETTE_NAME);
+struct inc_palette_t *get_palette_t_by_index(const size_t INDEX);
 size_t get_palettes_data_bytes();
-bool load_palette_name(const char *PALETTE_NAME);
+size_t load_palette_name(const char *PALETTE_NAME);
 size_t random_palette_index();
 char *get_palette_name_by_index(const int INDEX);
+
+///////////////////////////////////////////////////////////////////
+///     palette property utilities
+///////////////////////////////////////////////////////////////////
+struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME);
+struct Vector *get_unique_palette_property_names();
+struct Vector *get_unique_palette_property_names();
+struct Vector *get_invalid_palette_property_names();
+char *get_palette_item_code(const char *PALETTE_ITEM_NAME);
 bool palette_item_name_is_translated(const char *ITEM_NAME);
 char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE);
+
+///////////////////////////////////////////////////////////////////
+///     terminal utilities
+///////////////////////////////////////////////////////////////////
+char *kfc_utils_detect_terminal_type();
+
+///////////////////////////////////////////////////////////////////
+///     kitty utilities
+///////////////////////////////////////////////////////////////////
+bool kfc_utils_test_kitty_socket();
 
 ///////////////////////////////////////////////////////////////////
 #define PALETTE    "\
@@ -99,3 +121,4 @@ char *translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE
 \033[48;5;14m  \033[0m\
 \033[48;5;15m  \033[0m\
 \n"
+///////////////////////////////////////////////////////////////////
