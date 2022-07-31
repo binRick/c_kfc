@@ -1,4 +1,7 @@
 #pragma once
+//#define LOGLEVEL    4
+#define LOGLEVEL    2
+//#define LOGLEVEL 2
 #include <ctype.h>
 #include <libproc.h>
 #include <stdarg.h>
@@ -12,6 +15,7 @@
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
 ///////////////////////////////////////////////////////////////////
+#include "djbhash/src/djbhash.h"
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
 #define ANSI_ESC_CODE    "\x1b"
@@ -36,6 +40,13 @@
     }                                       \
 } while (0)
 ///////////////////////////////////////////////////////////////////
+enum kfc_utils_mode {
+  KFC_LOG_NONE,
+  KFC_LOG_INFO,
+  KFC_LOG_ERROR,
+  KFC_LOG_DEBUG,
+  KFC_LOG_QTY,
+};
 struct palette_name_translations_t { char *src; char *dst; };
 struct palette_code_value_translations_t { char *name; char *src; char *dst; };
 struct palette_code_t { char *name; char *code; };
@@ -43,6 +54,13 @@ enum background_brightness_type_t {
   BACKGROUND_BRIGHTNESS_BRIGHT,
   BACKGROUND_BRIGHTNESS_DARK,
   BACKGROUND_BRIGHTNESS_QTY,
+};
+enum ansi_codes_t {
+  ANSI_CODE_ESC,
+  ANSI_CODE_PREFIX,
+  ANSI_CODE_SUFIX,
+  ANSI_CODES_SUFFIX,
+  ANSI_CODES_QTY,
 };
 enum terminal_types_t {
   TERMINAL_TYPE_KITTY,
@@ -69,28 +87,34 @@ struct palette_property_t {
   char *sequence;
   char *escaped_sequence;
 };
+
 struct inc_palette_t {
   int        size;
   const char *name;
   const char *file;
   const char *data;
 };
+enum cache_items_t {
+  CACHE_PALETTES_TABLE,
+  CACHE_ITEMS_QTY,
+};
+struct terminal_type_names_t { const char *name, *env_key, *env_val; };
 ///////////////////////////////////////////////////////////////////
 extern struct inc_palette_t palette_t_list[];
 extern const size_t         PALETTES_QTY;
 ///////////////////////////////////////////////////////////////////
 ///     general utilities
 ///////////////////////////////////////////////////////////////////
-int kfc_utils_module_test(void);
 void __debug_palettes(void);
 void __debug_palette_codes(void);
 char *kfc_utils_get_exec_path(void);
+char *kfc_utils_get_cache_ymd();
 
 ///////////////////////////////////////////////////////////////////
 ///     table utilities
 ///////////////////////////////////////////////////////////////////
-char *get_palettes_table();
-char *get_palette_properties_table(const char *PALETTE_NAME);
+char *kfc_utils_get_palettes_table();
+char *kfc_utils_get_palette_properties_table(const char *PALETTE_NAME);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette utilities
@@ -112,12 +136,12 @@ char *get_palette_name_sequence(const char *PALETTE_NAME);
 char *get_palette_name_data(const char *PALETTE_NAME);
 char *get_ansi_reset_sequence();
 char *get_palette_history();
+size_t kfc_utils_get_random_palette_index(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities
 ///////////////////////////////////////////////////////////////////
 struct Vector *get_palette_name_properties_v(const char *PALETTE_NAME);
-struct Vector *get_unique_palette_property_names();
 struct Vector *get_unique_palette_property_names();
 struct Vector *get_invalid_palette_property_names();
 struct Vector *get_palette_names_by_brightness_type(int BACKGROUND_BRIGHTNESS_TYPE, float BRIGHTNESS_THRESHOLD);

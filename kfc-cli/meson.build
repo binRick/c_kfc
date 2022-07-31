@@ -1,6 +1,7 @@
 kfc_cli_srcs = [
   'kfc-cli.c',
-  'kfc-cli.h',
+  'kfc-cli-options.c',
+  'kfc-cli-exports.c',
 ]
 kfc_include_dirs = [
   '.',

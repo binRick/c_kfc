@@ -1,8 +1,8 @@
 kfc_utils_srcs = [
+  'kfc-utils.c',
   'kfc-utils-palettes.c',
   'kfc-utils-module.c',
   'kfc-utils-data.c',
-  'kfc-utils.c',
 ]
 kfc_utils_link_flags = []
 kfc_utils_c_args = [
@@ -18,12 +18,12 @@ kfc_utils_deps = [
   tiny_regex_c_dep,
   b64_dep,
   str_truncate_dep,
+  cansid_dep,
   module_dep,
   c_string_buffer_dep,
   fort_dep,
   c_vector_dep,
   ansi_utils_dep,
-  debug_memory_dep,
   which_dep,
   strdup_dep,
   parson_dep,
@@ -32,6 +32,7 @@ kfc_utils_deps = [
   ansi_rgb_utils_dep,  
   hsluv_c_dep,  
   string_utils_dep,
+  tempdir_dep,
   bytes_dep,
   dbg_dep,
   bench_dep,
