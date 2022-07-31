@@ -110,7 +110,10 @@ dev: nodemon
 nodemon:
 	@$(PASSH) -L .nodemon.log $(NODEMON) -i build \
 		--delay 1 \
-		-i submodules -w "*/*.c" -w "*/*.h" -w Makefle -w "*/meson.build" \
+		-w submodules/meson_deps/exec-fzf/exec-fzf.c \
+		-w submodules/meson_deps/exec-fzf/exec-fzf.h \
+		-w meson.build \
+		-w "*/*.c" -w "*/*.h" -w Makefle -w "*/meson.build" \
 		-e c,h,sh,Makefile,build \
 			-x sh -- -c 'passh make||true'
 meson-introspect-all:

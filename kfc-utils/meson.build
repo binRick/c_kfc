@@ -17,6 +17,7 @@ kfc_utils_deps = [
   c_stringfn_dep,
   tiny_regex_c_dep,
   b64_dep,
+  str_truncate_dep,
   module_dep,
   c_string_buffer_dep,
   fort_dep,

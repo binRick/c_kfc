@@ -53,10 +53,22 @@ static int kfc_cli_select_palettes(void);
 static int kfc_cli_select_apply_palette(void);
 static int kfc_cli_select_palette(void);
 static int kfc_cli_color_report(void);
+static int kfc_cli_print_escaped_sequence(void);
+static int kfc_cli_print_palette_data(void);
+static int kfc_cli_reset_terminal(void);
+static int kfc_cli_print_palette_history(void);
 
 const char               *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
 ////////////////////////////////////////////
 static struct cag_option options[] = {
+  { .identifier  = 'G', .access_letters = "G",
+    .access_name = "print-palette-history", .value_name = NULL, .description = "Print Palette History" },
+  { .identifier  = 'Q', .access_letters = "Q",
+    .access_name = "reset-terminal", .value_name = NULL, .description = "Reset Terminal State" },
+  { .identifier  = 'e', .access_letters = "e",
+    .access_name = "print-palette-data", .value_name = NULL, .description = "Print Palettte Data" },
+  { .identifier  = 'E', .access_letters = "E",
+    .access_name = "escaped-sequence", .value_name = NULL, .description = "Escaped Sequence" },
   { .identifier  = 'R', .access_letters = "R",
     .access_name = "color-report", .value_name = NULL, .description = "Color Report" },
   { .identifier  = 'A', .access_letters = "A",
@@ -128,6 +140,10 @@ static struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_SELECT_APPLY_PALETTE]             = { .handler = kfc_cli_select_apply_palette,             },
   [KFC_CLI_MODE_SELECT_PALETTES]                  = { .handler = kfc_cli_select_palettes,                  },
   [KFC_CLI_MODE_COLOR_REPORT]                     = { .handler = kfc_cli_color_report,                     },
+  [KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE]   = { .handler = kfc_cli_print_escaped_sequence,           },
+  [KFC_CLI_MODE_PRINT_PALETTE_DATA]               = { .handler = kfc_cli_print_palette_data,               },
+  [KFC_CLI_MODE_RESET_TERMINAL]                   = { .handler = kfc_cli_reset_terminal,                   },
+  [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]            = { .handler = kfc_cli_print_palette_history,            },
 };
 static struct ctx_t {
   char            *palette_name, *random_palette_name, *palette_property, *palette_value;
@@ -207,6 +223,10 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
+    case 'G': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_HISTORY; break;
+    case 'Q': ctx.mode                = KFC_CLI_MODE_RESET_TERMINAL; break;
+    case 'e': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_DATA; break;
+    case 'E': ctx.mode                = KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE; break;
     case 'R': ctx.mode                = KFC_CLI_MODE_COLOR_REPORT; break;
     case 'C': ctx.mode                = KFC_CLI_MODE_TEST_COLORS; break;
     case 'K': ctx.mode                = KFC_CLI_MODE_TEST_KITTY_SOCKET; break;
@@ -337,9 +357,9 @@ static int kfc_cli_detect_terminal_type(void){
 
 
 static int kfc_cli_test_kitty_socket(void){
-  log_debug("Testing kitty socket");
+  fprintf(stdout, "Testing kitty socket\n");
   bool ok = kfc_utils_test_kitty_socket();
-  log_debug("ok:%d", ok);
+  fprintf(stdout, "ok:%d\n", ok);
   return(EXIT_SUCCESS);
 }
 
@@ -536,4 +556,34 @@ static int kfc_cli_color_report(void){
   return(EXIT_SUCCESS);
 }
 
+
+static int kfc_cli_print_escaped_sequence(void){
+  char *s     = get_palette_name_sequence(ctx.palette_name);
+  char *s_esc = strdup_escaped(s);
+
+  fprintf(stdout, "%s\n", s_esc);
+  return(EXIT_SUCCESS);
+}
+
+
+static int kfc_cli_print_palette_data(void){
+  char *pd = get_palette_name_data(ctx.palette_name);
+
+  if (pd != NULL) {
+    fprintf(stdout, "%s\n", pd);
+  }
+}
+
+
+static int kfc_cli_reset_terminal(void){
+  fprintf(stdout, "%s", get_ansi_reset_sequence());
+  fflush(stdout);
+  return(EXIT_SUCCESS);
+}
+
+
+static int kfc_cli_print_palette_history(void){
+  fprintf(stdout, "%s\n", stringfn_mut_trim(get_palette_history()));
+  return(EXIT_SUCCESS);
+}
 #undef KFC

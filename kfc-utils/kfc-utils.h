@@ -84,6 +84,7 @@ extern const size_t         PALETTES_QTY;
 int kfc_utils_module_test(void);
 void __debug_palettes(void);
 void __debug_palette_codes(void);
+char *kfc_utils_get_exec_path(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     table utilities
@@ -107,6 +108,10 @@ struct Vector *kfc_utils_select_palettes(void);
 char *kfc_utils_select_palette(void);
 char *kfc_utils_select_apply_palette(void);
 int kfc_utils_color_report(void);
+char *get_palette_name_sequence(const char *PALETTE_NAME);
+char *get_palette_name_data(const char *PALETTE_NAME);
+char *get_ansi_reset_sequence();
+char *get_palette_history();
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities
