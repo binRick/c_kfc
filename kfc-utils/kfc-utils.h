@@ -105,6 +105,8 @@ size_t random_palette_index();
 char *get_palette_name_by_index(const int INDEX);
 struct Vector *kfc_utils_select_palettes(void);
 char *kfc_utils_select_palette(void);
+char *kfc_utils_select_apply_palette(void);
+int kfc_utils_color_report(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities

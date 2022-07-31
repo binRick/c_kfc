@@ -6,6 +6,7 @@
 ////////////////////////////////////////////
 #include <dirent.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +21,7 @@
 #define IS_DEBUG_MODE    (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
 ////////////////////////////////////////////
 #include "bytes/bytes.h"
+#include "c_stringfn/include/stringfn.h"
 #include "cargs/include/cargs.h"
 #include "exec-fzf/exec-fzf.h"
 #include "hsluv-c/src/hsluv.h"
@@ -27,6 +29,7 @@
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 #include "log.h/log.h"
+#include "process/process.h"
 #include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
 ////////////////////////////////////////////
@@ -47,10 +50,17 @@ static int kfc_cli_test_colors(void);
 static int kfc_cli_bright_backgrounds(void);
 static int kfc_cli_dark_backgrounds(void);
 static int kfc_cli_select_palettes(void);
+static int kfc_cli_select_apply_palette(void);
 static int kfc_cli_select_palette(void);
+static int kfc_cli_color_report(void);
 
+const char               *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
 ////////////////////////////////////////////
 static struct cag_option options[] = {
+  { .identifier  = 'R', .access_letters = "R",
+    .access_name = "color-report", .value_name = NULL, .description = "Color Report" },
+  { .identifier  = 'A', .access_letters = "A",
+    .access_name = "select-apply-palette", .value_name = NULL, .description = "Select & Apply Palettes" },
   { .identifier  = 'S', .access_letters = "S",
     .access_name = "select-palettes", .value_name = NULL, .description = "Select Palettes" },
   { .identifier  = 's', .access_letters = "s",
@@ -115,7 +125,9 @@ static struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]               = { .handler = kfc_cli_bright_backgrounds,               },
   [KFC_CLI_MODE_DARK_BACKGROUNDS]                 = { .handler = kfc_cli_dark_backgrounds,                 },
   [KFC_CLI_MODE_SELECT_PALETTE]                   = { .handler = kfc_cli_select_palette,                   },
+  [KFC_CLI_MODE_SELECT_APPLY_PALETTE]             = { .handler = kfc_cli_select_apply_palette,             },
   [KFC_CLI_MODE_SELECT_PALETTES]                  = { .handler = kfc_cli_select_palettes,                  },
+  [KFC_CLI_MODE_COLOR_REPORT]                     = { .handler = kfc_cli_color_report,                     },
 };
 static struct ctx_t {
   char            *palette_name, *random_palette_name, *palette_property, *palette_value;
@@ -195,12 +207,14 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
+    case 'R': ctx.mode                = KFC_CLI_MODE_COLOR_REPORT; break;
     case 'C': ctx.mode                = KFC_CLI_MODE_TEST_COLORS; break;
     case 'K': ctx.mode                = KFC_CLI_MODE_TEST_KITTY_SOCKET; break;
     case 'b': ctx.mode                = KFC_CLI_MODE_BRIGHT_BACKGROUNDS; break;
     case 'k': ctx.mode                = KFC_CLI_MODE_DARK_BACKGROUNDS; break;
     case 's': ctx.mode                = KFC_CLI_MODE_SELECT_PALETTE; break;
     case 'S': ctx.mode                = KFC_CLI_MODE_SELECT_PALETTES; break;
+    case 'A': ctx.mode                = KFC_CLI_MODE_SELECT_APPLY_PALETTE; break;
     case 'B': ctx.max_brightness      = atof(cag_option_get_value(&context)); break;
     case 'L': ctx.mode                = KFC_CLI_MODE_LOAD_PALETTE; break;
     case 'P': ctx.palette_property    = cag_option_get_value(&context); break;
@@ -227,7 +241,7 @@ static int parse_args(int argc, char *argv[]){
   }
   KFC->mode = (ctx.debug_mode == true) ? KFC_LOG_DEBUG : KFC->mode;
   return(EXIT_SUCCESS);
-}
+} /* parse_args */
 
 
 static int kfc_cli_print_usage(void){
@@ -330,6 +344,85 @@ static int kfc_cli_test_kitty_socket(void){
 }
 
 
+char *get_cwd(){
+  char *buf = malloc(PATH_MAX);
+
+  if (NULL == getcwd(buf, PATH_MAX)) {
+    perror("getcwd error");
+    return(NULL);
+  }
+  char *buf1 = malloc(PATH_MAX);
+
+  if (NULL == realpath(buf, buf1)) {
+    perror("realpath error");
+    return(NULL);
+  }
+  return(buf1);
+}
+
+
+char *exec_file(const char *argv0){
+  if (fsio_file_exists(argv0)) {
+    return(argv0);
+  }
+
+  char                   *p = getenv("PATH");
+  log_info("exec_path p: %s", p);
+  struct StringFNStrings paths = stringfn_split(p, ':');
+  for (size_t i = 0; i < paths.count; i++) {
+    log_info("%s", paths.strings[i]);
+    char *_e;
+    asprintf(&_e, "%s/%s", paths.strings[i], argv0);
+    if (fsio_file_exists(_e)) {
+      log_info("found: %s", _e);
+    }
+  }
+
+  return(NULL);
+}
+
+
+char *exec_path(const char *argv0){
+  char *ef = exec_file(argv0);
+
+  if (ef[0] == '/') {
+    return(ef);
+  }
+
+  char *ep;
+  char *cwd = get_cwd();
+
+  asprintf(&ep, "%s/%s", cwd, ef);
+
+//    if(!fsio_file_exists(buf))
+//        return NULL;
+
+  return(ep);
+}
+
+
+char * app_path(char *path, const char *argv0){
+  char buf[PATH_MAX];
+  char *pos;
+
+  if (argv0[0] == '/') { // run with absolute path
+    strcpy(buf, argv0);
+  } else {               // run with relative path
+    if (NULL == getcwd(buf, PATH_MAX)) {
+      perror("getcwd error");
+      return(NULL);
+    }
+    strcat(buf, "/");
+    strcat(buf, argv0);
+  }
+  if (NULL == realpath(buf, path)) {
+    perror("realpath error");
+    return(NULL);
+  }
+  return(path);
+}
+
+
 int main(int argc, char **argv) {
   parse_args(argc, argv);
   if (ctx.mode < KFC_CLI_MODES_QTY) {
@@ -400,10 +493,14 @@ static int kfc_cli_select_palette(void){
   char *palette_name = kfc_utils_select_palette();
 
   if (palette_name != NULL) {
-    log_info("Selected Palette %s", palette_name);
+//    fprintf(stdout, "\ec");
+    load_palette_name(palette_name);
+    fflush(stdout);
+    fprintf(stdout, "%s\n", palette_name);
   }else{
-    log_info("Selected no Palette");
+    fprintf(stdout, "Selected no Palette\n");
   }
+  return(EXIT_SUCCESS);
 }
 
 
@@ -414,5 +511,29 @@ static int kfc_cli_select_palettes(void){
   for (size_t i = 0; i < vector_size(selected_palettes); i++) {
     log_info(" - %s", (char *)vector_get(selected_palettes, i));
   }
+  return(EXIT_SUCCESS);
 }
+
+
+static int kfc_cli_select_apply_palette(void){
+  char *palette_name = kfc_utils_select_apply_palette();
+
+  if (palette_name != NULL) {
+//    fprintf(stdout, "\ec");
+    load_palette_name(palette_name);
+    fflush(stdout);
+    fprintf(stdout, "%s\n", palette_name);
+  }else{
+    fprintf(stdout, "Selected no Palette\n");
+  }
+
+  return(EXIT_SUCCESS);
+}
+
+
+static int kfc_cli_color_report(void){
+  kfc_utils_color_report();
+  return(EXIT_SUCCESS);
+}
+
 #undef KFC

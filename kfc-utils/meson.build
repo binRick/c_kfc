@@ -1,6 +1,7 @@
 kfc_utils_srcs = [
   'kfc-utils-palettes.c',
   'kfc-utils-module.c',
+  'kfc-utils-data.c',
   'kfc-utils.c',
 ]
 kfc_utils_link_flags = []
@@ -15,6 +16,7 @@ kfc_utils_deps = [
   kitty_dep,
   c_stringfn_dep,
   tiny_regex_c_dep,
+  b64_dep,
   module_dep,
   c_string_buffer_dep,
   fort_dep,

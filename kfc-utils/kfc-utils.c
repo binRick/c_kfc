@@ -17,6 +17,7 @@
 #define PALETTES_HASH          __PALETTES_HASH__
 #endif
 /////////////////////////////////////
+#include "kfc-utils/kfc-utils-data.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 /////////////////////////////////////
@@ -37,10 +38,12 @@
 #include "hsluv-c/src/hsluv.h"
 #include "libfort/src/fort.h"
 #include "rgba/src/rgba.h"
+#include "submodules/b64.c/b64.h"
 #include "tempdir.c/tempdir.h"
 #include "termpaint.h"
 #include "termpaintx.h"
 #include "timestamp/timestamp.h"
+#include "which/src/which.h"
 /////////////////////////////////////
 static char *get_palette_item_sequence(const struct palette_property_t *pp);
 static char *get_palette_name_sequence(const char *PALETTE_NAME);
@@ -56,6 +59,7 @@ static char                *PALETTES_CACHE_FILE = NULL;
 static module(kfc_utils) * KFC;
 static struct djbhash      palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
 static struct djbhash_node *hash_item;
+extern const char          *EXECUTABLE_ABSOLUTE;
 enum palette_cache_items_t { PALETTES_TABLE,
                              PALETTES_CACHE_QTY,
 };
@@ -157,6 +161,8 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   if (getenv("DEBUG_MODE") != NULL) {
     KFC_UTILS_DEBUG_MODE = true;
   }
+
+
   djbhash_init(&palette_properties_h);
   djbhash_init(&valid_palette_property_names_h);
   djbhash_init(&invalid_palette_property_names_h);
@@ -842,59 +848,147 @@ static char *get_cache_ymd(){
 }
 
 
+void kfc_utils_setup_fzf_exec(struct fzf_exec_t *fe){
+  char *env_path = (char *)which_path("env", getenv("PATH"));
+
+  if (fsio_file_exists(env_path)) {
+    char pathbuf[PATH_MAX];
+    int  ret1 = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
+    if (fsio_file_size(pathbuf)) {
+      asprintf(&fe->preview_cmd, "%s -i '%s' -T -p {}",
+               env_path,
+               pathbuf
+               );
+    }
+    fe->preview_type = "bottom";
+    fe->preview_size = 80;
+  }
+  fe->debug_mode      = false;
+  fe->select_multiple = false;
+  fe->height          = 100;
+}
+
+
+char *kfc_utils_select_apply_palette(void){
+  char              *selected_palette = NULL;
+  struct Vector     *v                = vector_new();
+  struct Vector     *palette_names_v  = get_palette_names_v();
+  struct fzf_exec_t *fe               = exec_fzf_setup();
+
+  assert(fe != NULL);
+  {
+    kfc_utils_setup_fzf_exec(fe);
+    char *env_path = (char *)which_path("env", getenv("PATH"));
+    if (fsio_file_exists(env_path)) {
+      char pathbuf[PATH_MAX];
+      int  ret1 = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
+      if (fsio_file_size(pathbuf)) {
+        if (false) {
+          asprintf(&fe->preview_cmd, "'%s' -i '%s' -p {} >/dev/tty 2>/dev/null",
+                   env_path,
+                   pathbuf
+                   );
+        }
+        if (false) {
+          asprintf(&fe->preview_cmd, "echo '%s' -i '%s' -p {}",
+                   env_path,
+                   pathbuf
+                   );
+        }
+        if (false) {
+          asprintf(&fe->preview_cmd, "'%s' -i '%s' -p {}",
+                   env_path,
+                   pathbuf
+                   );
+        }
+        if (true) {
+          asprintf(&fe->preview_cmd, "'%s' -i '%s' -p '{}' >/dev/tty 2>/dev/null",
+                   env_path,
+                   pathbuf
+                   );
+        }
+      }
+      fe->preview_type = "bottom";
+      fe->preview_size = 0;
+      fe->height       = 50;
+      fe->debug_mode   = false;
+    }
+    fe->header          = "Select Palette";
+    fe->select_multiple = false;
+    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+      vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
+    }
+  }
+  kfc_utils_color_report();
+  fprintf(stdout, "%s", AC_HIDE_CURSOR);
+  int res = exec_fzf(fe);
+
+  assert(res == 0);
+  if (vector_size(fe->selected_options) == 1) {
+    selected_palette = (char *)vector_get(fe->selected_options, 0);
+  }
+  exec_fzf_release(fe);
+  fprintf(stdout, "%s", AC_SHOW_CURSOR);
+  return(selected_palette);
+} /* kfc_utils_select_apply_palette */
+
+
 char *kfc_utils_select_palette(void){
   char              *selected_palette = NULL;
   struct Vector     *v                = vector_new();
   struct Vector     *palette_names_v  = get_palette_names_v();
-  struct fzf_exec_t *fzf_exec         = setup_fzf_exec();
+  struct fzf_exec_t *fe               = exec_fzf_setup();
 
-  assert(fzf_exec != NULL);
+  assert(fe != NULL);
   {
-    fzf_exec->debug_mode      = false;
-    fzf_exec->header          = "Select Palette";
-    fzf_exec->select_multiple = false;
-    fzf_exec->height          = 30;
+    kfc_utils_setup_fzf_exec(fe);
+    fe->header          = "Select Palette";
+    fe->select_multiple = false;
     for (size_t i = 0; i < vector_size(palette_names_v); i++) {
-      vector_push(fzf_exec->input_options, (char *)vector_get(palette_names_v, i));
+      vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
     }
   }
 
-  int res = execute_fzf_process(fzf_exec);
+  int res = exec_fzf(fe);
 
   assert(res == 0);
-  if (vector_size(fzf_exec->selected_options) == 1) {
-    selected_palette = (char *)vector_get(fzf_exec->selected_options, 0);
+  if (vector_size(fe->selected_options) == 1) {
+    selected_palette = (char *)vector_get(fe->selected_options, 0);
   }
-  release_fzf_exec(fzf_exec);
+  exec_fzf_release(fe);
   return(selected_palette);
 }
 
 struct Vector *kfc_utils_select_palettes(void){
   struct Vector     *v               = vector_new();
   struct Vector     *palette_names_v = get_palette_names_v();
-  struct fzf_exec_t *fzf_exec        = setup_fzf_exec();
+  struct fzf_exec_t *fe              = exec_fzf_setup();
 
-  assert(fzf_exec != NULL);
+  assert(fe != NULL);
   {
-    fzf_exec->debug_mode      = false;
-    fzf_exec->header          = "Select Palettes";
-    fzf_exec->select_multiple = true;
-    fzf_exec->height          = 30;
+    kfc_utils_setup_fzf_exec(fe);
+    fe->header          = "Select Palettes";
+    fe->select_multiple = true;
     for (size_t i = 0; i < vector_size(palette_names_v); i++) {
-      vector_push(fzf_exec->input_options, (char *)vector_get(palette_names_v, i));
+      vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
     }
   }
 
-  int res = execute_fzf_process(fzf_exec);
+  int res = exec_fzf(fe);
 
   assert(res == 0);
 
-//  log_info("Selected %lu/%lu options", vector_size(fzf_exec->selected_options), vector_size(fzf_exec->input_options));
-  for (size_t i = 0; i < vector_size(fzf_exec->selected_options); i++) {
-    //  log_info(" - %s", (char*)vector_get(fzf_exec->selected_options,i));
-    vector_push(v, (char *)vector_get(fzf_exec->selected_options, i));
+  for (size_t i = 0; i < vector_size(fe->selected_options); i++) {
+    vector_push(v, (char *)vector_get(fe->selected_options, i));
   }
-  release_fzf_exec(fzf_exec);
+  exec_fzf_release(fe);
   return(v);
 }
 
+
+int kfc_utils_color_report(void){
+  fprintf(stdout, "\ec%s",
+          b64_decode(COLOR_REPORT_B64, strlen(COLOR_REPORT_B64))
+          );
+  return(EXIT_SUCCESS);
+}
