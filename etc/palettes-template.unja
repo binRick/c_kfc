@@ -1,14 +1,14 @@
 #pragma once
 #include "kfc-utils.h"
 
-const size_t PALETTES_QTY = {{ palettes_qty }};
+const size_t PALETTES_QTY = {{ items | length }};
 
 {% for l in items -%}
-INCTXT({{l.data_name}}, "{{l.dir}}/{{l.name}}");
+INCTXT({{l.name|replace('-','_')}}, "{{l.dir}}/{{l.file}}");
 {% endfor %}
 
-struct inc_palette_t palette_t_list[{{palettes_qty}}] = {{lb}}
+struct inc_palette_t palette_t_list[{{ items | length }}] = {
   {%- for l in items %}
-    {{ lb }} .name = "{{l.name}}", .size = {{l.size}}, .file = "{{l.dir}}/{{l.name}}", .data = {{data_prefix}}{{l.data_name}}{{data_suffix}}, {{ rb }},{% endfor %}
-    {{lb}} 0 {{rb}},
-{{rb}};
+    { .name = "{{l.name}}", .size = {{l.size}}, .file = "{{l.file}}", .data = inc_palette_{{l.name|replace('-','_')}}_data, },{% endfor %}
+    { 0 },
+};

@@ -1607,7 +1607,6 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
 
   for (size_t i = 0; i < vector_size(__template_palettes_v) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
     struct palette_template_item_t *t = vector_get(__template_palettes_v, i);
-    //template_info(t);
     JSON_Value                     *item0_v = json_value_init_object();
     JSON_Object                    *item0   = json_value_get_object(item0_v);
     json_object_set_string(item0, "name", t->name);
