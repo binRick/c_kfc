@@ -1,7 +1,7 @@
 #define DEBUG_MODE         false
 #define KFC_CLI_VERSION    "0.0.1"
 #ifndef DEBUG_MEMORY
-#define DEBUG_MEMORY
+//#define DEBUG_MEMORY
 #endif
 ////////////////////////////////////////////
 #include <dirent.h>
@@ -16,9 +16,10 @@
 #include <unistd.h>
 ////////////////////////////////////////////
 #ifdef DEBUG_MEMORY
-#include "debug-memory/debug_memory.h"
+//#include "debug-memory/debug_memory.h"
 #endif
-#define IS_DEBUG_MODE    (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
+#define IS_DEBUG_MODE          (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
+#define MAX_BRIGHTNESS_DESC    "Brightness Threshold (0.00 - 100) (Default: " DEFAULT_MAX_BRIGHTNESS ")"
 ////////////////////////////////////////////
 #include "bytes/bytes.h"
 #include "c_stringfn/include/stringfn.h"
@@ -51,16 +52,20 @@ static int kfc_cli_bright_backgrounds(void);
 static int kfc_cli_dark_backgrounds(void);
 static int kfc_cli_select_palettes(void);
 static int kfc_cli_select_apply_palette(void);
-static int kfc_cli_select_palette(void);
+static int kfc_cli_select_palette(void *);
 static int kfc_cli_color_report(void);
 static int kfc_cli_print_escaped_sequence(void);
 static int kfc_cli_print_palette_data(void);
 static int kfc_cli_reset_terminal(void);
 static int kfc_cli_print_palette_history(void);
+static int kfc_cli_render_unja_template(void);
 
-const char               *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
+const char *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
 ////////////////////////////////////////////
+
 static struct cag_option options[] = {
+  { .identifier  = 'u', .access_letters = "u",
+    .access_name = "render-unja-template", .value_name = NULL, .description = "Render Unja Template" },
   { .identifier  = 'G', .access_letters = "G",
     .access_name = "print-palette-history", .value_name = NULL, .description = "Print Palette History" },
   { .identifier  = 'Q', .access_letters = "Q",
@@ -68,21 +73,24 @@ static struct cag_option options[] = {
   { .identifier  = 'e', .access_letters = "e",
     .access_name = "print-palette-data", .value_name = NULL, .description = "Print Palettte Data" },
   { .identifier  = 'E', .access_letters = "E",
-    .access_name = "escaped-sequence", .value_name = NULL, .description = "Escaped Sequence" },
+    .access_name = "print-palette-sequence", .value_name = NULL,
+    .description = AC_RESETALL AC_YELLOW "Print Palette Escaped Sequence" AC_RESETALL },
   { .identifier  = 'R', .access_letters = "R",
-    .access_name = "color-report", .value_name = NULL, .description = "Color Report" },
+    .access_name = "print-color-demo", .value_name = NULL, .description = "Print Color Demo" },
   { .identifier  = 'A', .access_letters = "A",
-    .access_name = "select-apply-palette", .value_name = NULL, .description = "Select & Apply Palettes" },
+    .access_name = "select-apply-palette", .value_name = NULL,
+    .description = "Select & Apply Palettes" },
   { .identifier  = 'S', .access_letters = "S",
     .access_name = "select-palettes", .value_name = NULL, .description = "Select Palettes" },
   { .identifier  = 's', .access_letters = "s",
     .access_name = "select-palette", .value_name = NULL, .description = "Select Palette" },
   { .identifier  = 'k', .access_letters = "k",
-    .access_name = "dark-backgrounds", .value_name = NULL, .description = "Dark Backgrounds" },
+    .access_name = "dark-backgrounds", .value_name = NULL, .description = "Print Dark Background Palettes" },
   { .identifier  = 'b', .access_letters = "b",
-    .access_name = "bright-backgrounds", .value_name = NULL, .description = "Bright Backgrounds" },
+    .access_name = "bright-backgrounds", .value_name = NULL, .description = "Print Bright Background Palettes" },
   { .identifier  = 'B', .access_letters = "B",
-    .access_name = "max-brightness", .value_name = "MAX_BRIGHTNESS", .description = "Max Brightness (0.00 - 100)" },
+    .access_name = "max-brightness", .value_name = "MAX_BRIGHTNESS",
+    .description = MAX_BRIGHTNESS_DESC, },
   { .identifier  = 'C', .access_letters = "C",
     .access_name = "test-colors", .value_name = NULL, .description = "Test Colors" },
   { .identifier  = 'K', .access_letters = "K",
@@ -120,8 +128,8 @@ static struct cag_option options[] = {
     .access_name = "help", .description = "Shows the command help" }
 };
 static struct kfc_mode_handlers_t {
-  int (*handler)(void);
-} kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
+  int (*handler)(void *);
+}                   kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_LIST_PALETTES]                    = { .handler = kfc_cli_list_palettes,                    },
   [KFC_CLI_MODE_LOAD_PALETTE]                     = { .handler = kfc_cli_load_palette,                     },
   [KFC_CLI_MODE_PRINT_PALETTES_TABLE]             = { .handler = kfc_cli_print_palettes_table,             },
@@ -144,27 +152,22 @@ static struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_PRINT_PALETTE_DATA]               = { .handler = kfc_cli_print_palette_data,               },
   [KFC_CLI_MODE_RESET_TERMINAL]                   = { .handler = kfc_cli_reset_terminal,                   },
   [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]            = { .handler = kfc_cli_print_palette_history,            },
+  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_unja_template,             },
 };
-static struct ctx_t {
-  char            *palette_name, *random_palette_name, *palette_property, *palette_value;
-  size_t          random_palette_index;
-  bool            debug_mode;
-  float           max_brightness;
-  enum kfc_mode_t mode;
-  module(kfc_utils) * kfc_utils;
-} ctx = {
+static struct ctx_t ctx = {
   .palette_name         = NULL,
   .debug_mode           = false,
   .random_palette_index = 1,
   .palette_property     = NULL,
-  .max_brightness       = DEFAULT_MAX_BRIGHTNESS,
+  .max_brightness       = 0.00,
   .palette_value        = NULL,
   .kfc_utils            = NULL,
   .mode                 = KFC_CLI_MODE_LOAD_PALETTE,
 };
 void __attribute__((constructor)) __kfc_cli_constructor(){
-  KFC       = require(kfc_utils);
-  KFC->mode = (ctx.debug_mode == true || (getenv("DEBUG_MODE") != NULL)) ? KFC_LOG_DEBUG : KFC_LOG_ERROR;
+  ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
+  KFC                = require(kfc_utils);
+  KFC->mode          = (ctx.debug_mode == true || (getenv("DEBUG_MODE") != NULL)) ? KFC_LOG_DEBUG : KFC_LOG_ERROR;
   if (KFC->mode >= KFC_LOG_DEBUG) {
     log_info("palettes vector qty:%lu", KFC->get_palettes_qty());
   }
@@ -176,7 +179,7 @@ void __attribute__((destructor)) __kfc_cli_destructor(){
   if (IS_DEBUG_MODE) {
     log_info("<%d> [%s] Checking for memory leaks", getpid(), __FUNCTION__);
   }
-  print_allocated_memory();
+//  print_allocated_memory();
   if (IS_DEBUG_MODE) {
     log_info("<%d> [%s] OK", getpid(), __FUNCTION__);
   }
@@ -223,6 +226,7 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
+    case 'u': ctx.mode                = KFC_CLI_MODE_RENDER_UNJA_TEMPLATE; break;
     case 'G': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_HISTORY; break;
     case 'Q': ctx.mode                = KFC_CLI_MODE_RESET_TERMINAL; break;
     case 'e': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_DATA; break;
@@ -449,7 +453,7 @@ int main(int argc, char **argv) {
     if (ctx.debug_mode == true) {
       log_debug("Loading mode #%d", ctx.mode);
     }
-    return(kfc_mode_handlers[ctx.mode].handler());
+    return(kfc_mode_handlers[ctx.mode].handler((void *)&ctx));
   }
   log_error("Unknown mode #%d", ctx.mode);
   return(1);
@@ -467,9 +471,11 @@ static int kfc_cli_test_colors(void){
     struct palette_property_t *pp = vector_get(p, i);
     if (strcmp("background", pp->name) == 0) {
       bool is_dark = palette_background_is_brightness_type(pp->translated_value, BACKGROUND_BRIGHTNESS_DARK, ctx.max_brightness);
-      printf("palette %s with background %s is dark?: %s",
+      printf("palette %s with background %s is dark?: %s\n",
              pname, pp->translated_value,
-             is_dark ? "Yes" : "No"
+             is_dark
+                ? AC_RESETALL AC_GREEN "Yes" AC_RESETALL
+                : AC_RESETALL AC_RED "No" AC_RESETALL
              );
     }
     FREE_PALETTE_PROPERTIES(pp);
@@ -509,11 +515,10 @@ static int kfc_cli_dark_backgrounds(void){
 }
 
 
-static int kfc_cli_select_palette(void){
-  char *palette_name = kfc_utils_select_palette();
+static int kfc_cli_select_palette(void *CTX){
+  char *palette_name = kfc_utils_select_palette((void *)CTX);
 
   if (palette_name != NULL) {
-//    fprintf(stdout, "\ec");
     load_palette_name(palette_name);
     fflush(stdout);
     fprintf(stdout, "%s\n", palette_name);
@@ -585,5 +590,11 @@ static int kfc_cli_reset_terminal(void){
 static int kfc_cli_print_palette_history(void){
   fprintf(stdout, "%s\n", stringfn_mut_trim(get_palette_history()));
   return(EXIT_SUCCESS);
+}
+
+
+static int kfc_cli_render_unja_template(void){
+  render_unja_template();
+  return(0);
 }
 #undef KFC

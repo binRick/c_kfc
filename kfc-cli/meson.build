@@ -20,7 +20,7 @@ kfc_cli_deps = [
   logh_dep,
   c_stringfn_dep,
   reproc_dep,
-  debug_memory_dep,
+  #//debug_memory_dep,
 ]
 if get_option('enable-binaries')
   kfc_cli_exec = executable('kfc',

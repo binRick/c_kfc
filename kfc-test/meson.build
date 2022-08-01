@@ -11,7 +11,7 @@ kfc_include_cargs = [
   ]
 kfc_test_deps = [
   kfc_utils_dep,
-  debug_memory_dep,
+  #//  debug_memory_dep,
 ]
 if get_option('enable-binaries')
   kfc_test_exec = executable('kfc-test',

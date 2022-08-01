@@ -1,0 +1,14 @@
+#pragma once
+#include "kfc-utils.h"
+
+const size_t PALETTES_QTY = {{ palettes_qty }};
+
+{% for l in items -%}
+INCTXT({{l.data_name}}, "{{l.dir}}/{{l.name}}");
+{%- endfor %}
+struct inc_palette_t palette_t_list[{{palettes_qty}}] = {{lb}}
+{% for l in items %}
+  {{ lb }} .name = "{{l.name}}", .size = {{l.size}}, .file = "{{l.dir}}/{{l.name}}", .data = {{data_prefix}}{{l.data_name}}{{data_suffix}}, {{ rb }},
+{%- endfor %}
+  {{lb}} 0 {{rb}},
+{{rb}};

@@ -6,7 +6,7 @@ PALETTES_LIMIT=${PALETTES_LIMIT:-10000}
 DEBUG_MODE=${DEBUG_MODE:-0}
 PALETTES=
 INCBIN_PREFIX=inc_palette_
-PALETTE_DIRS="palettes/light palettes/dark palettes/kitty-themes"
+PALETTE_DIRS="palettes/light palettes/dark palettes/kitty-themes palettes/dev"
 PALETTE_INCLUDES_C_PREFIX="#pragma once\n#include \"kfc-utils.h\"\n"
 
 get_file_bytes() {

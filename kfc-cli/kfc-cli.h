@@ -1,5 +1,9 @@
 #pragma once
 #include <stdio.h>
+
+#include "module/def.h"
+#include "module/module.h"
+#include "module/require.h"
 ////////////////////////////////////////////////////////
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
@@ -14,6 +18,7 @@
 #include "submodules/meson_deps/submodules/tiny-regex-c/re.h"
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////
+#define DEFAULT_MAX_BRIGHTNESS    "40.0"
 enum kfc_mode_t {
   KFC_CLI_MODE_PRINT_USAGE,
   KFC_CLI_MODE_LIST_PALETTES,
@@ -37,7 +42,15 @@ enum kfc_mode_t {
   KFC_CLI_MODE_PRINT_PALETTE_DATA,
   KFC_CLI_MODE_RESET_TERMINAL,
   KFC_CLI_MODE_PRINT_PALETTE_HISTORY,
+  KFC_CLI_MODE_RENDER_UNJA_TEMPLATE,
   KFC_CLI_MODES_QTY,
 };
-static const double DEFAULT_MAX_BRIGHTNESS = 40.0;
+struct ctx_t {
+  char            *palette_name, *random_palette_name, *palette_property, *palette_value;
+  size_t          random_palette_index;
+  bool            debug_mode;
+  float           max_brightness;
+  enum kfc_mode_t mode;
+  module(kfc_utils) * kfc_utils;
+} ctx_t;
 ////////////////////////////////////////////////////////

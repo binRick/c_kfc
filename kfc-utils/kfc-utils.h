@@ -69,6 +69,9 @@ struct palette_property_t {
   char *sequence;
   char *escaped_sequence;
 };
+#define debug_malloc    "malloc"
+#define debug_free      "free"
+#define debug_strdup    "strdup"
 struct inc_palette_t {
   int        size;
   const char *name;
@@ -105,13 +108,14 @@ size_t load_palette_name(const char *PALETTE_NAME);
 size_t random_palette_index();
 char *get_palette_name_by_index(const int INDEX);
 struct Vector *kfc_utils_select_palettes(void);
-char *kfc_utils_select_palette(void);
+char *kfc_utils_select_palette(void *CTX);
 char *kfc_utils_select_apply_palette(void);
 int kfc_utils_color_report(void);
 char *get_palette_name_sequence(const char *PALETTE_NAME);
 char *get_palette_name_data(const char *PALETTE_NAME);
 char *get_ansi_reset_sequence();
 char *get_palette_history();
+int render_unja_template(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities
