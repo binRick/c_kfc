@@ -1569,7 +1569,6 @@ struct vector *load_palettes(const char *PATH){
     if (!file.is_dir) {
       char *f = malloc(1024);
       sprintf(f, "%s/%s", PATH, file.name);
-      printf("%s\n", f);
       vector_push(pf, f);
     }
 
@@ -1584,29 +1583,6 @@ struct vector *load_palettes(const char *PATH){
 
 bail:
   tinydir_close(&dir);
-}
-
-
-int test_render_jinja2_template(void){
-  struct jinja2_render_template_t *CFG = jinja2_init_config();
-
-  CFG->input_json_string = "{\"abc\":\"world\"}";
-  CFG->template_file     = "test.jinja";
-  CFG->output_file       = "output.txt";
-  fsio_write_text_file(CFG->template_file, "hello {{ abc }}");
-  assert(fsio_file_exists(CFG->template_file) == true);
-  int res = jinja2_render_template(CFG);
-
-  assert(res == 0);
-  assert(CFG->success == true);
-  assert(fsio_file_exists(CFG->output_file) == true);
-  char *result = fsio_read_text_file(CFG->output_file);
-
-  assert(strcmp(result, "hello world") == 0);
-
-  printf("%s\n", result);
-
-  return(EXIT_SUCCESS);
 }
 
 
@@ -1631,7 +1607,7 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
 
   for (size_t i = 0; i < vector_size(__template_palettes_v) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
     struct palette_template_item_t *t = vector_get(__template_palettes_v, i);
-    template_info(t);
+    //template_info(t);
     JSON_Value                     *item0_v = json_value_init_object();
     JSON_Object                    *item0   = json_value_get_object(item0_v);
     json_object_set_string(item0, "name", t->name);
@@ -1643,7 +1619,6 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
   }
 
   CFG->input_json_string = json_serialize_to_string_pretty(root_value);
-  fprintf(stderr, "%s\n", CFG->input_json_string);
 
   assert(fsio_file_exists(CFG->template_file) == true);
   int res = jinja2_render_template(CFG);
@@ -1653,6 +1628,7 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
   assert(fsio_file_exists(CFG->output_file) == true);
   char *result = fsio_read_text_file(CFG->output_file);
 
+  //fprintf(stderr, "%s\n", CFG->input_json_string);
   fprintf(stderr, "%s\n", result);
   assert(strlen(result) > 128);
   return(EXIT_SUCCESS);
@@ -1660,14 +1636,12 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
 
 
 int render_unja_template(void){
-  printf("rendert emp:%s\n", PALETTES_LOAD_DIR);
-
-  char                           *P      = PALETTES_LOAD_DIR;
-  struct Vector                  *pfiles = load_palettes(P);
-  printf("%lu items\n", vector_size(pfiles));
+  char                           *P                     = PALETTES_LOAD_DIR;
+  struct Vector                  *pfiles                = load_palettes(P);
   struct palette_template_item_t *p                     = palette_template_items;
   struct Vector                  *__template_palettes_v = vector_new();
   struct Vector                  *palette_file_paths    = vector_new();
+
   for (size_t i = 0; i < vector_size(pfiles); i++) {
     vector_push(palette_file_paths, (char *)vector_get(pfiles, i));
   }
@@ -1707,40 +1681,5 @@ int render_unja_template(void){
     vector_push(__template_palettes_v, tmp);
     p++;
   }
-  log_info("%lu template palette items", vector_size(__template_palettes_v));
   return(render_jinja2_template(__template_palettes_v));
-
-  struct unja_vector *template_items_v = unja_vector_new(vector_size(__template_palettes_v));
-
-  for (size_t i = 0; i < vector_size(__template_palettes_v) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
-    struct palette_template_item_t *t = vector_get(__template_palettes_v, i);
-    template_info(t);
-    struct unja_hashmap            *hm = unja_hashmap_new();
-    unja_hashmap_insert(hm, "name", t->name);
-    unja_hashmap_insert(hm, "data_name", t->data_name);
-    unja_hashmap_insert(hm, "size", t->bytes_s);
-    unja_hashmap_insert(hm, "dir", t->dir);
-    unja_vector_push(template_items_v, hm);
-  }
-
-  char *template_s = fsio_read_text_file(PALETTES_UNJA_TEMPLATE), *qty_s;
-  qty_s = malloc(32);
-  sprintf(qty_s, "%lu", vector_size(__template_palettes_v) + 1);
-  struct unja_vector *template_h = unja_hashmap_new();
-
-  unja_hashmap_insert(template_h, "palettes_qty", qty_s);
-  unja_hashmap_insert(template_h, "data_prefix", "inc_palette_");
-  unja_hashmap_insert(template_h, "data_suffix", "_data");
-  unja_hashmap_insert(template_h, "items", template_items_v);
-  unja_hashmap_insert(template_h, "rb", "}");
-  unja_hashmap_insert(template_h, "lb", "{");
-  log_info("LOADING %lu template palette items", vector_size(__template_palettes_v));
-  //log_info("%s",template_s);
-  char *output = unja_template_string(template_s, template_h);
-
-  //printf("\n=======================\n");
-//  printf(AC_RESETALL AC_YELLOW "%s" AC_RESETALL, output);
-// printf("\n=======================\n");
-  fsio_write_text_file("WOW.c", output);
-  return(0);
 } /* render_unja_template */
