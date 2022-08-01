@@ -34,6 +34,7 @@ kfc_utils_deps = [
   ansi_rgb_utils_dep,  
   hsluv_c_dep,  
   string_utils_dep,
+  jinja2_cli_dep,
   bytes_dep,
   dbg_dep,
   bench_dep,

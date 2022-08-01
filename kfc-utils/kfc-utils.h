@@ -12,6 +12,7 @@
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
 ///////////////////////////////////////////////////////////////////
+#include "jinja2-cli/jinja2-cli.h"
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
 #define ANSI_ESC_CODE    "\x1b"

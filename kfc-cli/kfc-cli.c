@@ -269,14 +269,14 @@ static int parse_args(int argc, char *argv[]){
 
 
 static int kfc_cli_print_usage(void){
-  fprintf(stderr, AC_RESETALL AC_YELLOW AC_BOLD "Usage: kfc-cli [OPTION]\n" AC_RESETALL);
+  fprintf(stderr, AC_RESETALL AC_YELLOW AC_BOLD "Usage: kfc [OPTION]\n" AC_RESETALL);
   cag_option_print(options, CAG_ARRAY_SIZE(options), stdout);
   return(EXIT_SUCCESS);
 }
 
 
 static int kfc_cli_print_version(void){
-  puts("kfc-cli " KFC_CLI_VERSION);
+  puts("kfc" KFC_CLI_VERSION);
   return(0);
 }
 
