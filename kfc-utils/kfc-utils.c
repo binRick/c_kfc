@@ -1590,7 +1590,7 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
   struct jinja2_render_template_t *CFG = jinja2_init_config();
 
   CFG->template_file = "etc/palettes-template.unja";
-  CFG->output_file   = "kfc-utils/kfc-utils-palettes-rendered.c";
+  CFG->output_file   = "kfc-utils/kfc-utils-palettes.c";
   JSON_Value  *root_value        = json_value_init_object();
   JSON_Object *root_object       = json_value_get_object(root_value);
   char        *serialized_string = NULL;
