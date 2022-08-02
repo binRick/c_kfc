@@ -26,7 +26,7 @@
 #endif
 #define FZF_UTILS_DEFAULT_HISTORY_FILE    "/tmp/fzf-utils-history.txt"
 static const size_t PALETTES_QTY_LIMIT_LOAD = 2000;
-static const char PALETTES_UNJA_TEMPLATE[] = "etc/palettes-template.unja";
+static const char PALETTES_UNJA_TEMPLATE[] = "etc/kfc-utils-palettes.c.j2";
 static const char PALETTES_LOAD_DIR[]      = "palettes/load";
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-data.h"
@@ -34,7 +34,6 @@ static const char PALETTES_LOAD_DIR[]      = "palettes/load";
 #include "kfc-utils/kfc-utils.h"
 #include "string-utils/string-utils.h"
 /////////////////////////////////////
-#include "c_unja/src/unja_template.h"
 #include "submodules/tinydir/tinydir.h"
 /////////////////////////////////////
 #include "kitty/kitty.h"
@@ -71,7 +70,8 @@ static void __kfc_utils_constructor(void) __attribute__((constructor));
 static void __kfc_utils_destructor(void) __attribute__((destructor));
 static char *get_cache_ymd();
 static char *get_palette_history_file();
-static int render_jinja2_template(struct Vector *__template_palettes_v);
+static char *render_jinja2_template(struct Vector *__template_palettes_v);
+static void kfc_utils_test_local_kitty_socket();
 
 /////////////////////////////////////
 static bool                KFC_UTILS_DEBUG_MODE = false;
@@ -902,6 +902,10 @@ struct Vector *get_unique_palette_property_names(){
 }
 
 
+static void kfc_utils_test_local_kitty_socket(){
+}
+
+
 bool kfc_utils_test_kitty_socket(){
   struct Vector *kitty_listen_ons = get_kitty_listen_ons();
 
@@ -1522,18 +1526,7 @@ char *get_palette_history(){
 char *get_ansi_reset_sequence(){
   return("\ec");
 }
-struct palette_template_item_t {
-  char   *path, *data_name, *dir, *name, *file, *data_fullname, *bytes_s;
-  size_t bytes, lines_qty, *content;
-}                              palette_template_item_t;
 
-struct palette_template_item_t palette_template_items[] = {
-  { .path = "palettes/kitty-themes/laser"        },
-  { .path = "palettes/dark/wild-cherry"          },
-  { .path = "palettes/dark/vscode"               },
-  { .path = "palettes/kitty-themes/hopscotch256" },
-  { NULL },
-};
 #define template_fmt    ""                       \
   "file:%s|size:%lu|data_name:%s|dir:%s|path:%s" \
   "|data fillname:%s|"                           \
@@ -1585,41 +1578,76 @@ bail:
   tinydir_close(&dir);
 }
 
+struct palette_template_item_t {
+  char          *path, *data_name, *dir, *name, *file, *data_fullname, *bytes_s;
+  size_t        bytes, lines_qty, *content;
+  struct Vector *keys_v;
+}                              palette_template_item_t;
+struct palette_template_item_t palette_template_items[] = {
+  { .path = "palettes/kitty-themes/laser"        },
+  { .path = "palettes/dark/wild-cherry"          },
+  { .path = "palettes/dark/vscode"               },
+  { .path = "palettes/kitty-themes/hopscotch256" },
+  { NULL },
+};
 
-static int render_jinja2_template(struct Vector *__template_palettes_v){
+
+static char *render_jinja2_template(struct Vector *__template_palettes_v){
   struct jinja2_render_template_t *CFG = jinja2_init_config();
 
-  CFG->template_file = "etc/palettes-template.unja";
+  CFG->template_file = "etc/kfc-utils-palettes.c.j2";
   CFG->output_file   = "kfc-utils/kfc-utils-palettes.c";
-  JSON_Value  *root_value        = json_value_init_object();
-  JSON_Object *root_object       = json_value_get_object(root_value);
-  char        *serialized_string = NULL;
-  JSON_Array  *items_arr         = NULL;
+  CFG->debug_mode    = true;
+  JSON_Value  *root_value  = json_value_init_object();
+  JSON_Object *root_object = json_value_get_object(root_value);
 
-  json_object_set_number(root_object, "palettes_qty", vector_size(__template_palettes_v));
-  json_object_set_string(root_object, "lb", "{");
-  json_object_set_string(root_object, "rb", "}");
-  json_object_set_string(root_object, "data_suffix", "_data");
-  json_object_set_string(root_object, "data_prefix", "inc_palette_");
-  json_object_set_value(root_object, "items", json_value_init_array());
-  items_arr = json_object_get_array(root_object, "items");
-  assert(items_arr != NULL);
+  json_object_set_string(root_object, "inc_palette_t_struct", INC_PALETTE_T_STRING());
+  char       *serialized_string  = NULL;
+  JSON_Array *palette_t_list_arr = NULL;
+  JSON_Array *keys_arr           = NULL;
+
+  json_object_set_value(root_object, "palette_t_list", json_value_init_array());
+  palette_t_list_arr = json_object_get_array(root_object, "palette_t_list");
+  assert(palette_t_list != NULL);
+
+  struct Vector *L = vector_new();
+
+  vector_push(L, "k00");
+  vector_push(L, "k01");
+
 
   for (size_t i = 0; i < vector_size(__template_palettes_v) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
-    struct palette_template_item_t *t = vector_get(__template_palettes_v, i);
+    struct palette_template_item_t *t       = vector_get(__template_palettes_v, i);
     JSON_Value                     *item0_v = json_value_init_object();
     JSON_Object                    *item0   = json_value_get_object(item0_v);
+    json_object_set_value(item0, "keys_list", json_value_init_array());
+    keys_arr = json_object_get_array(item0, "keys_list");
+    assert(keys_arr != NULL);
+
+    struct StringBuffer *lsb = stringbuffer_new();
+    for (size_t ii = 0; ii < vector_size(t->keys_v); ii++) {
+      JSON_Value *lv = json_value_init_string((char *)vector_get(t->keys_v, ii));
+      json_array_append_value(keys_arr, lv);
+      stringbuffer_append_string(lsb, lv);
+      stringbuffer_append_string(lsb, ",");
+    }
+
     json_object_set_string(item0, "name", t->name);
-    json_object_set_string(item0, "data_name", t->data_name);
+    json_object_set_string(item0, "keys_csv", stringbuffer_to_string(lsb));
     json_object_set_string(item0, "dir", t->dir);
-    json_object_set_string(item0, "file", t->file);
     json_object_set_number(item0, "size", t->bytes);
-    json_array_append_value(items_arr, item0_v);
+    json_object_set_number(item0, "lines_qty", t->lines_qty);
+    json_array_append_value(palette_t_list_arr, item0_v);
   }
 
   CFG->input_json_string = json_serialize_to_string_pretty(root_value);
 
   assert(fsio_file_exists(CFG->template_file) == true);
+  CFG->template_s = fsio_read_text_file(CFG->template_file);
+  puts(CFG->input_json_string);
+  puts(CFG->template_s);
+  CFG->template_file = NULL;
+//  exit(0);
   int res = jinja2_render_template(CFG);
 
   assert(res == 0);
@@ -1627,14 +1655,14 @@ static int render_jinja2_template(struct Vector *__template_palettes_v){
   assert(fsio_file_exists(CFG->output_file) == true);
   char *result = fsio_read_text_file(CFG->output_file);
 
-  //fprintf(stderr, "%s\n", CFG->input_json_string);
-  fprintf(stderr, "%s\n", result);
   assert(strlen(result) > 128);
-  return(EXIT_SUCCESS);
+//puts("\n\n");  puts(result);
+//  exit(0);
+  return(result);
 } /* render_jinja2_template */
 
 
-int render_unja_template(void){
+char *kfc_utils_get_rendered_template(void){
   char                           *P                     = PALETTES_LOAD_DIR;
   struct Vector                  *pfiles                = load_palettes(P);
   struct palette_template_item_t *p                     = palette_template_items;
@@ -1662,23 +1690,28 @@ int render_unja_template(void){
       continue;
     }
     tmp->bytes = fsio_file_size(tmp->path);
-    if (tmp->bytes < 32) {
+    if (tmp->bytes < 2) {
       continue;
     }
+    tmp->keys_v  = vector_new();
     tmp->dir     = dirname(tmp->path);
     tmp->file    = basename(tmp->path);
     tmp->name    = strdup(tmp->file);
-    tmp->bytes_s = malloc(1024);
-    sprintf(tmp->bytes_s, "%lu", tmp->bytes);
     tmp->content = fsio_read_text_file(tmp->path);
     struct StringFNStrings lines = stringfn_split_lines_and_trim(tmp->content);
-    tmp->lines_qty     = lines.count;
-    tmp->data_name     = stringfn_replace(tmp->file, '-', '_');
-    tmp->data_fullname = malloc(1024);
-    sprintf(tmp->data_fullname, "inc_palette_%s_data", tmp->data_name);
+    tmp->lines_qty = lines.count;
+    tmp->data_name = stringfn_replace(tmp->file, '-', '_');
+    asprintf(&tmp->data_fullname, "inc_palette_%s_data", tmp->data_name);
+    for (size_t ii = 0; ii < lines.count; ii++) {
+      struct StringFNStrings _tss = stringfn_split(lines.strings[ii], '=');
+      if (_tss.count > 1) {
+        vector_push(tmp->keys_v, strdup(_tss.strings[0]));
+      }
+    }
+
     stringfn_release_strings_struct(lines);
     vector_push(__template_palettes_v, tmp);
     p++;
   }
   return(render_jinja2_template(__template_palettes_v));
-} /* render_unja_template */
+} /* kfc_utils_get_rendered_template */

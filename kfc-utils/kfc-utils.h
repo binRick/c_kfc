@@ -73,15 +73,26 @@ struct palette_property_t {
 #define debug_malloc    "malloc"
 #define debug_free      "free"
 #define debug_strdup    "strdup"
-struct inc_palette_t {
-  int        size;
-  const char *name;
-  const char *file;
-  const char *data;
-};
+
+#define INC_PALETTE_T()     \
+  struct inc_palette_t {    \
+    const size_t size;      \
+    const size_t lines_qty; \
+    const size_t keys_qty;  \
+    char         *keys_csv; \
+    const char   *name;     \
+    const char   *file;     \
+    const char   *data;     \
+    const char   *dir;      \
+  };
+#define INC_PALETTE_T_DEFINED
+#define ___S(s)                   #s
+#define __S(s)                    ___S(s)
+#define INC_PALETTE_T_STRING()    __S(INC_PALETTE_T())
+INC_PALETTE_T()
 ///////////////////////////////////////////////////////////////////
-extern struct inc_palette_t palette_t_list[];
-extern const size_t         PALETTES_QTY;
+extern const struct inc_palette_t palette_t_list[];
+extern const size_t               PALETTES_QTY;
 ///////////////////////////////////////////////////////////////////
 ///     general utilities
 ///////////////////////////////////////////////////////////////////
@@ -116,7 +127,7 @@ char *get_palette_name_sequence(const char *PALETTE_NAME);
 char *get_palette_name_data(const char *PALETTE_NAME);
 char *get_ansi_reset_sequence();
 char *get_palette_history();
-int render_unja_template(void);
+char *kfc_utils_get_rendered_template(void);
 
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities

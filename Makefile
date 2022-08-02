@@ -85,7 +85,7 @@ install: do-install
 test: do-test
 build: do-meson do-build muon
 uncrustify:
-	@$(UNCRUSTIFY) -c submodules/meson_deps/etc/uncrustify.cfg --replace $(TIDIED_FILES) 
+	@$(UNCRUSTIFY) -c submodules/c_deps/etc/uncrustify.cfg --replace $(TIDIED_FILES) 
 uncrustify-clean:
 	@find  . -type f -name "*unc-back*"|xargs -I % unlink %
 fix-dbg:
@@ -110,11 +110,12 @@ dev: nodemon
 nodemon:
 	@$(PASSH) -L .nodemon.log $(NODEMON) -i build \
 		--delay 1 \
-		-w submodules/meson_deps/exec-fzf/exec-fzf.c \
-		-w submodules/meson_deps/exec-fzf/exec-fzf.h \
+		-w submodules/c_deps/exec-fzf/exec-fzf.c \
+		-w etc/kfc-utils-palettes.c.j2 \
+		-w submodules/c_deps/exec-fzf/exec-fzf.h \
 		-w meson.build \
 		-w "*/*.c" -w "*/*.h" -w Makefle -w "*/meson.build" \
-		-e c,h,sh,Makefile,build \
+		-e j2,c,h,sh,Makefile,build \
 			-x sh -- -c 'passh make||true'
 meson-introspect-all:
 	@meson introspect --all -i meson.build

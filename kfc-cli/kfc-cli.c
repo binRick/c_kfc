@@ -58,14 +58,14 @@ static int kfc_cli_print_escaped_sequence(void);
 static int kfc_cli_print_palette_data(void);
 static int kfc_cli_reset_terminal(void);
 static int kfc_cli_print_palette_history(void);
-static int kfc_cli_render_unja_template(void);
+static int kfc_cli_render_palettes_template(void);
 
 const char *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
 ////////////////////////////////////////////
 
 static struct cag_option options[] = {
   { .identifier  = 'u', .access_letters = "u",
-    .access_name = "render-unja-template", .value_name = NULL, .description = "Render Unja Template" },
+    .access_name = "render-palettes-template", .value_name = NULL, .description = "Render Unja Template" },
   { .identifier  = 'G', .access_letters = "G",
     .access_name = "print-palette-history", .value_name = NULL, .description = "Print Palette History" },
   { .identifier  = 'Q', .access_letters = "Q",
@@ -152,7 +152,7 @@ static struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_PRINT_PALETTE_DATA]               = { .handler = kfc_cli_print_palette_data,               },
   [KFC_CLI_MODE_RESET_TERMINAL]                   = { .handler = kfc_cli_reset_terminal,                   },
   [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]            = { .handler = kfc_cli_print_palette_history,            },
-  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_unja_template,             },
+  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_palettes_template,         },
 };
 static struct ctx_t ctx = {
   .palette_name         = NULL,
@@ -546,7 +546,8 @@ static int kfc_cli_select_apply_palette(void){
   if (palette_name != NULL) {
 //    fprintf(stdout, "\ec");
     load_palette_name(palette_name);
-    fflush(stdout);
+    //fflush(stdout);
+    fprintf(stdout, " \n");
     fprintf(stdout, "%s\n", palette_name);
   }else{
     fprintf(stdout, "Selected no Palette\n");
@@ -593,8 +594,10 @@ static int kfc_cli_print_palette_history(void){
 }
 
 
-static int kfc_cli_render_unja_template(void){
-  render_unja_template();
+static int kfc_cli_render_palettes_template(void){
+  char *s = kfc_utils_get_rendered_template();
+
+  puts(s);
   return(0);
 }
 #undef KFC

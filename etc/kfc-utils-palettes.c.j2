@@ -1,0 +1,17 @@
+#pragma once
+#include "kfc-utils.h"
+
+const size_t PALETTES_QTY = {{ palette_t_list | length }};
+#ifndef INC_PALETTE_T_DEFINED
+##define INC_PALETTE_T_DEFINED
+{{inc_palette_t_struct}}
+#endif
+{% for l in palette_t_list -%}
+INCTXT({{l.name|replace('-','_')}}, "{{l.dir}}/{{l.name}}");
+{% endfor %}
+
+const struct inc_palette_t palette_t_list[{{ palette_t_list | length + 1 }}] = {
+  {%- for l in palette_t_list %}
+    { .name = "{{l.name}}", .size = {{l.size}}, .file = "{{l.name}}", .data = inc_palette_{{l.name|replace('-','_')}}_data, },{% endfor %}
+    { 0 },
+};

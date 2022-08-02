@@ -12,7 +12,6 @@ kfc_utils_deps = [
   ansi_codes_dep,
   djbhash_dep,
   termpaint_dep,
-  c_unja_dep,
   process_dep,
   tinydir_dep,
   kitty_dep,
