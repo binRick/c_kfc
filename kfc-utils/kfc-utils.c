@@ -1286,6 +1286,17 @@ char *kfc_utils_select_palette(void *CTX){
     }
 
     {
+      struct fzf_keybind_t *kb27 = &_kb[27];
+      kb27->key  = "a";
+      kb27->type = "execute-silent";
+      asprintf(&kb27->cmd, "%s -i %s -p {} -L >/dev/tty 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb27);
+    }
+
+    {
       struct fzf_keybind_t *kb3 = &_kb[3];
       kb3->key  = "y";
       kb3->type = "+change-prompt";
@@ -1552,8 +1563,8 @@ static char *render_jinja2_template(struct Vector *__template_palettes_v){
 
   assert(fsio_file_exists(CFG->template_file) == true);
   CFG->template_s = fsio_read_text_file(CFG->template_file);
-  puts(CFG->input_json_string);
-  puts(CFG->template_s);
+//  puts(CFG->input_json_string);
+//  puts(CFG->template_s);
   CFG->template_file = NULL;
 //  exit(0);
   int res = jinja2_render_template(CFG);

@@ -59,13 +59,21 @@ static int kfc_cli_print_palette_data(void);
 static int kfc_cli_reset_terminal(void);
 static int kfc_cli_print_palette_history(void);
 static int kfc_cli_render_palettes_template(void);
-
-const char *EXECUTABLE_PATH_DIRNAME = NULL, *EXECUTABLE_NAME = NULL, *EXECUTABLE_ABSOLUTE = NULL;
 ////////////////////////////////////////////
-
+static struct ctx_t               ctx = {
+  .palette_name         = NULL,
+  .debug_mode           = false,
+  .palette_property     = NULL,
+  .max_brightness       = 0.00,
+  .palettes_limit_qty   = 0,
+  .palette_value        = NULL,
+  .modes                = NULL,
+};
 static struct cag_option options[] = {
   { .identifier  = 'u', .access_letters = "u",
     .access_name = "render-palettes-template", .value_name = NULL, .description = "Render Unja Template" },
+  { .identifier  = 'v', .access_letters = "v",
+    .access_name = "version", .value_name = NULL, .description = "Print Version" },
   { .identifier  = 'G', .access_letters = "G",
     .access_name = "print-palette-history", .value_name = NULL, .description = "Print Palette History" },
   { .identifier  = 'Q', .access_letters = "Q",
@@ -114,8 +122,6 @@ static struct cag_option options[] = {
   { .identifier  = 'P', .access_letters = "P",
     .access_name = "palette-property", .value_name = "PALETTE_PROPERTY",
     .description = "Specified Palette Property" },
-  { .identifier  = 'v', .access_letters = "v",
-    .access_name = "version", .value_name = NULL, .description = "Print Version" },
   { .identifier  = 'T', .access_letters = "T",
     .access_name = "palette-properties-table", .value_name = NULL, .description = "Print Palette Properties Table" },
   { .identifier  = 't', .access_letters = "t",
@@ -127,50 +133,39 @@ static struct cag_option options[] = {
   { .identifier  = 'h', .access_letters = "h",
     .access_name = "help", .description = "Shows the command help" }
 };
-static struct kfc_mode_handlers_t {
-  int (*handler)(void *);
-}                   kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
-  [KFC_CLI_MODE_LIST_PALETTES]                    = { .handler = kfc_cli_list_palettes,                    },
-  [KFC_CLI_MODE_LOAD_PALETTE]                     = { .handler = kfc_cli_load_palette,                     },
-  [KFC_CLI_MODE_PRINT_PALETTES_TABLE]             = { .handler = kfc_cli_print_palettes_table,             },
-  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]              = { .handler = kfc_cli_print_palette_table,              },
-  [KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE]   = { .handler = kfc_cli_print_palette_properties_table,   },
-  [KFC_CLI_MODE_PRINT_VERSION]                    = { .handler = kfc_cli_print_version,                    },
-  [KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES]  = { .handler = kfc_cli_print_unique_palette_properties,  },
-  [KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES] = { .handler = kfc_cli_print_invalid_palette_properties, },
-  [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]             = { .handler = kfc_cli_detect_terminal_type,             },
-  [KFC_CLI_MODE_TEST_KITTY_SOCKET]                = { .handler = kfc_cli_test_kitty_socket,                },
-  [KFC_CLI_MODE_PRINT_USAGE]                      = { .handler = kfc_cli_print_usage,                      },
-  [KFC_CLI_MODE_TEST_COLORS]                      = { .handler = kfc_cli_test_colors,                      },
-  [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]               = { .handler = kfc_cli_bright_backgrounds,               },
-  [KFC_CLI_MODE_DARK_BACKGROUNDS]                 = { .handler = kfc_cli_dark_backgrounds,                 },
-  [KFC_CLI_MODE_SELECT_PALETTE]                   = { .handler = kfc_cli_select_palette,                   },
-  [KFC_CLI_MODE_SELECT_APPLY_PALETTE]             = { .handler = kfc_cli_select_apply_palette,             },
-  [KFC_CLI_MODE_SELECT_PALETTES]                  = { .handler = kfc_cli_select_palettes,                  },
-  [KFC_CLI_MODE_COLOR_REPORT]                     = { .handler = kfc_cli_color_report,                     },
-  [KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE]   = { .handler = kfc_cli_print_escaped_sequence,           },
-  [KFC_CLI_MODE_PRINT_PALETTE_DATA]               = { .handler = kfc_cli_print_palette_data,               },
-  [KFC_CLI_MODE_RESET_TERMINAL]                   = { .handler = kfc_cli_reset_terminal,                   },
-  [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]            = { .handler = kfc_cli_print_palette_history,            },
-  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_palettes_template,         },
+struct kfc_mode_handlers_t {
+  int  (*handler)(void *);
+  char identifier;
 };
-static struct ctx_t ctx = {
-  .palette_name         = NULL,
-  .debug_mode           = false,
-  .random_palette_index = 1,
-  .palette_property     = NULL,
-  .max_brightness       = 0.00,
-  .palette_value        = NULL,
-  .kfc_utils            = NULL,
-  .mode                 = KFC_CLI_MODE_LOAD_PALETTE,
+static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
+  [KFC_CLI_MODE_LIST_PALETTES]                    = { .handler = kfc_cli_list_palettes,                    .identifier = 'l', },
+  [KFC_CLI_MODE_LOAD_PALETTE]                     = { .handler = kfc_cli_load_palette,                     .identifier = 'L', },
+  [KFC_CLI_MODE_PRINT_PALETTES_TABLE]             = { .handler = kfc_cli_print_palettes_table,             .identifier = 't', },
+  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]              = { .handler = kfc_cli_print_palette_table,              .identifier = 'T', },
+  [KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE]   = { .handler = kfc_cli_print_palette_properties_table,   .identifier = 'T', },
+  [KFC_CLI_MODE_PRINT_VERSION]                    = { .handler = kfc_cli_print_version,                    .identifier = 'v', },
+  [KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES]  = { .handler = kfc_cli_print_unique_palette_properties,  .identifier = 'U', },
+  [KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES] = { .handler = kfc_cli_print_invalid_palette_properties, .identifier = 'I', },
+  [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]             = { .handler = kfc_cli_detect_terminal_type,             .identifier = 'D', },
+  [KFC_CLI_MODE_TEST_KITTY_SOCKET]                = { .handler = kfc_cli_test_kitty_socket,                .identifier = 'K', },
+  [KFC_CLI_MODE_PRINT_USAGE]                      = { .handler = kfc_cli_print_usage,                      .identifier = 'h', },
+  [KFC_CLI_MODE_TEST_COLORS]                      = { .handler = kfc_cli_test_colors,                      .identifier = 'C' },
+  [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]               = { .handler = kfc_cli_bright_backgrounds,               .identifier = 'b', },
+  [KFC_CLI_MODE_DARK_BACKGROUNDS]                 = { .handler = kfc_cli_dark_backgrounds,                 .identifier = 'k', },
+  [KFC_CLI_MODE_SELECT_PALETTE]                   = { .handler = kfc_cli_select_palette,                   .identifier = 's', },
+  [KFC_CLI_MODE_SELECT_APPLY_PALETTE]             = { .handler = kfc_cli_select_apply_palette,             .identifier = 'L', },
+  [KFC_CLI_MODE_SELECT_PALETTES]                  = { .handler = kfc_cli_select_palettes,                  .identifier = 'S', },
+  [KFC_CLI_MODE_COLOR_REPORT]                     = { .handler = kfc_cli_color_report,                     .identifier = 'C', },
+  [KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE]   = { .handler = kfc_cli_print_escaped_sequence,           .identifier = 'E', },
+  [KFC_CLI_MODE_PRINT_PALETTE_DATA]               = { .handler = kfc_cli_print_palette_data,               .identifier = 'e', },
+  [KFC_CLI_MODE_RESET_TERMINAL]                   = { .handler = kfc_cli_reset_terminal,                   .identifier = 'Q', },
+  [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]            = { .handler = kfc_cli_print_palette_history,            .identifier = 'G', },
+  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_palettes_template,         .identifier = 'u', },
 };
 void __attribute__((constructor)) __kfc_cli_constructor(){
   ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
+  ctx.modes          = vector_new();
   KFC                = require(kfc_utils);
-  KFC->mode          = (ctx.debug_mode == true || (getenv("DEBUG_MODE") != NULL)) ? KFC_LOG_DEBUG : KFC_LOG_ERROR;
-  if (KFC->mode >= KFC_LOG_DEBUG) {
-    log_info("palettes vector qty:%lu", KFC->get_palettes_qty());
-  }
 }
 
 void __attribute__((destructor)) __kfc_cli_destructor(){
@@ -219,6 +214,15 @@ static int kfc_cli_print_unique_palette_properties(void){
 }
 
 
+static int add_mode_to_ctx_modes(enum kfc_mode_t MODE){
+  if (MODE >= KFC_CLI_MODES_QTY) {
+    return(-1);
+  }
+  vector_push(ctx.modes, (void *)MODE);
+  return(0);
+}
+
+
 static int parse_args(int argc, char *argv[]){
   cag_option_context context;
 
@@ -226,44 +230,29 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
-    case 'u': ctx.mode                = KFC_CLI_MODE_RENDER_UNJA_TEMPLATE; break;
-    case 'G': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_HISTORY; break;
-    case 'Q': ctx.mode                = KFC_CLI_MODE_RESET_TERMINAL; break;
-    case 'e': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_DATA; break;
-    case 'E': ctx.mode                = KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE; break;
-    case 'R': ctx.mode                = KFC_CLI_MODE_COLOR_REPORT; break;
-    case 'C': ctx.mode                = KFC_CLI_MODE_TEST_COLORS; break;
-    case 'K': ctx.mode                = KFC_CLI_MODE_TEST_KITTY_SOCKET; break;
-    case 'b': ctx.mode                = KFC_CLI_MODE_BRIGHT_BACKGROUNDS; break;
-    case 'k': ctx.mode                = KFC_CLI_MODE_DARK_BACKGROUNDS; break;
-    case 's': ctx.mode                = KFC_CLI_MODE_SELECT_PALETTE; break;
-    case 'S': ctx.mode                = KFC_CLI_MODE_SELECT_PALETTES; break;
-    case 'A': ctx.mode                = KFC_CLI_MODE_SELECT_APPLY_PALETTE; break;
-    case 'B': ctx.max_brightness      = atof(cag_option_get_value(&context)); break;
-    case 'L': ctx.mode                = KFC_CLI_MODE_LOAD_PALETTE; break;
-    case 'P': ctx.palette_property    = cag_option_get_value(&context); break;
-    case 'V': ctx.palette_value       = cag_option_get_value(&context); break;
-    case 'q': KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
-    case 'l': ctx.mode                = KFC_CLI_MODE_LIST_PALETTES; break;
-    case 'U': ctx.mode                = KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES; break;
-    case 'D': ctx.mode                = KFC_CLI_MODE_DETECT_TERMINAL_TYPE; break;
-    case 'I': ctx.mode                = KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES; break;
-    case 'v': ctx.mode                = KFC_CLI_MODE_PRINT_VERSION; break;
-    case 't': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTES_TABLE; break;
-    case 'T': ctx.mode                = KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE; break;
-    case 'd': ctx.debug_mode          = true; break;
-    case 'p':
-      ctx.palette_name = cag_option_get_value(&context);
-      break;
-    case 'r':
-      ctx.random_palette_index = random_palette_index();
-      ctx.palette_name         = get_palette_name_by_index(ctx.random_palette_index);
-      break;
-    case 'h': ctx.mode = KFC_CLI_MODE_PRINT_USAGE; break;
-      break;
+    case 'd': ctx.debug_mode           = true; break;
+    case 'q': ctx.palettes_limit_qty = KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
+    case 'p': ctx.palette_name         = cag_option_get_value(&context); break;
+    case 'r': ctx.palette_name         = get_palette_name_by_index(random_palette_index()); break;
+    case 'B': ctx.max_brightness       = atof(cag_option_get_value(&context)); break;
+    case 'P': ctx.palette_property     = cag_option_get_value(&context); break;
+    case 'V': ctx.palette_value        = cag_option_get_value(&context); break;
+    }
+    for (size_t i = 0; i < (sizeof(options) / sizeof(options[0])); i++) {
+      for (size_t ii = 0; ii < KFC_CLI_MODES_QTY && ii < (sizeof(kfc_mode_handlers) / sizeof(kfc_mode_handlers[0])); ii++) {
+        if(kfc_mode_handlers[ii].identifier != 0 && options[i].identifier == identifier && options[i].identifier == kfc_mode_handlers[ii].identifier){
+              add_mode_to_ctx_modes(ii);
+        }
+      }
     }
   }
-  KFC->mode = (ctx.debug_mode == true) ? KFC_LOG_DEBUG : KFC->mode;
+  if(vector_size(ctx.modes)==0){
+    if(ctx.palette_name != NULL){
+      add_mode_to_ctx_modes(KFC_CLI_MODE_LOAD_PALETTE);
+    }else{
+      add_mode_to_ctx_modes(KFC_CLI_MODE_PRINT_USAGE);
+    }
+  }
   return(EXIT_SUCCESS);
 } /* parse_args */
 
@@ -449,14 +438,16 @@ char * app_path(char *path, const char *argv0){
 
 int main(int argc, char **argv) {
   parse_args(argc, argv);
-  if (ctx.mode < KFC_CLI_MODES_QTY) {
+  size_t modes_qty = vector_size(ctx.modes);
+  int res = 1;
+  for (size_t i = 0; i < modes_qty; i++) {
     if (ctx.debug_mode == true) {
-      log_debug("Loading mode #%d", ctx.mode);
+          log_debug("Loading mode #%d", ctx.mode);
     }
-    return(kfc_mode_handlers[ctx.mode].handler((void *)&ctx));
+    res = kfc_mode_handlers[(enum kfc_mode_t)(size_t)vector_get(ctx.modes, i)].handler((void *)&ctx);
+    assert(res == 0);
   }
-  log_error("Unknown mode #%d", ctx.mode);
-  return(1);
+  return(res);
 } /* main */
 
 
