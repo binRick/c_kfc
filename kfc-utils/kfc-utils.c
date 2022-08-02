@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <unistd.h>
 /////////////////////////////////////
+#define DEBUG_TEMPLATE_RENDER             false
 #define DEBUG_PALETTES                    false
 #define DEBUG_PALETTE_CODES               false
 #define PALETTES_QTY_LIMIT                999
@@ -95,39 +96,72 @@ static struct terminal_type_names_t { const char *name, *env_key, *env_val; } te
                               { 0 },
 };
 static struct palette_name_translations_t                                     palette_name_translations[] = {
-  { .src = "color0",      .dst = "color00", },
-  { .src = "color1",      .dst = "color01", },
-  { .src = "color2",      .dst = "color02", },
-  { .src = "color3",      .dst = "color03", },
-  { .src = "color4",      .dst = "color04", },
-  { .src = "color5",      .dst = "color05", },
-  { .src = "color6",      .dst = "color06", },
-  { .src = "color7",      .dst = "color07", },
-  { .src = "color8",      .dst = "color08", },
-  { .src = "color9",      .dst = "color09", },
-  { .src = "cursorcolor", .dst = "cursor",  },
+  { .src = "color0",          .dst = "color00",         },
+  { .src = "color1",          .dst = "color01",         },
+  { .src = "color2",          .dst = "color02",         },
+  { .src = "color3",          .dst = "color03",         },
+  { .src = "color4",          .dst = "color04",         },
+  { .src = "color5",          .dst = "color05",         },
+  { .src = "color6",          .dst = "color06",         },
+  { .src = "color7",          .dst = "color07",         },
+  { .src = "color8",          .dst = "color08",         },
+  { .src = "color9",          .dst = "color09",         },
+  { .src = "cursorcolor",     .dst = "cursor",          },
+  { .src = "load-palette",    .dst = "restore-palette", },
+  { .src = "restore_palette", .dst = "restore-palette", },
+  { .src = "save_palette",    .dst = "save-palette",    },
+  { 0 },
+};
+static struct kitty_cmd_items_t                                               kitty_cmd_items[] = {
+  { .desc = "Set Window Title",       .key = "window-title",       .cmd = "@set-window-title",       .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT, },
+  { .desc = "Set Tab Title",          .key = "tab-title",          .cmd = "@set-tab-title",          .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT & KITTY_CMD_TYPE_SOCKET },
+  { .desc = "Set Font Size",          .key = "font-size",          .cmd = "@set-font-size",          .valid_value_regex = "*[0-9][0-9]$", .types = KITTY_CMD_TYPE_AT, },
+  { .desc = "Set Tab Color",          .key = "tab-color",          .cmd = "@set-tab-color",          .valid_value_regex = "*#",           .types = KITTY_CMD_TYPE_AT, },
+  { .desc = "Set Background Opacity", .key = "background-opacity", .cmd = "@set-background-opacity", .valid_value_regex = "*[0-9]",       .types = KITTY_CMD_TYPE_AT, },
+  { .desc = "Send Text",              .key = "send-text",          .cmd = "@send-text",              .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT, },
+  { 0 },
+};
+struct kitty_cmd_key_translations_t                                           kitty_cmd_key_translations[] = {
+  { .src = "tabtitle",  .dst = "tab-title", },
+  { .src = "tab_title", .dst = "tab-title", },
+  { .src = "TABTITLE",  .dst = "tab-title", },
+  { 0 },
+};
+struct kitty_cmd_value_translations_t                                         kitty_cmd_value_translations[] = {
+  { .src = "off",   .dst = "", },
+  { .src = "clear", .dst = "", },
   { 0 },
 };
 static struct palette_code_value_translations_t                               palette_code_value_translations[] = {
-  { .name = "cursorstyle",   .src = "under",     .dst = "3 q", },
-  { .name = "cursorstyle",   .src = "block",     .dst = "1 q", },
-  { .name = "cursorstyle",   .src = "bar",       .dst = "5 q", },
-  { .name = "cursorblink",   .src = "off",       .dst = "l",   },
-  { .name = "cursorblink",   .src = "on",        .dst = "h",   },
-  { .name = "altscreen",     .src = "off",       .dst = "l",   },
-  { .name = "altscreen",     .src = "on",        .dst = "h",   },
-  { .name = "screen",        .src = "off",       .dst = "l",   },
-  { .name = "screen",        .src = "on",        .dst = "h",   },
-  { .name = "cursorvisible", .src = "off",       .dst = "l",   },
-  { .name = "cursorvisible", .src = "on",        .dst = "h",   },
-  { .name = "reportfocus",   .src = "off",       .dst = "l",   },
-  { .name = "reportfocus",   .src = "on",        .dst = "h",   },
-  { .name = "mouse",         .src = "clickdrag", .dst = "2h",  },
-  { .name = "mouse",         .src = "motion",    .dst = "3h",  },
-  { .name = "mouse",         .src = "click",     .dst = "0h",  },
-  { .name = "mouse",         .src = "off",       .dst = "0l",  },
-  { .name = "reset",         .src = "yes",       .dst = "c",   },
-  { .name = "reset",         .src = "no",        .dst = "",    },
+  { .name = "cursorstyle",     .src = "under",     .dst = "3 q", },
+  { .name = "cursorstyle",     .src = "block",     .dst = "1 q", },
+  { .name = "cursorstyle",     .src = "bar",       .dst = "5 q", },
+  { .name = "cursorblink",     .src = "off",       .dst = "l",   },
+  { .name = "cursorblink",     .src = "on",        .dst = "h",   },
+  { .name = "altscreen",       .src = "off",       .dst = "l",   },
+  { .name = "altscreen",       .src = "on",        .dst = "h",   },
+  { .name = "screen",          .src = "off",       .dst = "l",   },
+  { .name = "screen",          .src = "on",        .dst = "h",   },
+  { .name = "cursorvisible",   .src = "off",       .dst = "l",   },
+  { .name = "cursorvisible",   .src = "on",        .dst = "h",   },
+  { .name = "reportfocus",     .src = "off",       .dst = "l",   },
+  { .name = "reportfocus",     .src = "on",        .dst = "h",   },
+  { .name = "mouse",           .src = "clickdrag", .dst = "2h",  },
+  { .name = "mouse",           .src = "motion",    .dst = "3h",  },
+  { .name = "mouse",           .src = "click",     .dst = "0h",  },
+  { .name = "mouse",           .src = "off",       .dst = "0l",  },
+  { .name = "reset",           .src = "yes",       .dst = "c",   },
+  { .name = "reset",           .src = "no",        .dst = "",    },
+  { .name = "restore-palette", .src = "yes",       .dst = "101", },
+  { .name = "save-palette",    .src = "yes",       .dst = "001", },
+  { .name = "restore-palette", .src = "True",      .dst = "101", },
+  { .name = "save-palette",    .src = "True",      .dst = "001", },
+  { .name = "restore-palette", .src = "true",      .dst = "101", },
+  { .name = "save-palette",    .src = "true",      .dst = "001", },
+  { .name = "restore-palette", .src = "1",         .dst = "101", },
+  { .name = "save-palette",    .src = "1",         .dst = "001", },
+  { .name = "restore-palette", .src = "on",        .dst = "101", },
+  { .name = "save-palette",    .src = "on",        .dst = "001", },
   { 0 },
 };
 static struct palette_code_t                                                  palette_codes[] = {
@@ -175,6 +209,8 @@ static struct palette_code_t                                                  pa
   { .name = "mouse",                .code = "[?100",               },
   { .name = "notification",         .code = "]99;i=1:d=1:p=body;", },
   { .name = "reset",                .code = "",                    },
+  { .name = "save-palette",         .code = "]30",                 },
+  { .name = "restore-palette",      .code = "]30",                 },
   { 0 },
 };
 
@@ -1074,387 +1110,259 @@ char *kfc_utils_select_palette(void *CTX){
     struct StringBuffer *fzf_header_sb1 = stringbuffer_new();
     stringbuffer_append_string(fzf_header_sb, AC_RESETALL AC_ITALIC AC_RED "|n:history-next" AC_RESETALL);
     stringbuffer_append_string(fzf_header_sb, AC_RESETALL AC_ITALIC AC_GREEN "|p:history-prev" AC_RESETALL);
-    if (false) {
-      char pathbuf[PATH_MAX];
-      int  ret1 = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
-      if (fsio_file_exists(env_path) && fsio_file_exists(pathbuf)) {
-        struct fzf_keybind_t _kb[25] = { 0 };
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_RED "|u:unique" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = &_kb[2];
-          kb2->key  = "u";
-          kb2->type = "reload";
-          asprintf(&kb2->cmd, "%s -i %s -U 2>/dev/null",
-                   env_path,
-                   pathbuf
-                   );
-          vector_push(fe->fzf_keybinds_v, kb2);
+    struct fzf_keybind_t _kb[35] = { 0 };
+    char                 pathbuf[PATH_MAX];
+    int                  ret1 = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
+    {
+      struct fzf_keybind_t *kb19 = &_kb[19];
+      kb19->key  = "w";
+      kb19->type = "execute-silent";
+      asprintf(&kb19->cmd,
+               "command curl"
+               " --data key=w"
+               " --data keymod=ctrl"
+               " --data 'item={}'"
+               " --data 'pid=%d'"
+               " -vk"
+               " http://localhost:8199/cmd/n",
+               getpid()
+               );
+      vector_push(fe->fzf_keybinds_v, kb19);
+      struct fzf_keybind_t *kb18 = &_kb[18];
+      kb18->key  = "w";
+      kb18->type = "+change-preview";
+      asprintf(&kb18->cmd, "%s -i %s -p {} -E 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb18);
+      struct fzf_keybind_t *kb25 = &_kb[25];
+      kb25->key  = "w";
+      kb25->type = "+change-prompt";
+      asprintf(&kb25->cmd, "View Palette Sequence >  ");
+      vector_push(fe->fzf_keybinds_v, kb25);
 
-          struct fzf_keybind_t *kb3 = &_kb[3];
-          kb3->key  = "u";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Unique Properties> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = &_kb[4];
-          kb4->key  = "u";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_GREEN "|y:very bright" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = &_kb[5];
-          kb2->key  = "y";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -b -B 98 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = &_kb[6];
-          kb3->key  = "y";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Very Bright Palettes> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = &_kb[7];
-          kb4->key  = "y";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_YELLOW "|b:bright" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = &_kb[8];
-          kb2->key  = "b";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -b 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = &_kb[9];
-          kb3->key  = "b";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Bright Palettes> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = &_kb[10];
-          kb4->key  = "b";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_ITALIC AC_CYAN "|m:palette-data" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "m";
-          kb2->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -p {} -e 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "m";
-          kb3->type = "+change-preview";
-          asprintf(&kb3->cmd, "%s", kb2->cmd);
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "m";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_ITALIC AC_CYAN "|j:colors" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "j";
-          kb2->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -t 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "j";
-          kb3->type = "+change-preview";
-          asprintf(&kb3->cmd, "%s", kb2->cmd);
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "j";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_ITALIC AC_CYAN "|t:table" AC_RESETALL);
-          struct fzf_keybind_t *kb0 = malloc(sizeof(struct fzf_keybind_t));
-          kb0->key  = "t";
-          kb0->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb0->cmd, "%s -i %s -p {} -T 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb0);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "t";
-          kb3->type = "+change-preview";
-          asprintf(&kb3->cmd, "%s", kb0->cmd);
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "t";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_ITALIC AC_WHITE "|w:kitty" AC_RESETALL);
-          struct fzf_keybind_t *kb = malloc(sizeof(struct fzf_keybind_t));
-          kb->key  = "w";
-          kb->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb->cmd, "%s -i %s -p {} -K 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "w";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, "|r:report");
-          struct fzf_keybind_t *kb = malloc(sizeof(struct fzf_keybind_t));
-          kb->key  = "r";
-          kb->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb->cmd, "%s -i %s -R 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb);
+      struct fzf_keybind_t *kb20 = &_kb[20];
+      kb20->key  = "w";
+      kb20->type = "+change-preview-window";
+      asprintf(&kb20->cmd, "wrap,nofollow");
+      vector_push(fe->fzf_keybinds_v, kb20);
+    }
+    {
+      struct fzf_keybind_t *kb17 = &_kb[17];
+      kb17->key  = "e";
+      kb17->type = "execute-silent";
+      asprintf(&kb17->cmd,
+               "command curl"
+               " --data key=n"
+               " --data keymod=ctrl"
+               " --data 'item={}'"
+               " --data 'pid=%d'"
+               " -vk"
+               " http://localhost:8199/cmd/n",
+               getpid()
+               );
+      vector_push(fe->fzf_keybinds_v, kb17);
+      struct fzf_keybind_t *kb24 = &_kb[24];
+      kb24->key  = "e";
+      kb24->type = "+change-prompt";
+      asprintf(&kb24->cmd, "Dump Palette Data >  ");
+      vector_push(fe->fzf_keybinds_v, kb24);
+      struct fzf_keybind_t *kb16 = &_kb[16];
+      kb16->key  = "e";
+      kb16->type = "+change-preview";
+      asprintf(&kb16->cmd, "%s -i %s -p {} -e 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb16);
+    }
+    {
+      struct fzf_keybind_t *kb = &_kb[0];
+      kb->key  = "u";
+      kb->type = "execute-silent";
+      asprintf(&kb->cmd,
+               "command curl"
+               " --data key=u"
+               " --data keymod=ctrl"
+               " --data 'key0=val0'"
+               " --data 'key1=val1'"
+               " --data 'key2=val2'"
+               " --data 'key3=val3'"
+               " --data 'item={}'"
+               " --data 'pid=%d'"
+               " -vk"
+               " http://localhost:8199/cmd/u",
+               getpid()
+               );
+      vector_push(fe->fzf_keybinds_v, kb);
+    }
+    {
+      struct fzf_keybind_t *kb13 = &_kb[13];
+      kb13->key  = "n";
+      kb13->type = "execute-silent";
+      asprintf(&kb13->cmd,
+               "command curl"
+               " --data key=n"
+               " --data keymod=ctrl"
+               " --data item={}"
+               " -vk"
+               " http://localhost:8199/cmd/n"
+               );
 
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "r";
-          kb3->type = "+change-preview";
-          asprintf(&kb3->cmd, "%s", kb->cmd);
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "r";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_GREEN AC_BOLD "|h:apply+report" AC_RESETALL);
-          struct fzf_keybind_t *kb1 = malloc(sizeof(struct fzf_keybind_t));
-          kb1->key  = "h";
-          kb1->type = "+change-preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb1->cmd, "%s -i %s -p {} -L >/dev/tty 2>/dev/null; %s -i %s -R",
-                     env_path, pathbuf,
-                     env_path, pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb1);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "h";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Auto Load Palette + Color Table Mode> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "h";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_GREEN AC_BOLD "|a:apply" AC_RESETALL);
-          struct fzf_keybind_t *kb1 = malloc(sizeof(struct fzf_keybind_t));
-          kb1->key  = "a";
-          kb1->type = "+change-preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb1->cmd, "%s -i %s -p {} -L >/dev/tty 2>/dev/null; %s -i %s -T -p {}",
-                     env_path, pathbuf,
-                     env_path, pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb1);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "a";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Auto Load Palette + Table Mode> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "a";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_BLUE "|k:dark" AC_RESETALL);
-          struct fzf_keybind_t *kb = malloc(sizeof(struct fzf_keybind_t));
-          kb->key  = "k";
-          kb->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb->cmd, "%s -i %s -p {} -k 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "k";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Dark Palettes> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "k";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "wrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_BLUE "|s:sequence" AC_RESETALL);
-          struct fzf_keybind_t *kb = malloc(sizeof(struct fzf_keybind_t));
-          kb->key  = "s";
-          kb->type = "preview";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb->cmd, "%s -i %s -p {} -E 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "s";
-          kb3->type = "+change-preview";
-          asprintf(&kb3->cmd, "%s", kb->cmd);
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "s";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "wrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_RED "|/:toggle-preview" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "/";
-          kb2->type = "change-preview-window";
-          asprintf(&kb2->cmd, "down,border-top,50%%|up,border-bottom,50%%|left,border-right,70%%|right,border-left,70%%");
-          vector_push(fe->fzf_keybinds_v, kb2);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_RED "|l:all" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "l";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -l 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "l";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "All Palettes> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "l";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_YELLOW "|n:load-history" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "n";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "cat '%s' 2>/dev/null",
-                     get_palette_history_file()
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "n";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Palette Historys> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb1, AC_RESETALL AC_BOLD AC_YELLOW "|g:very dark" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "g";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -k -B 2 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = malloc(sizeof(struct fzf_keybind_t));
-          kb3->key  = "g";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Very Dark Palettes> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = malloc(sizeof(struct fzf_keybind_t));
-          kb4->key  = "g";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-        {
-          stringbuffer_append_string(fzf_header_sb0, AC_RESETALL AC_BOLD AC_RED "|i:invalid" AC_RESETALL);
-          struct fzf_keybind_t *kb2 = malloc(sizeof(struct fzf_keybind_t));
-          kb2->key  = "i";
-          kb2->type = "reload";
-          if (fsio_file_exists(pathbuf)) {
-            asprintf(&kb2->cmd, "%s -i %s -I 2>/dev/null",
-                     env_path,
-                     pathbuf
-                     );
-          }
-          vector_push(fe->fzf_keybinds_v, kb2);
-          struct fzf_keybind_t *kb3 = &_kb[0];
-          kb3->key  = "i";
-          kb3->type = "+change-prompt";
-          asprintf(&kb3->cmd, "Invalid Properties> ");
-          vector_push(fe->fzf_keybinds_v, kb3);
-          struct fzf_keybind_t *kb4 = &_kb[1];
-          kb4->key  = "i";
-          kb4->type = "+change-preview-window";
-          asprintf(&kb4->cmd, "nowrap,nofollow");
-          vector_push(fe->fzf_keybinds_v, kb4);
-        }
-      }
-      vector_push(fe->fzf_header_lines_v, stringbuffer_to_string(fzf_header_sb));
-      vector_push(fe->fzf_header_lines_v, stringbuffer_to_string(fzf_header_sb0));
-      vector_push(fe->fzf_header_lines_v, stringbuffer_to_string(fzf_header_sb1));
+      struct fzf_keybind_t *kb14 = &_kb[14];
+      kb14->key  = "n";
+      kb14->type = "+change-prompt";
+      asprintf(&kb14->cmd, "Select a Bright Palette > ");
+      vector_push(fe->fzf_keybinds_v, kb14);
+
+      struct fzf_keybind_t *kb11 = &_kb[11];
+      kb11->key  = "n";
+      kb11->type = "+change-preview";
+      asprintf(&kb11->cmd, "%s -i %s -p {} -T 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb11);
+
+      struct fzf_keybind_t *kb21 = &_kb[21];
+      kb21->key  = "n";
+      kb21->type = "+change-preview-window";
+      asprintf(&kb21->cmd, "nowrap,nofollow");
+      vector_push(fe->fzf_keybinds_v, kb21);
+
+      struct fzf_keybind_t *kb15 = &_kb[15];
+      kb15->key  = "n";
+      kb15->type = "+reload";
+      asprintf(&kb15->cmd, "%s -i %s -b -B 99 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb15);
     }
 
-    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
-      vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
+    {
+      struct fzf_keybind_t *kb1 = &_kb[1];
+      kb1->key  = "t";
+      kb1->type = "execute-silent";
+      asprintf(&kb1->cmd,
+               "command curl"
+               " --data key=t"
+               " --data keymod=ctrl"
+               " --data item={}"
+               " -vk"
+               " http://localhost:8199/x"
+               );
+
+      struct fzf_keybind_t *kb12 = &_kb[12];
+      kb12->key  = "t";
+      kb12->type = "+change-prompt";
+      asprintf(&kb12->cmd, "Select a Dark Palette > ");
+      vector_push(fe->fzf_keybinds_v, kb12);
+
+      struct fzf_keybind_t *kb11 = &_kb[11];
+      kb11->key  = "t";
+      kb11->type = "+change-preview";
+      asprintf(&kb11->cmd, "%s -i %s -p {} -T 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb11);
+      struct fzf_keybind_t *kb26 = &_kb[26];
+      kb26->key  = "t";
+      kb26->type = "+change-preview-window";
+      asprintf(&kb26->cmd, "nowrap,nofollow");
+      vector_push(fe->fzf_keybinds_v, kb26);
+
+
+      struct fzf_keybind_t *kb10 = &_kb[10];
+      kb10->key  = "t";
+      kb10->type = "+reload";
+      asprintf(&kb10->cmd, "%s -i %s -k -B 1 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb10);
+    }
+
+    {
+      struct fzf_keybind_t *kb3 = &_kb[3];
+      kb3->key  = "y";
+      kb3->type = "+change-prompt";
+      asprintf(&kb3->cmd, "New Prompt for y >  ");
+      vector_push(fe->fzf_keybinds_v, kb3);
+
+      struct fzf_keybind_t *kb8 = &_kb[8];
+      kb8->key  = "y";
+      kb8->type = "+change-preview";
+      asprintf(&kb8->cmd, "%s -i %s -p {} -E 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb8);
+
+      struct fzf_keybind_t *kb9 = &_kb[9];
+      kb9->key  = "y";
+      kb9->type = "+reload";
+      asprintf(&kb9->cmd, "%s -i %s -l 2>/dev/null",
+               env_path,
+               pathbuf
+               );
+      vector_push(fe->fzf_keybinds_v, kb9);
+    }
+    {
+      {
+        struct fzf_keybind_t *kb4 = &_kb[4];
+        kb4->key  = "i";
+        kb4->type = "change-prompt";
+        asprintf(&kb4->cmd, "New Prompt for i >  ");
+        vector_push(fe->fzf_keybinds_v, kb4);
+        struct fzf_keybind_t *kb5 = &_kb[5];
+        kb5->key  = "i";
+        kb5->type = "+change-preview";
+        asprintf(&kb5->cmd, "%s -i %s -p {} -T 2>/dev/null",
+                 env_path,
+                 pathbuf
+                 );
+        vector_push(fe->fzf_keybinds_v, kb5);
+
+        struct fzf_keybind_t *kb6 = &_kb[7];
+        kb6->key  = "i";
+        kb6->type = "+reload";
+        asprintf(&kb6->cmd, "%s -i %s -l 2>/dev/null",
+                 env_path,
+                 pathbuf
+                 );
+        vector_push(fe->fzf_keybinds_v, kb6);
+
+        struct fzf_keybind_t *kb22 = &_kb[22];
+        kb22->key  = "i";
+        kb22->type = "+change-preview-window";
+        asprintf(&kb22->cmd, "nowrap,nofollow");
+        vector_push(fe->fzf_keybinds_v, kb22);
+
+        struct fzf_keybind_t *kb2 = &_kb[2];
+        kb2->key  = "i";
+        kb2->type = "+execute-silent";
+        asprintf(&kb2->cmd,
+                 "command curl"
+                 " --data key=y"
+                 " --data env_path='%s'"
+                 " --data path_buf='%s'"
+                 " --data keymod=ctrl"
+                 " --data item={}"
+                 " -vk"
+                 " http://localhost:8199///cmd///y///",
+                 env_path, pathbuf
+                 );
+        vector_push(fe->fzf_keybinds_v, kb2);
+      }
     }
   }
 
+  for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+    vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
+  }
   int res = exec_fzf(fe);
 
   assert(res == 0);
@@ -1597,7 +1505,7 @@ static char *render_jinja2_template(struct Vector *__template_palettes_v){
 
   CFG->template_file = "etc/kfc-utils-palettes.c.j2";
   CFG->output_file   = "kfc-utils/kfc-utils-palettes.c";
-  CFG->debug_mode    = true;
+  CFG->debug_mode    = DEBUG_TEMPLATE_RENDER;
   JSON_Value  *root_value  = json_value_init_object();
   JSON_Object *root_object = json_value_get_object(root_value);
 
