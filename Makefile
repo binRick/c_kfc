@@ -108,7 +108,7 @@ palettes-hash:
 	@(grep '^INCTXT(' kfc-utils/kfc-utils-palettes.c |cut -d'"' -f2|xargs md5sum; md5sum kfc*/*.c kfc*/*.h meson.build */meson.build|md5sum)|md5sum|cut -d' ' -f1
 dev: nodemon
 nodemon:
-	@$(PASSH) -L .nodemon.log $(NODEMON) -i build \
+	@$(NODEMON) -i build \
 		--delay 1 \
 		-w submodules/c_deps/exec-fzf/exec-fzf.c \
 		-w etc/kfc-utils-palettes.c.j2 \
@@ -132,13 +132,32 @@ run-binary:
 	@make meson-binaries | fzf --reverse | xargs -I % nodemon -w build --delay 1000 -x passh "./%"
 meson-tests-list:
 	@meson test -C build --list
+do-meson-build:
+	@eval cd . && {  meson build || { meson build --reconfigure || { meson build --wipe;} && meson build; }; }
+do-meson: do-meson-build
+meson-build: build-meson
+build-meson: do-meson-build do-build
+build: do-meson do-build muon
 meson-tests:
-	@make meson-tests-list|fzf --reverse -m | xargs -I % env cmd="\
-		meson test --num-processes 1 -C build -v --no-stdsplit --print-errorlogs \"%\"" \
-			env bash -c '\
-	eval "$$cmd" && \
-	ansi -n --green --bold "OK" && \
-	echo -n "> " && \
-	ansi -n --yellow --italic "$$cmd" && \
-	echo \
-'	
+	@{ make meson-tests-list; } |fzf \
+	--reverse \
+	--bind 'ctrl-b:preview(make meson-build)' \
+	--bind 'ctrl-t:preview(make meson-tests-list)' \
+	--bind 'ctrl-l:reload(make meson-tests-list)' \
+	--bind 'ctrl-k:preview(make clean meson-build)' \
+	--bind 'ctrl-y:preview-half-page-up' \
+	--bind 'ctrl-u:preview-half-page-down' \
+	--bind 'ctrl-/:change-preview-window(right,85%|down,85%,border-horizontal)' \
+	--color='bg:#4B4B4B,bg+:#3F3F3F,info:#BDBB72,border:#6B6B6B,spinner:#98BC99' \
+	--color='hl:#719872,fg:#D9D9D9,header:#719872,fg+:#D9D9D9' \
+	--color='pointer:#E12672,marker:#E17899,prompt:#98BEDE,hl+:#98BC99' \
+	--preview='meson test --num-processes 1 -C build -v --no-stdsplit --print-errorlogs {}' \
+	--preview-window='follow,wrap,bottom,85%' \
+	--ansi \
+	--header='Select Test Case |ctrl+b:rebuild project|\
+ctrl+k:clean build|ctrl+t:list tests|ctrl+l:reload Selection List|\
+ctrl+/:toggle preview style|ctrl+y/u:scroll preview|\
+'\
+	--header-lines=0 \
+	--height='100%'
+	

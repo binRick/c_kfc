@@ -30,6 +30,7 @@ kfc_utils_deps = [
   parson_dep,
   c_fsio_dep,  
   exec_fzf_dep,  
+  incbin_dep,  
   ansi_rgb_utils_dep,  
   hsluv_c_dep,  
   string_utils_dep,

@@ -47,7 +47,7 @@ enum kfc_mode_t {
 };
 struct ctx_t {
   char            *palette_name, *random_palette_name, *palette_property, *palette_value;
-  size_t          random_palette_index,  palettes_limit_qty;
+  size_t          random_palette_index, palettes_limit_qty;
   bool            debug_mode;
   float           max_brightness;
   enum kfc_mode_t mode;

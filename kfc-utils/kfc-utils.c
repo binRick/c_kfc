@@ -1,7 +1,17 @@
 #pragma once
 /////////////////////////////////////
 #include <assert.h>
-
+#ifndef INCBIN_PREFIX
+#define INCBIN_PREFIX    inc_palette_
+#endif
+#ifndef INCBIN_STYLE
+#define INCBIN_STYLE     INCBIN_STYLE_SNAKE
+#endif
+#ifndef INCBIN_SILENCE_BITCODE_WARNING
+#define INCBIN_SILENCE_BITCODE_WARNING
+#endif
+#include "incbin/incbin.h"
+#include "timestamp/timestamp.h"
 #include <dirent.h>
 #include <errno.h>
 #include <libgen.h>
@@ -27,8 +37,11 @@
 #endif
 #define FZF_UTILS_DEFAULT_HISTORY_FILE    "/tmp/fzf-utils-history.txt"
 static const size_t PALETTES_QTY_LIMIT_LOAD = 2000;
-static const char PALETTES_UNJA_TEMPLATE[] = "etc/kfc-utils-palettes.c.j2";
-static const char PALETTES_LOAD_DIR[]      = "palettes/load";
+static const char PALETTES_JINJA_TEMPLATE[] = "etc/kfc-utils-palettes.c.j2";
+static const char PALETTES_LOAD_DIR[]       = "palettes/load";
+INCTXT(palettes_template_c, "etc/kfc-utils-palettes.c.j2");
+#define KFC_PALETTES_TEMPLATE_SIZE_VAR    "palettes_template_c_size"
+#define KFC_PALETTES_TEMPLATE_DATA_VAR    "palettes_template_c_data"
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-data.h"
 #include "kfc-utils/kfc-utils-module.h"
@@ -80,7 +93,6 @@ static char                *PALETTES_CACHE_FILE = NULL;
 static module(kfc_utils) * KFC;
 static struct djbhash      palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
 static struct djbhash_node *hash_item;
-extern const char          *EXECUTABLE_ABSOLUTE;
 enum palette_cache_items_t { PALETTES_TABLE,
                              PALETTES_CACHE_QTY,
 };
@@ -1514,9 +1526,7 @@ struct palette_template_item_t palette_template_items[] = {
 static char *render_jinja2_template(struct Vector *__template_palettes_v){
   struct jinja2_render_template_t *CFG = jinja2_init_config();
 
-  CFG->template_file = "etc/kfc-utils-palettes.c.j2";
-  CFG->output_file   = "kfc-utils/kfc-utils-palettes.c";
-  CFG->debug_mode    = DEBUG_TEMPLATE_RENDER;
+  CFG->debug_mode = DEBUG_TEMPLATE_RENDER;
   JSON_Value  *root_value  = json_value_init_object();
   JSON_Object *root_object = json_value_get_object(root_value);
 
@@ -1560,17 +1570,36 @@ static char *render_jinja2_template(struct Vector *__template_palettes_v){
   }
 
   CFG->input_json_string = json_serialize_to_string_pretty(root_value);
-
-  assert(fsio_file_exists(CFG->template_file) == true);
-  CFG->template_s = fsio_read_text_file(CFG->template_file);
-//  puts(CFG->input_json_string);
-//  puts(CFG->template_s);
+  if (false) {
+    fprintf(stderr, AC_RESETALL AC_GREEN_BLACK "%s\n", CFG->input_json_string);
+    CFG->debug_mode = true;
+    fprintf(stderr, AC_RESETALL AC_CYAN_BLACK "KFC_PALETTES_TEMPLATE_DATA_VAR:%s:%s\n%d\n", KFC_PALETTES_TEMPLATE_DATA_VAR, KFC_PALETTES_TEMPLATE_SIZE_VAR, inc_palette_palettes_template_c_size);
+    fprintf(stderr, AC_RESETALL AC_CYAN_BLACK "KFC_PALETTES_TEMPLATE_SIZE_VAR:%s:%s\n%s\n", KFC_PALETTES_TEMPLATE_SIZE_VAR, KFC_PALETTES_TEMPLATE_DATA_VAR, inc_palette_palettes_template_c_data);
+    fprintf(stderr, AC_RESETALL AC_RED_BLACK "%s\n", PALETTES_JINJA_TEMPLATE);
+    fprintf(stderr, AC_RESETALL AC_RED_BLACK "%d\n", fsio_file_exists(PALETTES_JINJA_TEMPLATE));
+  }
+  if (fsio_file_exists(PALETTES_JINJA_TEMPLATE) == 0) {
+    fprintf(stderr, AC_RESETALL AC_RED_BLACK "Template File does not exist. Loading from embeded text" AC_RESETALL "\n");
+    CFG->template_s = malloc(1024);
+    if (false) {
+      sprintf(CFG->template_s, "%s", inc_palette_palettes_template_c_data);
+      fprintf(stderr, AC_RESETALL AC_RED_BLACK "template_s :\n%s\n", CFG->template_s);
+    }
+  }else{
+    if (false) {
+      fprintf(stderr, AC_RESETALL AC_GREEN_BLACK "Template File does exist. Reading from it." AC_RESETALL "\n");
+    }
+    CFG->template_s = fsio_read_text_file(PALETTES_JINJA_TEMPLATE);
+  }
   CFG->template_file = NULL;
-//  exit(0);
+  assert(strlen(CFG->template_s) > 32);
+  assert(strlen(CFG->template_s) < 1024 * 1024);
+  assert(strlen(CFG->input_json_string) > 1024);
   int res = jinja2_render_template(CFG);
 
   assert(res == 0);
   assert(CFG->success == true);
+  fsio_write_text_file("kfc-utils/kfc-utils-palettes.c", CFG->output_s);
   assert(fsio_file_exists(CFG->output_file) == true);
   char *result = fsio_read_text_file(CFG->output_file);
 

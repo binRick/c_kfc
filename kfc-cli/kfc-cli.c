@@ -59,15 +59,16 @@ static int kfc_cli_print_palette_data(void);
 static int kfc_cli_reset_terminal(void);
 static int kfc_cli_print_palette_history(void);
 static int kfc_cli_render_palettes_template(void);
+
 ////////////////////////////////////////////
-static struct ctx_t               ctx = {
-  .palette_name         = NULL,
-  .debug_mode           = false,
-  .palette_property     = NULL,
-  .max_brightness       = 0.00,
-  .palettes_limit_qty   = 0,
-  .palette_value        = NULL,
-  .modes                = NULL,
+static struct ctx_t      ctx = {
+  .palette_name       = NULL,
+  .debug_mode         = false,
+  .palette_property   = NULL,
+  .max_brightness     = 0.00,
+  .palettes_limit_qty = 0,
+  .palette_value      = NULL,
+  .modes              = NULL,
 };
 static struct cag_option options[] = {
   { .identifier  = 'u', .access_letters = "u",
@@ -230,24 +231,24 @@ static int parse_args(int argc, char *argv[]){
   while (cag_option_fetch(&context)) {
     char identifier = cag_option_get(&context);
     switch (identifier) {
-    case 'd': ctx.debug_mode           = true; break;
+    case 'd': ctx.debug_mode         = true; break;
     case 'q': ctx.palettes_limit_qty = KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
-    case 'p': ctx.palette_name         = cag_option_get_value(&context); break;
-    case 'r': ctx.palette_name         = get_palette_name_by_index(random_palette_index()); break;
-    case 'B': ctx.max_brightness       = atof(cag_option_get_value(&context)); break;
-    case 'P': ctx.palette_property     = cag_option_get_value(&context); break;
-    case 'V': ctx.palette_value        = cag_option_get_value(&context); break;
+    case 'p': ctx.palette_name       = cag_option_get_value(&context); break;
+    case 'r': ctx.palette_name       = get_palette_name_by_index(random_palette_index()); break;
+    case 'B': ctx.max_brightness     = atof(cag_option_get_value(&context)); break;
+    case 'P': ctx.palette_property   = cag_option_get_value(&context); break;
+    case 'V': ctx.palette_value      = cag_option_get_value(&context); break;
     }
     for (size_t i = 0; i < (sizeof(options) / sizeof(options[0])); i++) {
       for (size_t ii = 0; ii < KFC_CLI_MODES_QTY && ii < (sizeof(kfc_mode_handlers) / sizeof(kfc_mode_handlers[0])); ii++) {
-        if(kfc_mode_handlers[ii].identifier != 0 && options[i].identifier == identifier && options[i].identifier == kfc_mode_handlers[ii].identifier){
-              add_mode_to_ctx_modes(ii);
+        if (kfc_mode_handlers[ii].identifier != 0 && options[i].identifier == identifier && options[i].identifier == kfc_mode_handlers[ii].identifier) {
+          add_mode_to_ctx_modes(ii);
         }
       }
     }
   }
-  if(vector_size(ctx.modes)==0){
-    if(ctx.palette_name != NULL){
+  if (vector_size(ctx.modes) == 0) {
+    if (ctx.palette_name != NULL) {
       add_mode_to_ctx_modes(KFC_CLI_MODE_LOAD_PALETTE);
     }else{
       add_mode_to_ctx_modes(KFC_CLI_MODE_PRINT_USAGE);
@@ -439,10 +440,10 @@ char * app_path(char *path, const char *argv0){
 int main(int argc, char **argv) {
   parse_args(argc, argv);
   size_t modes_qty = vector_size(ctx.modes);
-  int res = 1;
+  int    res       = 1;
   for (size_t i = 0; i < modes_qty; i++) {
     if (ctx.debug_mode == true) {
-          log_debug("Loading mode #%d", ctx.mode);
+      log_debug("Loading mode #%d", ctx.mode);
     }
     res = kfc_mode_handlers[(enum kfc_mode_t)(size_t)vector_get(ctx.modes, i)].handler((void *)&ctx);
     assert(res == 0);

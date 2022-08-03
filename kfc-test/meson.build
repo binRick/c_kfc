@@ -21,6 +21,5 @@ if get_option('enable-binaries')
      c_args: kfc_include_cargs,
   )
   if get_option('enable-binary-tests')
-    test('kfc-test', passh_program, args: [kfc_test_exec])
   endif
 endif

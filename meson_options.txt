@@ -14,3 +14,9 @@ option('enable-binary-clis',
   description : 'Enable binary clis.',
 )
 
+option('enable-scc-report',
+  type : 'boolean',
+  value : false,
+  description : 'Enable scc report',
+)
+
