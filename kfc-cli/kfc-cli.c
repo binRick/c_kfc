@@ -15,8 +15,10 @@
 #include <time.h>
 #include <unistd.h>
 ////////////////////////////////////////////
+
 #ifdef DEBUG_MEMORY
 //#include "debug-memory/debug_memory.h"
+//extern const struct inc_color_t *inc_colors;
 #endif
 #define IS_DEBUG_MODE          (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
 #define MAX_BRIGHTNESS_DESC    "Brightness Threshold (0.00 - 100) (Default: " DEFAULT_MAX_BRIGHTNESS ")"
@@ -27,6 +29,7 @@
 #include "exec-fzf/exec-fzf.h"
 #include "hsluv-c/src/hsluv.h"
 #include "kfc-cli/kfc-cli.h"
+#include "kfc-utils/kfc-utils-colors.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 #include "log.h/log.h"
@@ -164,6 +167,8 @@ static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]             = { .handler = kfc_cli_render_palettes_template,         .identifier = 'u', },
 };
 void __attribute__((constructor)) __kfc_cli_constructor(){
+  printf("COLORS_QTY:%lu\n", INC_COLORS_QTY);
+//    printf("COLOR #1 name: %s\n", inc_colors[0].name);
   ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
   ctx.modes          = vector_new();
   KFC                = require(kfc_utils);
