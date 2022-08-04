@@ -1,5 +1,8 @@
 foreground=C6D0E9
 background=20202A
+selection_foreground=2E3440
+selection_background=A8B6D0
+url_color=cddbf9
 color0=3b3b4d
 color8=1b1b23
 color1=ebb9b9

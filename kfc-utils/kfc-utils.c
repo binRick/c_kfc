@@ -1,11 +1,12 @@
 #pragma once
 /////////////////////////////////////
 #include <assert.h>
+#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/kfc-utils-palettes.c"
 #ifndef INCBIN_PREFIX
-#define INCBIN_PREFIX    inc_palette_
+#define INCBIN_PREFIX                           inc_palette_
 #endif
 #ifndef INCBIN_STYLE
-#define INCBIN_STYLE     INCBIN_STYLE_SNAKE
+#define INCBIN_STYLE                            INCBIN_STYLE_SNAKE
 #endif
 #ifndef INCBIN_SILENCE_BITCODE_WARNING
 #define INCBIN_SILENCE_BITCODE_WARNING
@@ -86,6 +87,7 @@ static char *get_cache_ymd();
 static char *get_palette_history_file();
 static char *render_jinja2_template(struct Vector *__template_palettes_v);
 static void kfc_utils_test_local_kitty_socket();
+static int32_t kfc_utils_random_int32(uint8_t *out, size_t outlen);
 
 /////////////////////////////////////
 static bool                KFC_UTILS_DEBUG_MODE = false;
@@ -1057,7 +1059,7 @@ char *kfc_utils_select_apply_palette(void){
       fe->preview_size = 0;
       fe->height       = 50;
       fe->debug_mode   = false;
-      fe->debug_mode   = true;
+      fe->debug_mode   = (getenv("DEBUG_MODE") != NULL) ? true : false;
     }
     fe->header          = AC_RESETALL AC_UNDERLINE AC_BOLD AC_GREEN "Select Palettes" AC_RESETALL;
     fe->select_multiple = false;
@@ -1562,22 +1564,15 @@ static char *render_jinja2_template(struct Vector *__template_palettes_v){
     }
 
     json_object_set_string(item0, "name", t->name);
-    json_object_set_string(item0, "keys_csv", stringbuffer_to_string(lsb));
+//    json_object_set_string(item0, "keys_csv", stringbuffer_to_string(lsb));
     json_object_set_string(item0, "dir", t->dir);
     json_object_set_number(item0, "size", t->bytes);
     json_object_set_number(item0, "lines_qty", t->lines_qty);
     json_array_append_value(palette_t_list_arr, item0_v);
   }
 
-  CFG->input_json_string = json_serialize_to_string_pretty(root_value);
-  if (false) {
-    fprintf(stderr, AC_RESETALL AC_GREEN_BLACK "%s\n", CFG->input_json_string);
-    CFG->debug_mode = true;
-    fprintf(stderr, AC_RESETALL AC_CYAN_BLACK "KFC_PALETTES_TEMPLATE_DATA_VAR:%s:%s\n%d\n", KFC_PALETTES_TEMPLATE_DATA_VAR, KFC_PALETTES_TEMPLATE_SIZE_VAR, inc_palette_palettes_template_c_size);
-    fprintf(stderr, AC_RESETALL AC_CYAN_BLACK "KFC_PALETTES_TEMPLATE_SIZE_VAR:%s:%s\n%s\n", KFC_PALETTES_TEMPLATE_SIZE_VAR, KFC_PALETTES_TEMPLATE_DATA_VAR, inc_palette_palettes_template_c_data);
-    fprintf(stderr, AC_RESETALL AC_RED_BLACK "%s\n", PALETTES_JINJA_TEMPLATE);
-    fprintf(stderr, AC_RESETALL AC_RED_BLACK "%d\n", fsio_file_exists(PALETTES_JINJA_TEMPLATE));
-  }
+//  CFG->input_json_string = json_serialize_to_string_pretty(root_value);
+  CFG->input_json_string = json_serialize_to_string(root_value);
   if (fsio_file_exists(PALETTES_JINJA_TEMPLATE) == 0) {
     fprintf(stderr, AC_RESETALL AC_RED_BLACK "Template File does not exist. Loading from embeded text" AC_RESETALL "\n");
     CFG->template_s = malloc(1024);
@@ -1595,18 +1590,30 @@ static char *render_jinja2_template(struct Vector *__template_palettes_v){
   assert(strlen(CFG->template_s) > 32);
   assert(strlen(CFG->template_s) < 1024 * 1024);
   assert(strlen(CFG->input_json_string) > 1024);
-  int res = jinja2_render_template(CFG);
+  size_t retries = 5, cur = 0;
+  int    res;
 
-  assert(res == 0);
+  while (cur < retries) {
+    if (cur > 2) {
+      CFG->debug_mode = true;
+    }
+    res = jinja2_render_template(CFG);
+    if (res == 0) {
+      break;
+    }
+
+    sleep(1);
+    cur++;
+  }
+
   assert(CFG->success == true);
-  fsio_write_text_file("kfc-utils/kfc-utils-palettes.c", CFG->output_s);
-  assert(fsio_file_exists(CFG->output_file) == true);
-  char *result = fsio_read_text_file(CFG->output_file);
+  assert(strlen(CFG->output_s) > 128);
+  //assert(res == 0);
+  fsio_write_text_file(KFC_UTILS_RENDERED_PALETTE_COPY_PATH, CFG->output_s);
+  assert(fsio_file_exists(KFC_UTILS_RENDERED_PALETTE_COPY_PATH) == true);
+  char *s = fsio_read_text_file(KFC_UTILS_RENDERED_PALETTE_COPY_PATH);
 
-  assert(strlen(result) > 128);
-//puts("\n\n");  puts(result);
-//  exit(0);
-  return(result);
+  return(s);
 } /* render_jinja2_template */
 
 
@@ -1663,3 +1670,4 @@ char *kfc_utils_get_rendered_template(void){
   }
   return(render_jinja2_template(__template_palettes_v));
 } /* kfc_utils_get_rendered_template */
+

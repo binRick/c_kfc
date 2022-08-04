@@ -587,9 +587,12 @@ static int kfc_cli_print_palette_history(void){
 
 
 static int kfc_cli_render_palettes_template(void){
-  char *s = kfc_utils_get_rendered_template();
+  char   *s     = kfc_utils_get_rendered_template();
+  size_t qty    = strlen(s);
+  bool   qty_ok = (qty > 1024);
 
-  puts(s);
-  return(0);
+  printf("kfc_utils_get_rendered_template returned %lub\n", qty);
+
+  return((qty_ok == true) ? 0 : 1);
 }
 #undef KFC
