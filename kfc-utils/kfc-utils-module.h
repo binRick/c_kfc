@@ -6,7 +6,7 @@
 #include "module/module.h"
 #include "module/require.h"
 ////////////////////////////////////
-size_t get_palettes_qty();
+size_t kfc_utils_get_palettes_qty();
 
 enum kfc_utils_mode {
   KFC_LOG_NONE,
@@ -57,12 +57,12 @@ exports(kfc_utils) {
   .mode                         = KFC_LOG_DEFAULT,
   .init                         = kfc_utils_module_init,
   .deinit                       = kfc_utils_module_deinit,
-  .get_palettes_table           = get_palettes_table,
-  .random_palette_index         = random_palette_index,
-  .get_palette_properties_table = get_palette_properties_table,
-  .get_palette_t_by_name        = get_palette_t_by_name,
-  .get_palette_t_by_index       = get_palette_t_by_index,
-  .get_palette_name_by_index    = get_palette_name_by_index,
-  .get_palettes_qty             = get_palettes_qty,
-  .get_palettes_v               = get_palettes_v,
+  .get_palettes_table           = kfc_utils_get_palettes_table,
+  .random_palette_index         = kfc_utils_random_palette_index,
+  .get_palette_properties_table = kfc_utils_get_palette_properties_table,
+  .get_palette_t_by_name        = kfc_utils_get_palette_t_by_name,
+  .get_palette_t_by_index       = kfc_utils_get_palette_t_by_index,
+  .get_palette_name_by_index    = kfc_utils_get_palette_name_by_index,
+  .get_palettes_qty             = kfc_utils_get_palettes_qty,
+  .get_palettes_v               = kfc_utils_get_palettes_v,
 };

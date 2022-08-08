@@ -14,6 +14,7 @@ kfc_cli_deps = [
   cargs_dep,
   tempdir_dep,
   rgba_dep,
+  vt100utils_dep,
   kfc_utils_dep,
   bytes_dep,
   hsluv_c_dep,

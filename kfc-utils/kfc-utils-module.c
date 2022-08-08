@@ -16,9 +16,9 @@ int kfc_utils_module_init(module(kfc_utils) *exports) {
     fprintf(stderr, "<%d> [%s] <module init> started\n", getpid(), __FUNCTION__);
   }
   exports->palettes            = palette_t_list;
-  exports->palettes_v          = get_palettes_v();
-  exports->palette_names_v     = get_palette_names_v();
-  exports->palettes_data_bytes = get_palettes_data_bytes();
+  exports->palettes_v          = kfc_utils_get_palettes_v();
+  exports->palette_names_v     = kfc_utils_get_palette_names_v();
+  exports->palettes_data_bytes = kfc_utils_get_palettes_data_bytes();
   exports->palettes_qty        = vector_size(exports->palettes_v);
   if (exports->mode >= KFC_LOG_DEBUG) {
     fprintf(stderr, "<%d> [%s] <module init> Loaded %lu Palettes\n",
@@ -45,7 +45,7 @@ void kfc_utils_module_deinit(module(kfc_utils) *exports) {
 
 
 //////////////////////////////////////
-size_t get_palettes_qty(){
+size_t kfc_utils_get_palettes_qty(){
   return(vector_size(require(kfc_utils)->palettes_v));
 }
 //////////////////////////////////////
