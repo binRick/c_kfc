@@ -33,7 +33,8 @@ ACTIVE_APP_DIR=$(DIR)/active-window
 SOURCE_VENV_CMD = source $(VENV_DIR)/bin/activate
 CREATE_PALETTE_INCLUDES_SCRIPT := scripts/create-palette-includes-c.sh
 ##############################################################
-TIDIED_FILES = \
+TIDIED_FILES = $(shell find */*.c */*.h -type f|egrep -v 'kfc-utils-colors.c|kfc-utils/kfc-utils-palettes-backup.c|kfc-utils/kfc-utils-palettes-backup1.c|kfc-utils/kfc-utils-palettes-rendered.c|kfc-utils/kfc-utils-palettes.backup.c|kfc-utils/kfc-utils-palettes.c')
+_TIDIED_FILES = \
 			   */*.h */*.c
 ##############################################################
 all: build muon test

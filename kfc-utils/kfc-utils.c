@@ -12,10 +12,10 @@
 #endif
 /////////////////////////////////////
 #include <assert.h>
-#include <math.h>
 #include <dirent.h>
 #include <errno.h>
 #include <libgen.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@
 #include "incbin/incbin.h"
 #include "timestamp/timestamp.h"
 /////////////////////////////////////
-#define KFC_CLI_STORAGE_DIR "$HOME/.kfc"
+#define KFC_CLI_STORAGE_DIR               "$HOME/.kfc"
 #define DEBUG_TEMPLATE_RENDER             false
 #define DEBUG_PALETTES                    false
 #define DEBUG_PALETTE_CODES               false
@@ -41,15 +41,15 @@ static const size_t PALETTES_QTY_LIMIT_LOAD = 2000;
 static const char PALETTES_JINJA_TEMPLATE[] = "etc/kfc-utils-palettes.c.j2";
 static const char PALETTES_LOAD_DIR[]       = "palettes/load";
 struct kfc_utils_storage_t {
-    char *homedir;
-    char *dir;
-    char *dir_template;
-    bool is_valid;
+  char *homedir;
+  char *dir;
+  char *dir_template;
+  bool is_valid;
 } static kfc_utils_storage = {
-    .homedir = NULL,
-    .dir = NULL,
-    .dir_template = KFC_CLI_STORAGE_DIR,
-    .is_valid = false,
+  .homedir      = NULL,
+  .dir          = NULL,
+  .dir_template = KFC_CLI_STORAGE_DIR,
+  .is_valid     = false,
 };
 INCTXT(palettes_template_c, "etc/kfc-utils-palettes.c.j2");
 #define KFC_PALETTES_TEMPLATE_SIZE_VAR    "palettes_template_c_size"
@@ -99,7 +99,7 @@ static char *kfc_utils_get_palette_history_file();
 static char *kfc_utils_render_jinja2_template(struct Vector *__template_palettes_v);
 static void kfc_utils_test_local_kitty_socket();
 static int32_t kfc_utils_random_int32(uint8_t *out, size_t outlen);
-static char *normalize_hex_color(const char* COLOR);
+static char *normalize_hex_color(const char *COLOR);
 static bool kfc_utils_get_color_is_brightness_type(const float BRIGHTNESS, const int BACKGROUND_BRIGHTNESS_TYPE, const double BRIGHTNESS_THRESHOLD);
 
 /////////////////////////////////////
@@ -159,39 +159,39 @@ struct kitty_cmd_value_translations_t                                         ki
   { .src = "clear", .dst = "", },
   { 0 },
 };
-static char *palette_color_properties[] = {
-    "background",
-    "foreground",
-    "color00",
-    "color01",
-    "color02",
-    "color03",
-"color04",
-"color05",
-"color06",
-"color07",
-"color08",
-"color09",
-"color10",
-"color11",
-"color12",
-"color13",
-"color14",
-"color15",
-"color16",
-"color17",
-"color18",
-"color19",
-"color20",
-"color21",
-"color22",
-"color23",
-"color24",
-"color25",
-"cursor",
-"selection_background",
-"selection_foreground",
-    0,
+static char                                                                   *palette_color_properties[] = {
+  "background",
+  "foreground",
+  "color00",
+  "color01",
+  "color02",
+  "color03",
+  "color04",
+  "color05",
+  "color06",
+  "color07",
+  "color08",
+  "color09",
+  "color10",
+  "color11",
+  "color12",
+  "color13",
+  "color14",
+  "color15",
+  "color16",
+  "color17",
+  "color18",
+  "color19",
+  "color20",
+  "color21",
+  "color22",
+  "color23",
+  "color24",
+  "color25",
+  "cursor",
+  "selection_background",
+  "selection_foreground",
+  0,
 };
 static struct palette_code_value_translations_t                               palette_code_value_translations[] = {
   { .name = "cursorstyle",     .src = "under",     .dst = "3 q", },
@@ -279,13 +279,13 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   if (getenv("DEBUG_MODE") != NULL) {
     KFC_UTILS_DEBUG_MODE = true;
   }
-  if(getenv("HOME") != NULL){
+  if (getenv("HOME") != NULL) {
     kfc_utils_storage.homedir = getenv("HOME");
   }
-  if(fsio_dir_exists(kfc_utils_storage.homedir) == true){
-    asprintf(&kfc_utils_storage.dir,"%s/%s/%s", kfc_utils_storage.homedir, ".config","kfc");
-    if(fsio_dir_exists(kfc_utils_storage.dir) == false){
-        fsio_mkdirs(kfc_utils_storage.dir,FSIO_MODE_ALL);
+  if (fsio_dir_exists(kfc_utils_storage.homedir) == true) {
+    asprintf(&kfc_utils_storage.dir, "%s/%s/%s", kfc_utils_storage.homedir, ".config", "kfc");
+    if (fsio_dir_exists(kfc_utils_storage.dir) == false) {
+      fsio_mkdirs(kfc_utils_storage.dir, FSIO_MODE_ALL);
     }
   }
 
@@ -319,14 +319,14 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   }
   kfc_utils_storage.is_valid = (fsio_dir_exists(kfc_utils_storage.dir) == true) ? true : false;
   log_debug("<%d> "
-          "\nkfc_utils_storage.dir: %s"
-          "\nkfc_utils_storage.is_valid: %s"
-          "",
-              getpid(),
-              kfc_utils_storage.dir,
-              (kfc_utils_storage.is_valid == true ) ? "Yes" : "No"
-  );
-}
+            "\nkfc_utils_storage.dir: %s"
+            "\nkfc_utils_storage.is_valid: %s"
+            "",
+            getpid(),
+            kfc_utils_storage.dir,
+            (kfc_utils_storage.is_valid == true) ? "Yes" : "No"
+            );
+} /* __kfc_utils_constructor */
 
 static void __attribute__((destructor)) __kfc__utils_destructor(){
   clib_module_free(KFC);
@@ -337,13 +337,15 @@ static void __attribute__((destructor)) __kfc__utils_destructor(){
 
 
 char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME){
-  struct StringBuffer *sb = stringbuffer_new();
+  struct StringBuffer       *sb                   = stringbuffer_new();
   struct palette_property_t *palette_properties_v = kfc_utils_get_palette_name_properties_v(PALETTE_NAME);
+
   if (vector_size(palette_properties_v) < 1) {
     return("No properties found");
   }
 
   ft_table_t *table = ft_create_table();
+
   ft_set_border_style(table, FT_FRAME_STYLE);
   ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
   ft_set_tbl_prop(table, FT_TPROP_TOP_MARGIN, 0);
@@ -358,7 +360,7 @@ char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME){
               "Property",
               "Value",
               "Is Color",
-              "Red","Green","Blue",
+              "Red", "Green", "Blue",
               "Brightness",
               "Bright",
               "Dark",
@@ -366,79 +368,83 @@ char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME){
               "Very Dark"
               );
   size_t max_width = 0;
+
   for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
-    struct palette_property_t *pp = vector_get(palette_properties_v, i);
-    int row_len = ft_u8printf_ln(table,
-                 "%s|%s"
-                 "|%s"
-                 "|%s|%s|%s"
-                 "|%s|%s|%s"
-                 "|%s|%s",
-                 pp->name, 
-                 (false == pp->is_color) ? pp->translated_value : normalize_hex_color(pp->translated_value),
-                 (true == pp->is_color) ? "Yes" : "No" ,
-                 (false == pp->is_color) ? "" : pp->color_t->red_s,
-                 (false == pp->is_color) ? "" : pp->color_t->green_s,
-                 (false == pp->is_color) ? "" : pp->color_t->blue_s,
-                 (false == pp->is_color) ? ""
+    struct palette_property_t *pp     = vector_get(palette_properties_v, i);
+    int                       row_len = ft_u8printf_ln(table,
+                                                       "%s|%s"
+                                                       "|%s"
+                                                       "|%s|%s|%s"
+                                                       "|%s|%s|%s"
+                                                       "|%s|%s",
+                                                       pp->name,
+                                                       (false == pp->is_color) ? pp->translated_value : normalize_hex_color(pp->translated_value),
+                                                       (true == pp->is_color) ? "Yes" : "No",
+                                                       (false == pp->is_color) ? "" : pp->color_t->red_s,
+                                                       (false == pp->is_color) ? "" : pp->color_t->green_s,
+                                                       (false == pp->is_color) ? "" : pp->color_t->blue_s,
+                                                       (false == pp->is_color) ? ""
                     : pp->color_t->brightness_s,
-                 (false == pp->is_color) ? ""
+                                                       (false == pp->is_color) ? ""
                     : (pp->color_t->is_bright == true) ? "Yes" : "No",
-                 (false == pp->is_color) ? ""
+                                                       (false == pp->is_color) ? ""
                     : (pp->color_t->is_dark == true) ? "Yes" : "No",
-                 (false == pp->is_color) ? ""
+                                                       (false == pp->is_color) ? ""
                     : (pp->color_t->is_very_bright == true) ? "Yes" : "No",
-                 (false == pp->is_color) ? ""
+                                                       (false == pp->is_color) ? ""
                     : (pp->color_t->is_very_dark == true) ? "Yes" : "No"
-            );
+                                                       );
     ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, (true == pp->is_color) ? FT_COLOR_GREEN : FT_COLOR_RED);
     ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_RED);
     ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_GREEN);
     ft_set_cell_prop(table, i + 1, 5, FT_CPROP_CONT_FG_COLOR, FT_COLOR_LIGHT_BLUE);
     ft_set_cell_prop(table, i + 1, 6, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT : FT_COLOR_LIGHT_YELLOW);
-    ft_set_cell_prop(table, i + 1, 7, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT 
+    ft_set_cell_prop(table, i + 1, 7, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT
             : (pp->color_t->is_bright) ? FT_COLOR_LIGHT_GREEN : FT_COLOR_LIGHT_RED
-            );
-    ft_set_cell_prop(table, i + 1, 8, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT 
+                     );
+    ft_set_cell_prop(table, i + 1, 8, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT
             : (pp->color_t->is_dark) ? FT_COLOR_LIGHT_GREEN : FT_COLOR_LIGHT_RED
-            );
-    ft_set_cell_prop(table, i + 1, 9, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT 
+                     );
+    ft_set_cell_prop(table, i + 1, 9, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT
             : (pp->color_t->is_very_bright) ? FT_COLOR_LIGHT_GREEN : FT_COLOR_LIGHT_RED
-            );
-    ft_set_cell_prop(table, i + 1, 10, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT 
+                     );
+    ft_set_cell_prop(table, i + 1, 10, FT_CPROP_CONT_FG_COLOR, (false == pp->is_color) ? FT_COLOR_DEFAULT
             : (pp->color_t->is_very_dark) ? FT_COLOR_LIGHT_GREEN : FT_COLOR_LIGHT_RED
-            );
+                     );
     max_width = (strlen(pp->name) > max_width) ? strlen(pp->name) : max_width;
     FREE_PALETTE_PROPERTIES(pp);
   }
   char *table1_s = strdup(ft_to_u8string(table));
+
   ft_destroy_table(table);
 
-  size_t table_title_margin = 0;
-  ft_table_t *table_title = ft_create_table();
+  size_t     table_title_margin = 0;
+  ft_table_t *table_title       = ft_create_table();
   {
-      ft_set_border_style(table_title, FT_FRAME_STYLE);
-      ft_set_tbl_prop(table_title, FT_TPROP_LEFT_MARGIN, 0);
-      ft_set_tbl_prop(table_title, FT_TPROP_RIGHT_MARGIN, 0);
+    ft_set_border_style(table_title, FT_FRAME_STYLE);
+    ft_set_tbl_prop(table_title, FT_TPROP_LEFT_MARGIN, 0);
+    ft_set_tbl_prop(table_title, FT_TPROP_RIGHT_MARGIN, 0);
   }
   {
-      ft_printf_ln(table_title,"%s",PALETTE_NAME);
+    ft_printf_ln(table_title, "%s", PALETTE_NAME);
   }
   char *table_title_s = strdup(ft_to_u8string(table_title));
   {
-      ft_destroy_table(table_title);
+    ft_destroy_table(table_title);
   }
 
-  stringbuffer_append_string(sb,AC_RESETALL);
-  stringbuffer_append_string(sb,AC_BLUE);
-  stringbuffer_append_string(sb,table_title_s);
-  stringbuffer_append_string(sb,AC_RESETALL);
-  stringbuffer_append_string(sb,table1_s);
+  stringbuffer_append_string(sb, AC_RESETALL);
+  stringbuffer_append_string(sb, AC_BLUE);
+  stringbuffer_append_string(sb, table_title_s);
+  stringbuffer_append_string(sb, AC_RESETALL);
+  stringbuffer_append_string(sb, table1_s);
   char *ret_s = stringbuffer_to_string(sb);
+
   stringbuffer_release(sb);
 
   return(ret_s);
-}
+} /* kfc_utils_get_palette_colors_table */
+
 
 char *kfc_utils_get_palette_properties_table(const char *PALETTE_NAME){
   struct palette_property_t *palette_properties_v = kfc_utils_get_palette_name_properties_v(PALETTE_NAME);
@@ -601,36 +607,41 @@ static bool kfc_utils_get_color_is_brightness_type(const float BRIGHTNESS, const
   return(false);
 }
 
+
 rgba_t kfc_utils_get_color_rgba_t(const char *COLOR){
-  char   *hex = normalize_hex_color(COLOR);
+  char    *hex = normalize_hex_color(COLOR);
   short   ok;
-  int32_t val   = rgba_from_string(hex, &ok);
+  int32_t val = rgba_from_string(hex, &ok);
+
   return(rgba_new(val));
 }
 
+
 float kfc_utils_get_color_brightness(const char *COLOR){
   double hsluv[3];
-  rgba_t  _rgba = kfc_utils_get_color_rgba_t(COLOR);
+  rgba_t _rgba = kfc_utils_get_color_rgba_t(COLOR);
+
   rgb2hsluv(_rgba.r, _rgba.g, _rgba.b, &hsluv[0], &hsluv[2], &hsluv[2]);
   return(hsluv[2]);
 }
 
 
-static char *normalize_hex_color(const char* COLOR){
-  char   *hex = NULL;
+static char *normalize_hex_color(const char *COLOR){
+  char *hex = NULL;
+
   if (false == stringfn_starts_with(COLOR, "#")) {
     asprintf(&hex, "#%s", COLOR);
   }else{
     asprintf(&hex, "%s", COLOR);
   }
   return(hex);
-
 }
 
+
 bool kfc_utils_palette_background_is_brightness_type(char *BACKGROUND_COLOR, int BACKGROUND_BRIGHTNESS_TYPE, double BRIGHTNESS_THRESHOLD){
-  char   *hex = normalize_hex_color(BACKGROUND_COLOR);
-  double hsluv[3];
-  
+  char    *hex = normalize_hex_color(BACKGROUND_COLOR);
+  double  hsluv[3];
+
   short   ok;
   int32_t val   = rgba_from_string(hex, &ok);
   rgba_t  _rgba = rgba_new(val);
@@ -813,23 +824,23 @@ struct Vector *kfc_utils_get_palette_name_properties_v(const char *PALETTE_NAME)
     pp->sequence         = kfc_utils_get_palette_item_sequence(pp);
     pp->suffix           = is_valid_palette_item_name(pp->translated_name) ? strdup_escaped(CODE_SUFFIX) : "";
     pp->prefix           = is_valid_palette_item_name(pp->translated_name) ? strdup_escaped(CODE_PREFIX) : "";
-    pp->is_color = kfc_utils_palette_property_is_color(pp->translated_name);
-    pp->color_t = NULL;
-    if(true == pp->is_color){
-        pp->color_t = malloc(sizeof(struct palette_property_color_t));
-        pp->color_t->brightness = kfc_utils_get_color_brightness(pp->translated_value);
-        asprintf(&pp->color_t->brightness_s,"%d",(int)pp->color_t->brightness);
-        pp->color_t->is_bright = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_BRIGHT, atof(DEFAULT_MAX_BRIGHTNESS));
-        pp->color_t->is_dark = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_DARK, atof(DEFAULT_MAX_BRIGHTNESS));
-        pp->color_t->is_very_bright = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_BRIGHT, atof(DEFAULT_MAX_BRIGHTNESS_VERY));
-        pp->color_t->is_very_dark = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_DARK, atof(DEFAULT_MAX_BRIGHTNESS_VERY));
-        pp->color_t->rgba = kfc_utils_get_color_rgba_t(pp->translated_value);
-        pp->color_t->red = (int)(255 *pp->color_t->rgba.r);
-        pp->color_t->green = (int)(255 *pp->color_t->rgba.g);
-        pp->color_t->blue = (int)(255 *pp->color_t->rgba.b);
-        asprintf(&pp->color_t->red_s,"%d",pp->color_t->red);
-        asprintf(&pp->color_t->green_s,"%d",pp->color_t->green);
-        asprintf(&pp->color_t->blue_s,"%d",pp->color_t->blue);
+    pp->is_color         = kfc_utils_palette_property_is_color(pp->translated_name);
+    pp->color_t          = NULL;
+    if (true == pp->is_color) {
+      pp->color_t             = malloc(sizeof(struct palette_property_color_t));
+      pp->color_t->brightness = kfc_utils_get_color_brightness(pp->translated_value);
+      asprintf(&pp->color_t->brightness_s, "%d", (int)pp->color_t->brightness);
+      pp->color_t->is_bright      = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_BRIGHT, atof(DEFAULT_MAX_BRIGHTNESS));
+      pp->color_t->is_dark        = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_DARK, atof(DEFAULT_MAX_BRIGHTNESS));
+      pp->color_t->is_very_bright = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_BRIGHT, atof(DEFAULT_MAX_BRIGHTNESS_VERY));
+      pp->color_t->is_very_dark   = kfc_utils_get_color_is_brightness_type(pp->color_t->brightness, BACKGROUND_BRIGHTNESS_DARK, atof(DEFAULT_MAX_BRIGHTNESS_VERY));
+      pp->color_t->rgba           = kfc_utils_get_color_rgba_t(pp->translated_value);
+      pp->color_t->red            = (int)(255 * pp->color_t->rgba.r);
+      pp->color_t->green          = (int)(255 * pp->color_t->rgba.g);
+      pp->color_t->blue           = (int)(255 * pp->color_t->rgba.b);
+      asprintf(&pp->color_t->red_s, "%d", pp->color_t->red);
+      asprintf(&pp->color_t->green_s, "%d", pp->color_t->green);
+      asprintf(&pp->color_t->blue_s, "%d", pp->color_t->blue);
     }
     if (strlen(pp->translated_value) == 0) {
       pp->sequence = "";
@@ -1879,25 +1890,27 @@ char *kfc_utils_get_rendered_template(void){
 
 
 bool kfc_utils_palette_property_is_color(const char *PALETTE_PROPERTY_NAME){
-   bool is_color = false;
-    struct Vector *props = kfc_utils_get_palette_property_color_names_v();
-    for(size_t i=0;i<vector_size(props);i++){
-        if(strcmp(PALETTE_PROPERTY_NAME,(char*)vector_get(props,i))==0){
-            is_color = true;
-            goto done;
-        }
+  bool          is_color = false;
+  struct Vector *props   = kfc_utils_get_palette_property_color_names_v();
+
+  for (size_t i = 0; i < vector_size(props); i++) {
+    if (strcmp(PALETTE_PROPERTY_NAME, (char *)vector_get(props, i)) == 0) {
+      is_color = true;
+      goto done;
     }
+  }
 done:
-   vector_release(props);
-   return is_color;
+  vector_release(props);
+  return(is_color);
 }
 
 struct Vector *kfc_utils_get_palette_property_color_names_v(){
-    struct Vector *v = vector_new();
-    char **tmp = palette_color_properties;
-    while(*tmp != NULL){
-        vector_push(v,*tmp);
-        tmp++;
-    }
-    return(v);
+  struct Vector *v    = vector_new();
+  char          **tmp = palette_color_properties;
+
+  while (*tmp != NULL) {
+    vector_push(v, *tmp);
+    tmp++;
+  }
+  return(v);
 }
