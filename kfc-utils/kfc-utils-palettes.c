@@ -1,7 +1,7 @@
 #pragma once
 #include "kfc-utils.h"
 
-const size_t PALETTES_QTY = 663;
+const size_t PALETTES_QTY = 665;
 #ifndef INC_PALETTE_T_DEFINED
 ##define INC_PALETTE_T_DEFINED
 struct inc_palette_t { const size_t size; const size_t lines_qty; const size_t keys_qty; char *keys_csv; const char *name; const char *file; const char *data; const char *dir; };
@@ -45,6 +45,7 @@ INCTXT(base16_vulcan, "palettes/load/base16-vulcan");
 INCTXT(raycastlight, "palettes/load/raycastlight");
 INCTXT(duckbones, "palettes/load/duckbones");
 INCTXT(kibble, "palettes/load/kibble");
+INCTXT(repos, "palettes/load/repos");
 INCTXT(tempus_totus, "palettes/load/tempus_totus");
 INCTXT(sexy_jasonwryan, "palettes/load/sexy-jasonwryan");
 INCTXT(catppuccin, "palettes/load/catppuccin");
@@ -293,6 +294,7 @@ INCTXT(dkeg_blumune, "palettes/load/dkeg-blumune");
 INCTXT(invalid, "palettes/load/invalid");
 INCTXT(sexy_gotham, "palettes/load/sexy-gotham");
 INCTXT(base16_porple, "palettes/load/base16-porple");
+INCTXT(c_ansi, "palettes/load/c_ansi");
 INCTXT(base16_brewer, "palettes/load/base16-brewer");
 INCTXT(flatland, "palettes/load/flatland");
 INCTXT(base16_black_metal_funeral, "palettes/load/base16-black-metal-funeral");
@@ -671,7 +673,7 @@ INCTXT(firefoxdev, "palettes/load/firefoxdev");
 INCTXT(nocturnalwinter, "palettes/load/nocturnalwinter");
 
 
-const struct inc_palette_t palette_t_list[664] = {
+const struct inc_palette_t palette_t_list[666] = {
     { .name = "modusvivendifaint", .size = 537, .file = "modusvivendifaint", .data = inc_palette_modusvivendifaint_data, },
     { .name = "wild-cherry", .size = 304, .file = "wild-cherry", .data = inc_palette_wild_cherry_data, },
     { .name = "base16-black-metal-bathory", .size = 290, .file = "base16-black-metal-bathory", .data = inc_palette_base16_black_metal_bathory_data, },
@@ -711,6 +713,7 @@ const struct inc_palette_t palette_t_list[664] = {
     { .name = "raycastlight", .size = 336, .file = "raycastlight", .data = inc_palette_raycastlight_data, },
     { .name = "duckbones", .size = 481, .file = "duckbones", .data = inc_palette_duckbones_data, },
     { .name = "kibble", .size = 336, .file = "kibble", .data = inc_palette_kibble_data, },
+    { .name = "repos", .size = 440, .file = "repos", .data = inc_palette_repos_data, },
     { .name = "tempus_totus", .size = 290, .file = "tempus_totus", .data = inc_palette_tempus_totus_data, },
     { .name = "sexy-jasonwryan", .size = 290, .file = "sexy-jasonwryan", .data = inc_palette_sexy_jasonwryan_data, },
     { .name = "catppuccin", .size = 807, .file = "catppuccin", .data = inc_palette_catppuccin_data, },
@@ -959,6 +962,7 @@ const struct inc_palette_t palette_t_list[664] = {
     { .name = "invalid", .size = 48, .file = "invalid", .data = inc_palette_invalid_data, },
     { .name = "sexy-gotham", .size = 290, .file = "sexy-gotham", .data = inc_palette_sexy_gotham_data, },
     { .name = "base16-porple", .size = 290, .file = "base16-porple", .data = inc_palette_base16_porple_data, },
+    { .name = "c_ansi", .size = 428, .file = "c_ansi", .data = inc_palette_c_ansi_data, },
     { .name = "base16-brewer", .size = 290, .file = "base16-brewer", .data = inc_palette_base16_brewer_data, },
     { .name = "flatland", .size = 336, .file = "flatland", .data = inc_palette_flatland_data, },
     { .name = "base16-black-metal-funeral", .size = 290, .file = "base16-black-metal-funeral", .data = inc_palette_base16_black_metal_funeral_data, },

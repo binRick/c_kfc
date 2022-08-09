@@ -70,6 +70,9 @@ struct palette_property_color_t {
   char   *brightness_s;
   int    red; int green; int blue;
   char   *red_s; char *green_s; char *blue_s;
+  char   *sequence;
+  char   *escaped_sequence;
+  char   *(*apply_sequence)(const char *SEQUENCE, const char *STRING);
 };
 struct palette_property_t {
   char                            *name;
@@ -159,6 +162,7 @@ struct Vector *kfc_utils_get_unique_palette_property_names();
 struct Vector *kfc_utils_get_invalid_palette_property_names();
 struct Vector *kfc_utils_get_palette_names_by_brightness_type(int BACKGROUND_BRIGHTNESS_TYPE, float BRIGHTNESS_THRESHOLD);
 struct Vector *kfc_utils_get_palette_property_color_names_v();
+char *kfc_utils_get_palette_colored_properties(const char *PALETTE_NAME);
 char *kfc_utils_get_palette_item_code(const char *PALETTE_ITEM_NAME);
 char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME);
 bool kfc_utils_palette_item_name_is_translated(const char *ITEM_NAME);

@@ -1,8 +1,5 @@
 #define DEBUG_MODE         false
 #define KFC_CLI_VERSION    "0.0.1"
-#ifndef DEBUG_MEMORY
-//#define DEBUG_MEMORY
-#endif
 ////////////////////////////////////////////
 #include <dirent.h>
 #include <getopt.h>
@@ -16,9 +13,6 @@
 #include <time.h>
 #include <unistd.h>
 ////////////////////////////////////////////
-#ifdef DEBUG_MEMORY
-#include "debug-memory/debug_memory.h"
-#endif
 #define IS_DEBUG_MODE          (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
 #define MAX_BRIGHTNESS_DESC    "Brightness Threshold\n\t\t\t\t\t\t(0.00 - 100) (Default: " DEFAULT_MAX_BRIGHTNESS ")"
 #define OPTION_MODE_COLOR      AC_BRIGHT_YELLOW AC_BOLD
@@ -76,6 +70,7 @@ static int kfc_cli_render_bright_colors_demo(void);
 static int kfc_cli_vt100utils_demo(void);
 static int kfc_cli_render_bright_colors_vt100utils_demo(void);
 static int kfc_cli_print_palette_color_property_names(void);
+static int kfc_cli_print_palette_colored_property_names(void);
 static char *kfc_cli_get_bright_colors_demo_string(void);
 
 ////////////////////////////////////////////
@@ -101,6 +96,9 @@ static struct cag_option options[] = {
   { .identifier  = 't', .access_letters = "t",
     .access_name = "palettes-table", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Palettes Table"), },
+  { .identifier  = 'o', .access_letters = "o",
+    .access_name = "print-colored-properties", .value_name = NULL,
+    .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Colored Property Names"), },
   { .identifier  = 'F', .access_letters = "F",
     .access_name = "print-color-properties", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Color Property Names"), },
@@ -199,42 +197,37 @@ struct kfc_mode_handlers_t {
   char identifier;
 };
 static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
-  [KFC_CLI_MODE_LIST_PALETTES]                      = { .handler = kfc_cli_list_palettes,                        .identifier = 'l', },
-  [KFC_CLI_MODE_LOAD_PALETTE]                       = { .handler = kfc_cli_load_palette,                         .identifier = 'L', },
-  [KFC_CLI_MODE_PRINT_PALETTES_TABLE]               = { .handler = kfc_cli_print_palettes_table,                 .identifier = 't', },
-  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]                = { .handler = kfc_cli_print_palette_table,                  .identifier = 'T', },
-  [KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE]     = { .handler = kfc_cli_print_palette_properties_table,       .identifier = 'T', },
-  [KFC_CLI_MODE_PRINT_VERSION]                      = { .handler = kfc_cli_print_version,                        .identifier = 'v', },
-  [KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES]    = { .handler = kfc_cli_print_unique_palette_properties,      .identifier = 'U', },
-  [KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES]   = { .handler = kfc_cli_print_invalid_palette_properties,     .identifier = 'I', },
-  [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]               = { .handler = kfc_cli_detect_terminal_type,                 .identifier = 'D', },
-  [KFC_CLI_MODE_TEST_KITTY_SOCKET]                  = { .handler = kfc_cli_test_kitty_socket,                    .identifier = 'K', },
-  [KFC_CLI_MODE_PRINT_USAGE]                        = { .handler = kfc_cli_print_usage,                          .identifier = 'h', },
-  [KFC_CLI_MODE_TEST_COLORS]                        = { .handler = kfc_cli_test_colors,                          .identifier = 'C' },
-  [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]                 = { .handler = kfc_cli_bright_backgrounds,                   .identifier = 'b', },
-  [KFC_CLI_MODE_VT100UTILS_DEMO]                    = { .handler = kfc_cli_vt100utils_demo,                      .identifier = 'z', },
-  [KFC_CLI_MODE_DARK_BACKGROUNDS]                   = { .handler = kfc_cli_dark_backgrounds,                     .identifier = 'k', },
-  [KFC_CLI_MODE_SELECT_PALETTE]                     = { .handler = kfc_cli_select_palette,                       .identifier = 's', },
-  [KFC_CLI_MODE_SELECT_APPLY_PALETTE]               = { .handler = kfc_cli_select_apply_palette,                 .identifier = 'L', },
-  [KFC_CLI_MODE_SELECT_PALETTES]                    = { .handler = kfc_cli_select_palettes,                      .identifier = 'S', },
-  [KFC_CLI_MODE_COLOR_REPORT]                       = { .handler = kfc_cli_color_report,                         .identifier = 'C', },
-  [KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE]     = { .handler = kfc_cli_print_escaped_sequence,               .identifier = 'E', },
-  [KFC_CLI_MODE_PRINT_PALETTE_DATA]                 = { .handler = kfc_cli_print_palette_data,                   .identifier = 'e', },
-  [KFC_CLI_MODE_RESET_TERMINAL]                     = { .handler = kfc_cli_reset_terminal,                       .identifier = 'Q', },
-  [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]              = { .handler = kfc_cli_print_palette_history,                .identifier = 'G', },
-  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]               = { .handler = kfc_cli_render_palettes_template,             .identifier = 'u', },
-  [KFC_CLI_MODE_RENDER_BRIGHT_COLORS_DEMO]          = { .handler = kfc_cli_render_bright_colors_demo,            .identifier = 'z', },
-  [KFC_CLI_MODE_BRIGHT_COLORS_VT100UTILS_DEMO]      = { .handler = kfc_cli_render_bright_colors_vt100utils_demo, .identifier = 'X', },
-  [KFC_CLI_MODE_PRINT_PALETTE_COLORS_TABLE]         = { .handler = kfc_cli_print_palette_colors_table,           .identifier = 'c', },
-  [KFC_CLI_MODE_PRINT_PALETTE_COLOR_PROPERTY_NAMES] = { .handler = kfc_cli_print_palette_color_property_names,   .identifier = 'F', },
+  [KFC_CLI_MODE_LIST_PALETTES]                        = { .handler = kfc_cli_list_palettes,                        .identifier = 'l', },
+  [KFC_CLI_MODE_LOAD_PALETTE]                         = { .handler = kfc_cli_load_palette,                         .identifier = 'L', },
+  [KFC_CLI_MODE_PRINT_PALETTES_TABLE]                 = { .handler = kfc_cli_print_palettes_table,                 .identifier = 't', },
+  [KFC_CLI_MODE_PRINT_PALETTE_TABLE]                  = { .handler = kfc_cli_print_palette_table,                  .identifier = 'T', },
+  [KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE]       = { .handler = kfc_cli_print_palette_properties_table,       .identifier = 'T', },
+  [KFC_CLI_MODE_PRINT_VERSION]                        = { .handler = kfc_cli_print_version,                        .identifier = 'v', },
+  [KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES]      = { .handler = kfc_cli_print_unique_palette_properties,      .identifier = 'U', },
+  [KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES]     = { .handler = kfc_cli_print_invalid_palette_properties,     .identifier = 'I', },
+  [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]                 = { .handler = kfc_cli_detect_terminal_type,                 .identifier = 'D', },
+  [KFC_CLI_MODE_TEST_KITTY_SOCKET]                    = { .handler = kfc_cli_test_kitty_socket,                    .identifier = 'K', },
+  [KFC_CLI_MODE_PRINT_USAGE]                          = { .handler = kfc_cli_print_usage,                          .identifier = 'h', },
+  [KFC_CLI_MODE_TEST_COLORS]                          = { .handler = kfc_cli_test_colors,                          .identifier = 'C' },
+  [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]                   = { .handler = kfc_cli_bright_backgrounds,                   .identifier = 'b', },
+  [KFC_CLI_MODE_VT100UTILS_DEMO]                      = { .handler = kfc_cli_vt100utils_demo,                      .identifier = 'z', },
+  [KFC_CLI_MODE_DARK_BACKGROUNDS]                     = { .handler = kfc_cli_dark_backgrounds,                     .identifier = 'k', },
+  [KFC_CLI_MODE_SELECT_PALETTE]                       = { .handler = kfc_cli_select_palette,                       .identifier = 's', },
+  [KFC_CLI_MODE_SELECT_APPLY_PALETTE]                 = { .handler = kfc_cli_select_apply_palette,                 .identifier = 'L', },
+  [KFC_CLI_MODE_SELECT_PALETTES]                      = { .handler = kfc_cli_select_palettes,                      .identifier = 'S', },
+  [KFC_CLI_MODE_COLOR_REPORT]                         = { .handler = kfc_cli_color_report,                         .identifier = 'C', },
+  [KFC_CLI_MODE_PALETTE_PRINT_ESCAPED_SEQUENCE]       = { .handler = kfc_cli_print_escaped_sequence,               .identifier = 'E', },
+  [KFC_CLI_MODE_PRINT_PALETTE_DATA]                   = { .handler = kfc_cli_print_palette_data,                   .identifier = 'e', },
+  [KFC_CLI_MODE_RESET_TERMINAL]                       = { .handler = kfc_cli_reset_terminal,                       .identifier = 'Q', },
+  [KFC_CLI_MODE_PRINT_PALETTE_HISTORY]                = { .handler = kfc_cli_print_palette_history,                .identifier = 'G', },
+  [KFC_CLI_MODE_RENDER_UNJA_TEMPLATE]                 = { .handler = kfc_cli_render_palettes_template,             .identifier = 'u', },
+  [KFC_CLI_MODE_RENDER_BRIGHT_COLORS_DEMO]            = { .handler = kfc_cli_render_bright_colors_demo,            .identifier = 'z', },
+  [KFC_CLI_MODE_BRIGHT_COLORS_VT100UTILS_DEMO]        = { .handler = kfc_cli_render_bright_colors_vt100utils_demo, .identifier = 'X', },
+  [KFC_CLI_MODE_PRINT_PALETTE_COLORS_TABLE]           = { .handler = kfc_cli_print_palette_colors_table,           .identifier = 'c', },
+  [KFC_CLI_MODE_PRINT_PALETTE_COLOR_PROPERTY_NAMES]   = { .handler = kfc_cli_print_palette_color_property_names,   .identifier = 'F', },
+  [KFC_CLI_MODE_PRINT_PALETTE_COLORED_PROPERTY_NAMES] = { .handler = kfc_cli_print_palette_colored_property_names, .identifier = 'o', },
 };
 void __attribute__((constructor)) __kfc_cli_constructor(){
-  /*
-   * if (IS_DEBUG_MODE) {
-   * fprintf(stderr,"COLORS_QTY:%lu\n", INC_COLORS_QTY);
-   * }
-   */
-//    printf("COLOR #1 name: %s\n", inc_colors[0].name);
   ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
   ctx.modes          = vector_new();
   KFC                = require(kfc_utils);
@@ -242,15 +235,9 @@ void __attribute__((constructor)) __kfc_cli_constructor(){
 
 void __attribute__((destructor)) __kfc_cli_destructor(){
   clib_module_free(KFC);
-#ifdef DEBUG_MEMORY
-  if (IS_DEBUG_MODE) {
-    log_info("<%d> [%s] Checking for memory leaks", getpid(), __FUNCTION__);
-  }
-//  print_allocated_memory();
   if (IS_DEBUG_MODE) {
     log_info("<%d> [%s] OK", getpid(), __FUNCTION__);
   }
-#endif
 }
 
 
@@ -592,7 +579,7 @@ static int kfc_cli_select_palette(void *CTX){
   if (palette_name != NULL) {
     kfc_utils_load_palette_name(palette_name);
     fflush(stdout);
-    fprintf(stdout, "%s\n", palette_name);
+    fprintf(stderr, "%s\n", palette_name);
   }else{
     fprintf(stdout, "Selected no Palette\n");
   }
@@ -618,8 +605,8 @@ static int kfc_cli_select_apply_palette(void){
 //    fprintf(stdout, "\ec");
     kfc_utils_load_palette_name(palette_name);
     //fflush(stdout);
-    fprintf(stdout, " \n");
-    fprintf(stdout, "%s\n", palette_name);
+    fprintf(stderr, " \n");
+    fprintf(stderr, "%s\n", palette_name);
   }else{
     fprintf(stdout, "Selected no Palette\n");
   }
@@ -749,7 +736,9 @@ static int kfc_cli_render_bright_colors_demo(void){
 static int kfc_cli_render_bright_colors_vt100utils_demo(void){
   char *bright_colors = kfc_cli_get_bright_colors_demo_string();
 
+  fprintf(stdout, AC_ALT_SCREEN_ON);
   fprintf(stdout, "%s\n", bright_colors);
+  fprintf(stdout, AC_ALT_SCREEN_OFF);
   return(EXIT_SUCCESS);
 
   struct vt100_node_t *tmp;
@@ -852,11 +841,25 @@ static int kfc_cli_print_palette_colors_table(void){
 }
 
 
+static int kfc_cli_print_palette_colored_property_names(void){
+  if (ctx.palette_name == NULL) {
+    ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
+  }
+  char *s = kfc_utils_get_palette_colored_properties(ctx.palette_name);
+  if (ctx.debug_mode) {
+    fprintf(stderr, AC_RESETALL AC_YELLOW "%s" AC_RESETALL "\n", ctx.palette_name);
+  }
+  fprintf(stdout, "%s\n", s);
+  return(EXIT_SUCCESS);
+}
+
+
 static int kfc_cli_print_palette_color_property_names(void){
   struct Vector *props = kfc_utils_get_palette_property_color_names_v();
 
   for (size_t i = 0; i < vector_size(props); i++) {
-    printf("%s\n", (char *)vector_get(props, i));
+    char *p = vector_get(props, i);
+    printf("%s\n", p);
   }
   if (ctx.debug_mode) {
     fprintf(stderr, "%lu color prop names\n", vector_size(props));
