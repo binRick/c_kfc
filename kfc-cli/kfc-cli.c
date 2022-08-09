@@ -22,6 +22,7 @@
 #define KFC_CLI_OPTION_COLORIZED(OPTION_NAME)                AC_RESETALL OPTION_COLOR OPTION_NAME AC_RESETALL
 #define KFC_CLI_OPTION_VALUE_COLORIZED(OPTION_VALUE_NAME)    AC_RESETALL OPTION_VALUE_COLOR OPTION_VALUE_NAME AC_RESETALL
 ////////////////////////////////////////////
+#include "ansi-rgb-utils/ansi-rgb-utils.h"
 #include "bytes/bytes.h"
 #include "c_stringfn/include/stringfn.h"
 #include "cargs/include/cargs.h"
@@ -71,6 +72,7 @@ static int kfc_cli_vt100utils_demo(void);
 static int kfc_cli_render_bright_colors_vt100utils_demo(void);
 static int kfc_cli_print_palette_color_property_names(void);
 static int kfc_cli_print_palette_colored_property_names(void);
+static int kfc_cli_print_color_boxes(void);
 static char *kfc_cli_get_bright_colors_demo_string(void);
 
 ////////////////////////////////////////////
@@ -123,6 +125,9 @@ static struct cag_option options[] = {
   { .identifier  = 'R', .access_letters = "R",
     .access_name = "print-color-demo", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Color Demo"), },
+  { .identifier  = 'H', .access_letters = "H",
+    .access_name = "print-color-boxes", .value_name = NULL,
+    .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Color Boxes"), },
   { .identifier  = 'A', .access_letters = "A",
     .access_name = "select-apply-palette", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Select & Apply Palettes"), },
@@ -226,6 +231,7 @@ static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_PRINT_PALETTE_COLORS_TABLE]           = { .handler = kfc_cli_print_palette_colors_table,           .identifier = 'c', },
   [KFC_CLI_MODE_PRINT_PALETTE_COLOR_PROPERTY_NAMES]   = { .handler = kfc_cli_print_palette_color_property_names,   .identifier = 'F', },
   [KFC_CLI_MODE_PRINT_PALETTE_COLORED_PROPERTY_NAMES] = { .handler = kfc_cli_print_palette_colored_property_names, .identifier = 'o', },
+  [KFC_CLI_MODE_PRINT_COLOR_BOXES]                    = { .handler = kfc_cli_print_color_boxes,                    .identifier = 'H', },
 };
 void __attribute__((constructor)) __kfc_cli_constructor(){
   ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
@@ -864,5 +870,12 @@ static int kfc_cli_print_palette_color_property_names(void){
   if (ctx.debug_mode) {
     fprintf(stderr, "%lu color prop names\n", vector_size(props));
   }
+}
+
+
+static int kfc_cli_print_color_boxes(void){
+  char *s = get_color_boxes();
+
+  printf("%s", s);
 }
 #undef KFC

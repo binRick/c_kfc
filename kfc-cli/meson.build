@@ -20,6 +20,7 @@ kfc_cli_deps = [
   hsluv_c_dep,
   logh_dep,
   c_stringfn_dep,
+  ansi_rgb_utils_dep,
   reproc_dep,
   #//debug_memory_dep,
 ]

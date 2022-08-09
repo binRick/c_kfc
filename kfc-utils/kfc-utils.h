@@ -72,7 +72,7 @@ struct palette_property_color_t {
   char   *red_s; char *green_s; char *blue_s;
   char   *sequence;
   char   *escaped_sequence;
-  char   *(*apply_sequence)(const char *SEQUENCE, const char *STRING);
+//  void   (*apply_sequence)(char *SEQUENCE, char *STRING);
 };
 struct palette_property_t {
   char                            *name;
