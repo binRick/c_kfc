@@ -1,5 +1,6 @@
 #pragma once
-#include "vt100utils/demos/tuibox.h"
+#include "vt100utils/tuibox-vec.h"
+#include "vt100utils/tuibox.h"
 #include "vt100utils/vt100utils.h"
 
 #define MIN(a, b)    (a < b ? a : b)

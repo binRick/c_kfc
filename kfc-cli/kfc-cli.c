@@ -38,7 +38,8 @@
 #include "rgba/src/rgba.h"
 #include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
-#include "vt100utils/demos/tuibox.h"
+#include "vt100utils/tuibox-vec.h"
+#include "vt100utils/tuibox.h"
 #include "vt100utils/vt100utils.h"
 ////////////////////////////////////////////
 #define KFC    ctx.kfc_utils
