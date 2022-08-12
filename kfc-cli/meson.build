@@ -30,7 +30,9 @@ if get_option('enable-binaries')
      dependencies: kfc_cli_deps,
      include_directories: kfc_include_dirs,
      c_args: kfc_include_cargs,
+     install_dir: '/usr/local/bin',
      install: true,
+
   )
   if get_option('enable-binary-clis')
   if get_option('enable-scc-report')

@@ -1,4 +1,7 @@
-project('c_kfc', ['c'],default_options: ['warning_level=0','c_std=gnu99',],subproject_dir: 'submodules/c_deps/subprojects',version: '0.0.1')
+project('c_kfc', ['c'],
+  default_options: ['warning_level=0','c_std=gnu99','default_library=static'],
+  subproject_dir: 'submodules/c_deps/subprojects',version: '0.0.1'
+  )
 cc = meson.get_compiler('c')
 unlink_program = find_program('unlink', required : true)
 passh_program = find_program('passh', required : true)

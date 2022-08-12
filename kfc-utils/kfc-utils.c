@@ -324,18 +324,20 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
               KFC->get_palettes_qty()
               );
   }
-  if (strcmp(PALETTES_HASH, "") != 0) {
-    char *ymd = kfc_utils_get_cache_ymd();
-    for (size_t i = 0; i < PALETTES_CACHE_QTY; i++) {
-      asprintf(&PALETTE_CACHE_FILES[i].path,
-               "%s%s-%s-%s.txt",
-               gettempdir(),
-               PALETTE_CACHE_FILES[i].name,
-               ymd,
-               PALETTES_HASH
-               );
-      if (KFC_UTILS_DEBUG_MODE == true) {
-        log_debug("palettes table hash %s|%s", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
+  if (false) {
+    if (strcmp(PALETTES_HASH, "") != 0) {
+      char *ymd = kfc_utils_get_cache_ymd();
+      for (size_t i = 0; i < PALETTES_CACHE_QTY; i++) {
+        asprintf(&PALETTE_CACHE_FILES[i].path,
+                 "%s%s-%s-%s.txt",
+                 gettempdir(),
+                 PALETTE_CACHE_FILES[i].name,
+                 ymd,
+                 PALETTES_HASH
+                 );
+        if (KFC_UTILS_DEBUG_MODE == true) {
+          log_debug("palettes table hash %s|%s", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
+        }
       }
     }
   }
@@ -702,49 +704,76 @@ bool kfc_utils_palette_background_is_brightness_type(char *BACKGROUND_COLOR, int
 
 
 char *kfc_utils_get_palettes_table() {
-  char *cache_file = PALETTE_CACHE_FILES[PALETTES_TABLE].path;
+  unsigned long table_started_ts = timestamp();
+  unsigned long pp_dur           = 0;
+  unsigned long palettes_dur     = 0;
+  unsigned long table_dur        = 0;
+  unsigned long cache_dur        = 0;
+  unsigned long cache_started    = timestamp();
+  char          *cache_file      = PALETTE_CACHE_FILES[PALETTES_TABLE].path;
 
-  if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
-    if (fsio_file_exists(cache_file)) {
-      size_t cache_file_size = fsio_file_size(cache_file);
-      if (cache_file_size > 0) {
-        char *cache_file_content = fsio_read_text_file(cache_file);
-        if (cache_file_content != NULL) {
-          if (KFC_UTILS_DEBUG_MODE) {
-            log_info("<%d> [%s] returning %s cached table from cache file: %s",
-                     getpid(), __FUNCTION__,
-                     bytes_to_string(cache_file_size),
-                     cache_file);
+  if (false) {
+    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+      if (fsio_file_exists(cache_file)) {
+        size_t cache_file_size = fsio_file_size(cache_file);
+        if (cache_file_size > 0) {
+          char *cache_file_content = fsio_read_text_file(cache_file);
+          if (cache_file_content != NULL) {
+            if (KFC_UTILS_DEBUG_MODE) {
+              log_info("<%d> [%s] returning %s cached table from cache file: %s",
+                       getpid(), __FUNCTION__,
+                       bytes_to_string(cache_file_size),
+                       cache_file);
+            }
+            return(cache_file_content);
           }
-          return(cache_file_content);
         }
       }
     }
   }
-  unsigned long started_ts = timestamp();
-  ft_table_t    *table     = ft_create_table();
+  cache_dur += timestamp() - cache_started;
 
+  long unsigned table_start = timestamp();
+  ft_table_t    *table      = ft_create_table();
+
+  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
   ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
   ft_set_tbl_prop(table, FT_TPROP_LEFT_MARGIN, 0);
   ft_set_tbl_prop(table, FT_TPROP_TOP_MARGIN, 0);
   ft_set_tbl_prop(table, FT_TPROP_BOTTOM_MARGIN, 0);
-  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
-  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_CENTER);
-  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
-  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
-  ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_CONT_BG_COLOR, FT_COLOR_BLACK);
+  ft_set_cell_prop(table, FT_ANY_ROW, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
+  ft_set_cell_prop(table, FT_ANY_ROW, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_MAGENTA);
+  ft_set_cell_prop(table, FT_ANY_ROW, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_MAGENTA);
+  ft_set_cell_prop(table, FT_ANY_ROW, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_MAGENTA);
+  ft_set_cell_prop(table, FT_ANY_ROW, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_MAGENTA);
+  ft_set_cell_prop(table, FT_ANY_ROW, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_GREEN);
+  for (int r = 0; r < 5; r++) {
+    ft_set_cell_prop(table, 0, r, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_CENTER);
+    ft_set_cell_prop(table, 0, r, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
+    ft_set_cell_prop(table, 0, r, FT_CPROP_CONT_FG_COLOR, FT_COLOR_BLUE);
+    ft_set_cell_prop(table, 0, r, FT_CPROP_CONT_BG_COLOR, FT_COLOR_BLACK);
+  }
+  ft_set_cell_prop(table, FT_ANY_ROW, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_CYAN);
+  ft_set_cell_prop(table, FT_ANY_ROW, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_CYAN);
+
 
   ft_write_ln(table,
               "Palette",
               "Size",
-              "Source",
               "# Props",
-              "BG Brightness"
+              "Background Brightness"
+              ""
               );
+  ft_set_cell_span(table, 0, 3, 2);
+  table_dur += timestamp() - table_start;
+
+  unsigned long palettes_start = timestamp();
 
   for (size_t i = 0; i < vector_size(KFC->palettes_v) && i < PALETTES_QTY_LIMIT; i++) {
-    struct inc_palette_t *p = vector_get(require(kfc_utils)->palettes_v, i);
-    struct Vector        *pp = kfc_utils_get_palette_name_properties_v(p->name);
+    struct inc_palette_t *p       = vector_get(require(kfc_utils)->palettes_v, i);
+    unsigned long        pp_start = timestamp();
+    struct Vector        *pp      = kfc_utils_get_palette_name_properties_v(p->name);
+    pp_dur += timestamp() - pp_start;
     float                brightness = 0;
     bool                 is_dark = false, is_very_dark = false, is_bright = false, is_very_bright = false;
     for (size_t i = 0; i < vector_size(pp); i++) {
@@ -761,10 +790,9 @@ char *kfc_utils_get_palettes_table() {
 
     struct StringFNStrings sp = stringfn_split(p->file, '/');
     ft_printf_ln(table,
-                 "%s|%s|%s|%lu|%5.2f  %s",
+                 "%s|%s|%lu|%5.2f|%s",
                  p->name,
                  bytes_to_string(p->size),
-                 str_truncate(stringfn_join(sp.strings, "/", 1, sp.count - 2), 25),
                  vector_size(pp),
                  brightness,
                  is_very_dark ? "Very Dark"
@@ -773,41 +801,55 @@ char *kfc_utils_get_palettes_table() {
                    : "Bright"
                  );
 
-    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_FG_COLOR, FT_COLOR_BLACK);
-    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_BG_COLOR, FT_COLOR_GREEN);
-    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_INVERTED);
-    ft_set_cell_prop(table, i + 1, 0, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_BOLD);
+    size_t qty = vector_size(pp);
+    table_start = timestamp();
+    if (p->size > 600) {
+      ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
+    }else if (p->size < 100) {
+      ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
+    }
+    if (qty > 30) {
+      ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
+    }else if (qty < 10) {
+      ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
+    }
 
-    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_ITALIC);
-    ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, p->size > 400 ? FT_COLOR_RED
-                                                                : p->size < 290 ? FT_COLOR_YELLOW
-                                                                : FT_COLOR_GREEN);
-
-    ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_TEXT_STYLE, FT_TSTYLE_DIM);
-    ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_MAGENTA);
-
-    ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, vector_size(pp) > 19 ? FT_COLOR_RED
-                                                                : vector_size(pp) < 19 ? FT_COLOR_YELLOW
-                                                                : FT_COLOR_GREEN);
-    ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, is_very_dark ? FT_COLOR_BLUE
-                                                                : is_dark ? FT_COLOR_YELLOW
-                                                                : is_very_bright ? FT_COLOR_RED
-                                                                : FT_COLOR_MAGENTA);
+    if (is_very_dark) {
+      ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_BLUE);
+      ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_BLUE);
+    }else if (is_very_bright) {
+      ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
+      ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
+    }else if (is_bright) {
+      ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
+      ft_set_cell_prop(table, i + 1, 4, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
+    }
+    table_dur += timestamp() - table_start;
 
 
     stringfn_release_strings_struct(sp);
     vector_release(pp);
   }
+  palettes_dur += timestamp() - palettes_start;
+
+  table_start = timestamp();
 
   char *table_s = ft_to_string(table);
 
   ft_destroy_table(table);
-  unsigned long ended_ts = timestamp();
+  table_dur += timestamp() - table_start;
 
-  log_debug("palettes table dur:%lu", ended_ts - started_ts);
-  if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
-    fsio_write_text_file(cache_file, table_s);
+  cache_started = timestamp();
+  if (false) {
+    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+      fsio_write_text_file(cache_file, table_s);
+    }
   }
+  cache_dur += timestamp() - cache_started;
+  log_debug("palettes properties dur:%lu", pp_dur);
+  log_debug("palettes dur:%lu", palettes_dur);
+  log_debug("table dur:%lu", palettes_dur);
+  log_debug("palettes table dur:%lld", timestamp() - table_started_ts);
   return(table_s);
 } /* get_palettes_table */
 
