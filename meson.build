@@ -34,3 +34,6 @@ subdir('kfc-cli')
 subdir('kfc-test')
 
 #//////////////////////////////////////////////////////////////////////
+subdir('richard-1-test')
+subdir('richard3-test')
+subdir('richard4-test')

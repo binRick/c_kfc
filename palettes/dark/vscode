@@ -29,4 +29,4 @@ icontitle=vscode icontitle
 cursorvisible=on
 reportfocus=on
 mouse=off
-notification=hello
+__notification=hello

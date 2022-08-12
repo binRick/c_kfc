@@ -12,3 +12,4 @@ build
 .e
 kfc-utils/kfc-utils-palettes-rendered.c
 kfc-utils/kfc-utils-palettes.backup.c
+submodules/c_deps
