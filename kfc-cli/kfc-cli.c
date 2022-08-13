@@ -247,7 +247,6 @@ void __attribute__((destructor)) __kfc_cli_destructor(){
   }
 }
 
-
 static int kfc_cli_print_invalid_palette_properties(void){
   struct Vector *v = kfc_utils_get_invalid_palette_property_names();
 
@@ -262,7 +261,6 @@ static int kfc_cli_print_invalid_palette_properties(void){
   vector_release(v);
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_print_unique_palette_properties(void){
   struct Vector *unique_palette_properties_v = kfc_utils_get_unique_palette_property_names();
@@ -279,7 +277,6 @@ static int kfc_cli_print_unique_palette_properties(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int add_mode_to_ctx_modes(enum kfc_mode_t MODE){
   if (MODE >= KFC_CLI_MODES_QTY) {
     return(-1);
@@ -287,7 +284,6 @@ static int add_mode_to_ctx_modes(enum kfc_mode_t MODE){
   vector_push(ctx.modes, (void *)MODE);
   return(0);
 }
-
 
 static int parse_args(int argc, char *argv[]){
   cag_option_context context;
@@ -299,7 +295,7 @@ static int parse_args(int argc, char *argv[]){
     case 'd': ctx.debug_mode         = true; break;
     case 'q': ctx.palettes_limit_qty = KFC->palettes_limit_qty = atoi(cag_option_get_value(&context));  break;
     case 'p': ctx.palette_name       = cag_option_get_value(&context); break;
-    case 'r': ctx.palette_name       = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index()); break;
+    case 'r': ctx.palette_name       = kfc_utils_get_palette_name_by_index(kfc_utils_random_dark_palette_index(ctx.max_brightness)); break;
     case 'B': ctx.max_brightness     = atof(cag_option_get_value(&context)); break;
     case 'P': ctx.palette_property   = cag_option_get_value(&context); break;
     case 'V': ctx.palette_value      = cag_option_get_value(&context); break;
@@ -322,7 +318,6 @@ static int parse_args(int argc, char *argv[]){
   return(EXIT_SUCCESS);
 } /* parse_args */
 
-
 static int kfc_cli_print_usage(void){
   fprintf(stdout,
           AC_RESETALL AC_GREEN AC_BOLD "Usage: kfc" AC_RESETALL
@@ -338,12 +333,10 @@ static int kfc_cli_print_usage(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_print_version(void){
   puts("kfc" KFC_CLI_VERSION);
   return(0);
 }
-
 
 static int kfc_cli_print_palette_properties_table(void){
   if (ctx.palette_name == NULL) {
@@ -358,14 +351,12 @@ static int kfc_cli_print_palette_properties_table(void){
   return(0);
 }
 
-
 static int kfc_cli_print_palette_table(void){
   if (ctx.debug_mode == true) {
     log_debug("Printing Palette Table");
   }
   return(0);
 }
-
 
 static int kfc_cli_print_palettes_table(void){
   if (ctx.debug_mode == true) {
@@ -374,7 +365,6 @@ static int kfc_cli_print_palettes_table(void){
   fprintf(stdout, "%s", KFC->get_palettes_table());
   return(0);
 }
-
 
 static int kfc_cli_list_palettes(void){
   if (ctx.debug_mode == true) {
@@ -388,7 +378,6 @@ static int kfc_cli_list_palettes(void){
     }
   }
 }
-
 
 static int kfc_cli_load_palette(void){
   if (ctx.palette_name == NULL) {
@@ -413,7 +402,6 @@ static int kfc_cli_load_palette(void){
   return(0);
 }
 
-
 static int kfc_cli_detect_terminal_type(void){
   char *terminal_type = kfc_utils_detect_terminal_type();
 
@@ -421,14 +409,12 @@ static int kfc_cli_detect_terminal_type(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_test_kitty_socket(void){
   fprintf(stdout, "Testing kitty socket\n");
   bool ok = kfc_utils_test_kitty_socket();
   fprintf(stdout, "ok:%d\n", ok);
   return(EXIT_SUCCESS);
 }
-
 
 char *get_cwd(){
   char *buf = malloc(PATH_MAX);
@@ -445,7 +431,6 @@ char *get_cwd(){
   }
   return(buf1);
 }
-
 
 char *exec_file(const char *argv0){
   if (fsio_file_exists(argv0)) {
@@ -467,7 +452,6 @@ char *exec_file(const char *argv0){
   return(NULL);
 }
 
-
 char *exec_path(const char *argv0){
   char *ef = exec_file(argv0);
 
@@ -485,7 +469,6 @@ char *exec_path(const char *argv0){
 
   return(ep);
 }
-
 
 char * app_path(char *path, const char *argv0){
   char buf[PATH_MAX];
@@ -508,7 +491,6 @@ char * app_path(char *path, const char *argv0){
   return(path);
 }
 
-
 int main(int argc, char **argv) {
   parse_args(argc, argv);
   size_t modes_qty = vector_size(ctx.modes);
@@ -519,7 +501,6 @@ int main(int argc, char **argv) {
   }
   return(res);
 } /* main */
-
 
 static int kfc_cli_test_colors(void){
   log_debug("max_brightness: %f", ctx.max_brightness);
@@ -545,7 +526,6 @@ static int kfc_cli_test_colors(void){
   return(EXIT_SUCCESS);
 } /* kfc_cli_test_colors */
 
-
 static int kfc_cli_bright_backgrounds(void){
   struct Vector *v  = kfc_utils_get_palette_names_by_brightness_type(BACKGROUND_BRIGHTNESS_BRIGHT, ctx.max_brightness);
   size_t        qty = vector_size(v);
@@ -561,7 +541,6 @@ static int kfc_cli_bright_backgrounds(void){
   }
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_dark_backgrounds(void){
   struct Vector *v  = kfc_utils_get_palette_names_by_brightness_type(BACKGROUND_BRIGHTNESS_DARK, ctx.max_brightness);
@@ -579,7 +558,6 @@ static int kfc_cli_dark_backgrounds(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_select_palette(void *CTX){
   char *palette_name = kfc_utils_select_palette((void *)CTX);
 
@@ -593,7 +571,6 @@ static int kfc_cli_select_palette(void *CTX){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_select_palettes(void){
   struct Vector *selected_palettes = kfc_utils_select_palettes();
 
@@ -603,7 +580,6 @@ static int kfc_cli_select_palettes(void){
   }
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_select_apply_palette(void){
   char *palette_name = kfc_utils_select_apply_palette();
@@ -621,12 +597,10 @@ static int kfc_cli_select_apply_palette(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_color_report(void){
   kfc_utils_color_report();
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_print_escaped_sequence(void){
   if (ctx.palette_name == NULL) {
@@ -642,7 +616,6 @@ static int kfc_cli_print_escaped_sequence(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_print_palette_data(void){
   if (ctx.palette_name == NULL) {
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
@@ -657,19 +630,16 @@ static int kfc_cli_print_palette_data(void){
   }
 }
 
-
 static int kfc_cli_reset_terminal(void){
   fprintf(stdout, "%s", kfc_utils_get_ansi_reset_sequence());
   fflush(stdout);
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_print_palette_history(void){
   fprintf(stdout, "%s\n", stringfn_mut_trim(kfc_utils_get_palette_history()));
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_render_palettes_template(void){
   char   *s     = kfc_utils_get_rendered_template();
@@ -680,7 +650,6 @@ static int kfc_cli_render_palettes_template(void){
 
   return((qty_ok == true) ? 0 : 1);
 }
-
 
 static char *kfc_cli_get_bright_colors_demo_string(void){
   struct StringBuffer *sb  = stringbuffer_new();
@@ -731,14 +700,12 @@ static char *kfc_cli_get_bright_colors_demo_string(void){
   return(ret_s);
 } /* get_bright_colors_demo_string */
 
-
 static int kfc_cli_render_bright_colors_demo(void){
   char *bright_colors = kfc_cli_get_bright_colors_demo_string();
 
   fprintf(stdout, "%s\n", bright_colors);
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_render_bright_colors_vt100utils_demo(void){
   char *bright_colors = kfc_cli_get_bright_colors_demo_string();
@@ -792,7 +759,6 @@ static int kfc_cli_render_bright_colors_vt100utils_demo(void){
   return(EXIT_SUCCESS);
 } /* kfc_cli_render_bright_colors_vt100utils_demo */
 
-
 static int kfc_cli_vt100utils_demo(void){
   struct vt100_node_t *tmp;
   int                 x;
@@ -837,7 +803,6 @@ static int kfc_cli_vt100utils_demo(void){
   return(EXIT_SUCCESS);
 } /* kfc_cli_vt100utils_demo */
 
-
 static int kfc_cli_print_palette_colors_table(void){
   if (ctx.palette_name == NULL) {
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
@@ -846,7 +811,6 @@ static int kfc_cli_print_palette_colors_table(void){
   printf("%s\n", palette_colors_table);
   return(EXIT_SUCCESS);
 }
-
 
 static int kfc_cli_print_palette_colored_property_names(void){
   if (ctx.palette_name == NULL) {
@@ -860,7 +824,6 @@ static int kfc_cli_print_palette_colored_property_names(void){
   return(EXIT_SUCCESS);
 }
 
-
 static int kfc_cli_print_palette_color_property_names(void){
   struct Vector *props = kfc_utils_get_palette_property_color_names_v();
 
@@ -872,7 +835,6 @@ static int kfc_cli_print_palette_color_property_names(void){
     fprintf(stderr, "%lu color prop names\n", vector_size(props));
   }
 }
-
 
 static int kfc_cli_print_color_boxes(void){
   char *s = get_color_boxes();

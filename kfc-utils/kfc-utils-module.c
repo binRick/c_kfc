@@ -7,7 +7,6 @@
 #include "kfc-utils/kfc-utils-module.h"
 #define KFC_MODULE_DEBUG_MODE    false
 
-
 //////////////////////////////////////
 int kfc_utils_module_init(module(kfc_utils) *exports) {
   clib_module_init(kfc_utils, exports);
@@ -29,7 +28,6 @@ int kfc_utils_module_init(module(kfc_utils) *exports) {
   return(0);
 }
 
-
 //////////////////////////////////////
 void kfc_utils_module_deinit(module(kfc_utils) *exports) {
   if (KFC_MODULE_DEBUG_MODE == true) {
@@ -43,10 +41,8 @@ void kfc_utils_module_deinit(module(kfc_utils) *exports) {
   clib_module_deinit(kfc_utils);
 }
 
-
 //////////////////////////////////////
 size_t kfc_utils_get_palettes_qty(){
   return(vector_size(require(kfc_utils)->palettes_v));
 }
 //////////////////////////////////////
-

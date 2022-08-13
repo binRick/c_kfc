@@ -138,6 +138,7 @@ struct Vector *kfc_utils_get_palettes_v();
 struct Vector *kfc_utils_get_palette_names_v();
 struct inc_palette_t *kfc_utils_get_palette_t_by_name(const char *PALETTE_NAME);
 struct inc_palette_t *kfc_utils_get_palette_t_by_index(const size_t INDEX);
+size_t kfc_utils_random_dark_palette_index(float MAX_DARKNESS_VALUE);
 char *kfc_utils_get_palette_name_property_value(const char *PALETTE_NAME, const char *PALETTE_PROPERTY_NAME);
 size_t kfc_utils_get_palettes_data_bytes();
 size_t kfc_utils_load_palette_name(const char *PALETTE_NAME);

@@ -8,7 +8,6 @@
 ui_t u;
 struct vt100_node_t *head;
 
-
 void draw(ui_box_t *b, char *out) {
   struct vt100_node_t *node = b->data1;
   char                *sgr  = vt100_sgr(node, NULL);
@@ -16,7 +15,6 @@ void draw(ui_box_t *b, char *out) {
   sprintf(out, "%s%s", sgr, node->str);
   free(sgr);
 }
-
 
 void click(ui_box_t *b, int x, int y) {
   struct vt100_node_t *node = b->data1;
@@ -28,10 +26,8 @@ void click(ui_box_t *b, int x, int y) {
   ui_draw(&u);
 }
 
-
 void stop() {
   ui_free(&u);
   vt100_free(head);
   exit(0);
 }
-
