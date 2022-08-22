@@ -1040,8 +1040,8 @@ size_t kfc_utils_random_dark_palette_index(float MAX_DARKNESS_VALUE){
   struct Vector             *pp_v;
 
   while (background_is_dark == false) {
-    r   = kfc_utils_random_palette_index();
-    p   = vector_get(require(kfc_utils)->palettes_v, r);
+    r    = kfc_utils_random_palette_index();
+    p    = vector_get(require(kfc_utils)->palettes_v, r);
     pp_v = kfc_utils_get_palette_name_properties_v(p->name);
     for (size_t i = 0; i < vector_size(pp_v); i++) {
       pp = vector_get(pp_v, i);
@@ -1055,8 +1055,9 @@ size_t kfc_utils_random_dark_palette_index(float MAX_DARKNESS_VALUE){
       }
     }
   }
-  if(pp)
+  if (pp) {
     FREE_PALETTE_PROPERTIES(pp);
+  }
   return((size_t)r);
 }
 

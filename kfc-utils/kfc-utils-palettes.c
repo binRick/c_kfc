@@ -1,7 +1,7 @@
 #pragma once
 #include "kfc-utils.h"
 
-const size_t PALETTES_QTY = 665;
+const size_t PALETTES_QTY = 666;
 #ifndef INC_PALETTE_T_DEFINED
 ##define INC_PALETTE_T_DEFINED
 struct inc_palette_t { const size_t size; const size_t lines_qty; const size_t keys_qty; char *keys_csv; const char *name; const char *file; const char *data; const char *dir; };
@@ -634,6 +634,7 @@ INCTXT(monokaiprofiltermachine, "palettes/load/monokaiprofiltermachine");
 INCTXT(restore_palette_2, "palettes/load/restore-palette-2");
 INCTXT(builtinpasteldark, "palettes/load/builtinpasteldark");
 INCTXT(rosepine, "palettes/load/rosepine");
+INCTXT(c_darwin, "palettes/load/c_darwin");
 INCTXT(peppermint, "palettes/load/peppermint");
 INCTXT(belafonteday, "palettes/load/belafonteday");
 INCTXT(espresso, "palettes/load/espresso");
@@ -673,7 +674,7 @@ INCTXT(firefoxdev, "palettes/load/firefoxdev");
 INCTXT(nocturnalwinter, "palettes/load/nocturnalwinter");
 
 
-const struct inc_palette_t palette_t_list[666] = {
+const struct inc_palette_t palette_t_list[667] = {
     { .name = "modusvivendifaint", .size = 537, .file = "modusvivendifaint", .data = inc_palette_modusvivendifaint_data, },
     { .name = "wild-cherry", .size = 304, .file = "wild-cherry", .data = inc_palette_wild_cherry_data, },
     { .name = "base16-black-metal-bathory", .size = 290, .file = "base16-black-metal-bathory", .data = inc_palette_base16_black_metal_bathory_data, },
@@ -842,7 +843,7 @@ const struct inc_palette_t palette_t_list[666] = {
     { .name = "tomorrow", .size = 336, .file = "tomorrow", .data = inc_palette_tomorrow_data, },
     { .name = "1984dark", .size = 370, .file = "1984dark", .data = inc_palette_1984dark_data, },
     { .name = "base16-chalk", .size = 290, .file = "base16-chalk", .data = inc_palette_base16_chalk_data, },
-    { .name = "icontitle", .size = 44, .file = "icontitle", .data = inc_palette_icontitle_data, },
+    { .name = "icontitle", .size = 48, .file = "icontitle", .data = inc_palette_icontitle_data, },
     { .name = "jackiebrown", .size = 336, .file = "jackiebrown", .data = inc_palette_jackiebrown_data, },
     { .name = "liquidcarbontransparent", .size = 336, .file = "liquidcarbontransparent", .data = inc_palette_liquidcarbontransparent_data, },
     { .name = "nordlight", .size = 336, .file = "nordlight", .data = inc_palette_nordlight_data, },
@@ -1265,7 +1266,7 @@ const struct inc_palette_t palette_t_list[666] = {
     { .name = "base16-woodland", .size = 290, .file = "base16-woodland", .data = inc_palette_base16_woodland_data, },
     { .name = "base16-horizon", .size = 290, .file = "base16-horizon", .data = inc_palette_base16_horizon_data, },
     { .name = "darkpride", .size = 336, .file = "darkpride", .data = inc_palette_darkpride_data, },
-    { .name = "vscode", .size = 506, .file = "vscode", .data = inc_palette_vscode_data, },
+    { .name = "vscode", .size = 512, .file = "vscode", .data = inc_palette_vscode_data, },
     { .name = "dkeg-urban", .size = 290, .file = "dkeg-urban", .data = inc_palette_dkeg_urban_data, },
     { .name = "royal", .size = 336, .file = "royal", .data = inc_palette_royal_data, },
     { .name = "base16-oceanicnext", .size = 290, .file = "base16-oceanicnext", .data = inc_palette_base16_oceanicnext_data, },
@@ -1302,6 +1303,7 @@ const struct inc_palette_t palette_t_list[666] = {
     { .name = "restore-palette-2", .size = 20, .file = "restore-palette-2", .data = inc_palette_restore_palette_2_data, },
     { .name = "builtinpasteldark", .size = 336, .file = "builtinpasteldark", .data = inc_palette_builtinpasteldark_data, },
     { .name = "rosepine", .size = 498, .file = "rosepine", .data = inc_palette_rosepine_data, },
+    { .name = "c_darwin", .size = 428, .file = "c_darwin", .data = inc_palette_c_darwin_data, },
     { .name = "peppermint", .size = 336, .file = "peppermint", .data = inc_palette_peppermint_data, },
     { .name = "belafonteday", .size = 336, .file = "belafonteday", .data = inc_palette_belafonteday_data, },
     { .name = "espresso", .size = 477, .file = "espresso", .data = inc_palette_espresso_data, },
