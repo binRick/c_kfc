@@ -41,7 +41,7 @@ if get_option('enable-binaries')
       args: [
         '-i','c','--not-match','./submodules/*',
         '--by-file','--wide','--exclude-dir','submodules',
-        '--not-match','backup','--not-match','kfc-utils/kfc-utils-palettes.c',
+        '--not-match','backup','--not-match','kfc-utils/.kfc-utils-palettes.c',
       ],
       )
   endif

@@ -1,6 +1,6 @@
 #pragma once
 /////////////////////////////////////
-#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/kfc-utils-palettes.c"
+#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/.kfc-utils-palettes.c"
 #define KFC_UTILS_PALETTE_TEMPLATE_FILE         "etc/kfc-utils-palettes.c.j2"
 #ifndef INCBIN_PREFIX
 #define INCBIN_PREFIX                           inc_palette_

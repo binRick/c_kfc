@@ -1,6 +1,6 @@
 kfc_utils_srcs = [
-  'kfc-utils-palettes.c',
-  'kfc-utils-colors.c',
+  '.kfc-utils-palettes.c',
+  '.kfc-utils-colors.c',
   'kfc-utils-module.c',
   'kfc-utils-data.c',
   'kfc-utils.c',
