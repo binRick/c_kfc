@@ -416,22 +416,6 @@ static int kfc_cli_test_kitty_socket(void){
   return(EXIT_SUCCESS);
 }
 
-char *get_cwd(){
-  char *buf = malloc(PATH_MAX);
-
-  if (NULL == getcwd(buf, PATH_MAX)) {
-    perror("getcwd error");
-    return(NULL);
-  }
-  char *buf1 = malloc(PATH_MAX);
-
-  if (NULL == realpath(buf, buf1)) {
-    perror("realpath error");
-    return(NULL);
-  }
-  return(buf1);
-}
-
 char *exec_file(const char *argv0){
   if (fsio_file_exists(argv0)) {
     return(argv0);
@@ -440,7 +424,7 @@ char *exec_file(const char *argv0){
   char                   *p = getenv("PATH");
   log_info("exec_path p: %s", p);
   struct StringFNStrings paths = stringfn_split(p, ':');
-  for (size_t i = 0; i < paths.count; i++) {
+  for (int i = 0; i < paths.count; i++) {
     log_info("%s", paths.strings[i]);
     char *_e;
     asprintf(&_e, "%s/%s", paths.strings[i], argv0);
@@ -458,21 +442,14 @@ char *exec_path(const char *argv0){
   if (ef[0] == '/') {
     return(ef);
   }
-
-  char *ep;
-  char *cwd = get_cwd();
+  char *ep, *cwd = kfc_utils_get_cwd();
 
   asprintf(&ep, "%s/%s", cwd, ef);
-
-//    if(!fsio_file_exists(buf))
-//        return NULL;
-
   return(ep);
 }
 
 char * app_path(char *path, const char *argv0){
   char buf[PATH_MAX];
-  char *pos;
 
   if (argv0[0] == '/') { // run with absolute path
     strcpy(buf, argv0);
@@ -504,7 +481,6 @@ int main(int argc, char **argv) {
 
 static int kfc_cli_test_colors(void){
   log_debug("max_brightness: %f", ctx.max_brightness);
-  char *hex;
   char *pname = "vscode";
   pname = "github";
   pname = "vscode";
@@ -585,9 +561,7 @@ static int kfc_cli_select_apply_palette(void){
   char *palette_name = kfc_utils_select_apply_palette();
 
   if (palette_name != NULL) {
-//    fprintf(stdout, "\ec");
     kfc_utils_load_palette_name(palette_name);
-    //fflush(stdout);
     fprintf(stderr, " \n");
     fprintf(stderr, "%s\n", palette_name);
   }else{
@@ -644,10 +618,9 @@ static int kfc_cli_print_palette_history(void){
 static int kfc_cli_render_palettes_template(void){
   char   *s     = kfc_utils_get_rendered_template();
   size_t qty    = strlen(s);
-  bool   qty_ok = (qty > 1024);
+  bool   qty_ok = (qty > 128);
 
-  printf("kfc_utils_get_rendered_template returned %lub\n", qty);
-
+  log_info("kfc_utils_get_rendered_template returned %lub\n", qty);
   return((qty_ok == true) ? 0 : 1);
 }
 

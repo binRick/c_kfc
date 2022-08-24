@@ -3,7 +3,7 @@
 #include <stdio.h>
 //////////////////////////////////////
 #include "bench/bench.h"
-#include "c_vector/include/vector.h"
+#include "c_vector/vector/vector.h"
 #include "kfc-utils/kfc-utils-module.h"
 #define KFC_MODULE_DEBUG_MODE    false
 

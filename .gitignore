@@ -13,3 +13,8 @@ build
 kfc-utils/kfc-utils-palettes-rendered.c
 kfc-utils/kfc-utils-palettes.backup.c
 submodules/c_deps
+.meson.build*.log
+.meson.build*.log
+.meson-build*.log
+.meson-build*.log
+kfc-utils/kfc-utils-palettes-backup.c

@@ -24,6 +24,7 @@ inc = [include_directories(
   'submodules',
   'submodules/c_deps',
   'submodules/c_deps/submodules',
+  'submodules/c_deps/submodules/incbin',
   'submodules/c_deps/submodules/c_ansi',
   'submodules/c_deps/submodules/c_darwin',
   'submodules/c_deps/submodules/reproc',

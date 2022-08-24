@@ -12,7 +12,6 @@
 #define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX    inc_palette_
 ///////////////////////////////////////////////////////////////////
-#include "jinja2-cli/jinja2-cli.h"
 #include "rgba/src/rgba.h"
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
@@ -153,7 +152,7 @@ char *kfc_utils_get_palette_name_data(const char *PALETTE_NAME);
 char *kfc_utils_get_ansi_reset_sequence();
 char *kfc_utils_get_palette_history();
 char *kfc_utils_get_rendered_template(void);
-
+char *kfc_utils_get_cwd(void);
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities
 ///////////////////////////////////////////////////////////////////
