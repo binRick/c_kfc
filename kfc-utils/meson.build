@@ -11,6 +11,7 @@ kfc_utils_c_args = [
 ]
 kfc_utils_deps = [
   ansi_codes_dep,
+  ms_dep,
   djbhash_dep,
   termpaint_dep,
   process_dep,

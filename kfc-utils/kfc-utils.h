@@ -60,7 +60,15 @@ enum terminal_types_t {
   TERMINAL_TYPE_TERMINAL,
   TERMINAL_TYPES_QTY,
 };
-
+struct rendered_template_result_t {
+  size_t        qty;
+  size_t        size;
+  unsigned long started, dur;
+  char          *path, *content, *template_path;
+  size_t        palette_file_lines;
+  size_t        palette_file_bytes;
+  size_t        palette_file_properties;
+};
 struct palette_property_color_t {
   bool   is_bright; bool is_dark;
   bool   is_very_bright; bool is_very_dark;
@@ -93,9 +101,11 @@ struct palette_property_t {
   bool                            is_color;
   struct palette_property_color_t *color_t;
 };
-#define debug_malloc    "malloc"
-#define debug_free      "free"
-#define debug_strdup    "strdup"
+#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/.kfc-utils-palettes.c"
+#define KFC_UTILS_PALETTE_TEMPLATE_FILE         "etc/kfc-utils-palettes.c.j2"
+#define debug_malloc                            "malloc"
+#define debug_free                              "free"
+#define debug_strdup                            "strdup"
 
 #define INC_PALETTE_T()     \
   struct inc_palette_t {    \
@@ -151,7 +161,7 @@ char *kfc_utils_get_palette_name_sequence(const char *PALETTE_NAME);
 char *kfc_utils_get_palette_name_data(const char *PALETTE_NAME);
 char *kfc_utils_get_ansi_reset_sequence();
 char *kfc_utils_get_palette_history();
-char *kfc_utils_get_rendered_template(void);
+struct rendered_template_result_t *kfc_utils_get_rendered_template(void);
 char *kfc_utils_get_cwd(void);
 ///////////////////////////////////////////////////////////////////
 ///     palette property utilities

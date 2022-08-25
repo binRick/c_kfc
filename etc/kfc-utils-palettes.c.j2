@@ -1,20 +1,17 @@
 #pragma once
 #include "kfc-utils.h"
-const size_t PALETTES_QTY = {{qty}};
+#ifndef INC_PALETTES_DEFINED
+#define INC_PALETTES_DEFINED
+const size_t PALETTES_QTY   =   {{palettes_qty}};
 #ifndef INC_PALETTE_T_DEFINED
 #define INC_PALETTE_T_DEFINED
 {{inc_palette_t_struct}}
 #endif
 {%for i in palette_t_list %}INCTXT({{i.inc_name}}, "{{i.dir}}/{{i.name}}");
 {%endfor%}
-
-const struct inc_palette_t palette_t_list[{{ qty }}] = {{LEFT_CURLY}}
+const struct inc_palette_t palette_t_list[{{ palettes_qty+1 }}] = {{LEFT_CURLY}}
 {% for i in palette_t_list %}
-  {{LEFT_CURLY}} 
-    .name = "{{i.inc_name}}", 
-    .size = {{i.size}}, 
-    .file = "{{i.name}}", 
-    .data = inc_palette_{{i.inc_name}}_data,
-  {{RIGHT_CURLY}},{% endfor %}
+  {{LEFT_CURLY}} .name = "{{i.inc_name}}", .size = {{i.size}}, .file = "{{i.name}}", .data = inc_palette_{{i.inc_name}}_data, {{RIGHT_CURLY}},{% endfor %}
   {{LEFT_CURLY}} 0 {{RIGHT_CURLY}},
 {{RIGHT_CURLY}};
+#endif

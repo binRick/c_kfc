@@ -19,6 +19,7 @@ kfc_cli_deps = [
   bytes_dep,
   hsluv_c_dep,
   logh_dep,
+  ms_dep,
   c_stringfn_dep,
   ansi_rgb_utils_dep,
   reproc_dep,

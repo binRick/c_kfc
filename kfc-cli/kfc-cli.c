@@ -34,6 +34,7 @@
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 #include "log.h/log.h"
+#include "ms/ms.h"
 #include "process/process.h"
 #include "rgba/src/rgba.h"
 #include "rgba/src/rgba.h"
@@ -616,12 +617,36 @@ static int kfc_cli_print_palette_history(void){
 }
 
 static int kfc_cli_render_palettes_template(void){
-  char   *s     = kfc_utils_get_rendered_template();
-  size_t qty    = strlen(s);
-  bool   qty_ok = (qty > 128);
+  char                              *msg;
+  struct rendered_template_result_t *res = kfc_utils_get_rendered_template();
 
-  log_info("kfc_utils_get_rendered_template returned %lub\n", qty);
-  return((qty_ok == true) ? 0 : 1);
+  if (!res) {
+    return(-1);
+  }
+  if (ctx.debug_mode) {
+    log_debug("kfc_utils_get_rendered_template returned %lub\n", res->qty);
+  }
+
+  asprintf(&msg,
+           "Rendered " AC_YELLOW "%s" AC_RESETALL " " AC_RED "%s" AC_RESETALL
+           " using " AC_YELLOW "%lu" AC_RESETALL " properties from "
+           AC_YELLOW "%lu" AC_RESETALL " palettes comprised of "
+           AC_YELLOW "%s" AC_RESETALL " and " AC_BLUE "%lu" AC_RESETALL " lines"
+           " and template "
+           AC_BLUE "%s" AC_RESETALL
+           " in " AC_GREEN "%s" AC_RESETALL
+           "",
+           bytes_to_string(res->size),
+           res->path,
+           res->palette_file_properties,
+           res->qty,
+           bytes_to_string(res->palette_file_bytes), res->palette_file_lines,
+           res->template_path,
+           milliseconds_to_string(res->dur)
+           );
+  fprintf(stdout, "%s\n", msg);
+  free(res);
+  return(0);
 }
 
 static char *kfc_cli_get_bright_colors_demo_string(void){

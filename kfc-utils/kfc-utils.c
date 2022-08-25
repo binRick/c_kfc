@@ -1,12 +1,11 @@
 #pragma once
+#include "kfc-utils/kfc-utils.h"
 /////////////////////////////////////
-#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/.kfc-utils-palettes.c"
-#define KFC_UTILS_PALETTE_TEMPLATE_FILE         "etc/kfc-utils-palettes.c.j2"
 #ifndef INCBIN_PREFIX
-#define INCBIN_PREFIX                           inc_palette_
+#define INCBIN_PREFIX    inc_palette_
 #endif
 #ifndef INCBIN_STYLE
-#define INCBIN_STYLE                            INCBIN_STYLE_SNAKE
+#define INCBIN_STYLE     INCBIN_STYLE_SNAKE
 #endif
 #ifndef INCBIN_SILENCE_BITCODE_WARNING
 #define INCBIN_SILENCE_BITCODE_WARNING
@@ -68,7 +67,6 @@ INCTXT(palettes_template_c, "etc/kfc-utils-palettes.c.j2");
 /////////////////////////////////////
 #include "kfc-utils/kfc-utils-data.h"
 #include "kfc-utils/kfc-utils-module.h"
-#include "kfc-utils/kfc-utils.h"
 #include "string-utils/string-utils.h"
 /////////////////////////////////////
 #include "submodules/tinydir/tinydir.h"
@@ -1830,10 +1828,14 @@ struct palette_template_item_t {
 } palette_template_item_t;
 
 static char *kfc_utils_render_palettes_template(struct Vector *__template_palettes_v){
+  char *TEMPLATE_s, *TEMPLATE_s_rendered;
+
   roscha_init();
-  struct roscha_env    *env = roscha_env_new();
+  struct roscha_env *env = roscha_env_new();
+
   env->vars = roscha_object_new(hmap_new());
   struct roscha_object *palette_t_list = roscha_object_new_vector(roscha_vector_new());
+
   for (size_t i = 0; i < vector_size(__template_palettes_v) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
     struct palette_template_item_t *t  = vector_get(__template_palettes_v, i);
     struct roscha_object           *i0 = roscha_object_new(hmap_new());
@@ -1844,19 +1846,19 @@ static char *kfc_utils_render_palettes_template(struct Vector *__template_palett
     roscha_hmap_set_new(i0, "dir", t->dir);
     roscha_vector_push_object(palette_t_list, i0);
     roscha_hmap_set(env->vars, "palette_t_list", palette_t_list);
-    roscha_hmap_set_new(env->vars, "qty", (int)(size_t)vector_size(__template_palettes_v));
+    roscha_hmap_set_new(env->vars, "palettes_qty", (int)(size_t)vector_size(__template_palettes_v));
     roscha_hmap_set_new(env->vars, "LEFT_CURLY", "{");
     roscha_hmap_set_new(env->vars, "RIGHT_CURLY", "}");
     roscha_hmap_set_new(env->vars, "inc_palette_t_struct", INC_PALETTE_T_STRING());
-    log_info("added palette # %lu :: %s", i, t->name);
+    if (KFC_UTILS_DEBUG_MODE == true) {
+      log_debug("added palette # %lu :: %s", i, t->name);
+    }
   }
-  char *TEMPLATE_s;
 
   if (fsio_file_exists(PALETTES_JINJA_TEMPLATE) == 0) {
     fprintf(stderr, AC_RESETALL AC_RED_BLACK "Template File does not exist. Loading from embeded text" AC_RESETALL "\n");
-    TEMPLATE_s = malloc(1024);
-    sprintf(TEMPLATE_s, "%s", inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
-    fprintf(stderr, AC_RESETALL AC_RED_BLACK "template_s :\n%s\n", TEMPLATE_s);
+    asprintf(&TEMPLATE_s, "%s", inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
+    log_debug(AC_RESETALL AC_RED_BLACK "template_s :\n%s\n", TEMPLATE_s);
   }else{
     if (false) {
       fprintf(stderr, AC_RESETALL AC_GREEN_BLACK "Template File does exist. Reading from it." AC_RESETALL "\n");
@@ -1866,23 +1868,25 @@ static char *kfc_utils_render_palettes_template(struct Vector *__template_palett
   if (strlen(TEMPLATE_s) == 0) {
     TEMPLATE_s = strdup(inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
   }
-  log_info("about to render..................");
-  log_info("%s", TEMPLATE_s);
-  log_info("%lub template", strlen(TEMPLATE_s));
   roscha_env_add_template(env, strdup("test"), TEMPLATE_s);
-  sds got = roscha_env_render(env, "test");
-  printf("==============================\n");
-  printf("%s", TEMPLATE_s);
-  printf("==============================\n");
-  printf("%s", got);
-  printf("==============================\n");
-  fsio_write_text_file(KFC_UTILS_RENDERED_PALETTE_COPY_PATH, got);
-  roscha_deinit();
-  char *s = strdup(got);
-  return(s);
-}
+  sds RENDERED_ROSCHA_TEMPLATE = roscha_env_render(env, "test");
 
-char *kfc_utils_get_rendered_template(void){
+  asprintf(&TEMPLATE_s_rendered, "%s", RENDERED_ROSCHA_TEMPLATE);
+  fsio_write_text_file(KFC_UTILS_RENDERED_PALETTE_COPY_PATH, TEMPLATE_s_rendered);
+  roscha_deinit();
+  return(TEMPLATE_s_rendered);
+} /* kfc_utils_render_palettes_template */
+
+struct rendered_template_result_t *kfc_utils_get_rendered_template(void){
+  struct rendered_template_result_t *res = malloc(sizeof(struct rendered_template_result_t));
+
+  res->palette_file_bytes = 0;
+  res->palette_file_lines = 0;
+  res->palette_file_properties = 0;
+
+  res->started       = timestamp();
+  res->path          = KFC_UTILS_RENDERED_PALETTE_COPY_PATH;
+  res->template_path = KFC_UTILS_PALETTE_TEMPLATE_FILE;
   char          *P                     = PALETTES_LOAD_DIR;
   struct Vector *pfiles                = kfc_utils_load_palettes(P);
   struct Vector *__template_palettes_v = vector_new();
@@ -1917,23 +1921,29 @@ char *kfc_utils_get_rendered_template(void){
     tmp->name    = strdup(tmp->file);
     tmp->content = fsio_read_text_file(tmp->path);
     struct StringFNStrings lines = stringfn_split_lines_and_trim(tmp->content);
-    tmp->lines_qty = lines.count;
-    tmp->data_name = stringfn_replace(tmp->file, '-', '_');
+    tmp->lines_qty           = lines.count;
+    tmp->data_name           = stringfn_replace(tmp->file, '-', '_');
     asprintf(&tmp->data_fullname, "inc_palette_%s_data", tmp->data_name);
     for (size_t ii = 0; ii < (size_t)lines.count; ii++) {
       struct StringFNStrings _tss = stringfn_split(lines.strings[ii], '=');
       if (_tss.count > 1) {
         vector_push(tmp->keys_v, strdup(_tss.strings[0]));
+        res->palette_file_properties += 1;
       }
     }
 
     stringfn_release_strings_struct(lines);
     vector_push(__template_palettes_v, tmp);
+    res->palette_file_lines += tmp->lines_qty;
+    res->palette_file_bytes += strlen(tmp->content);
     p++;
   }
-  char *s = kfc_utils_render_palettes_template(__template_palettes_v);
+  res->content = kfc_utils_render_palettes_template(__template_palettes_v);
+  res->size    = strlen(res->content);
+  res->dur     = timestamp() - res->started;
+  res->qty     = vector_size(__template_palettes_v);
 
-  return(s);
+  return(res);
 } /* kfc_utils_get_rendered_template */
 
 bool kfc_utils_palette_property_is_color(const char *PALETTE_PROPERTY_NAME){
