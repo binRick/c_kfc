@@ -370,6 +370,7 @@ static int kfc_cli_list_palettes(void){
       printf("%s\n", p->name);
     }
   }
+  return(EXIT_SUCCESS);
 }
 
 static int kfc_cli_load_palette(void){
@@ -532,6 +533,7 @@ static int kfc_cli_print_palette_data(void){
     }
     fprintf(stdout, "%s\n", pd);
   }
+  return(EXIT_SUCCESS);
 }
 
 static int kfc_cli_reset_terminal(void){
@@ -575,7 +577,7 @@ static int kfc_cli_render_palettes_template(void){
            );
   fprintf(stdout, "%s\n", msg);
   free(res);
-  return(0);
+  return(EXIT_SUCCESS);
 }
 
 static char *kfc_cli_get_bright_colors_demo_string(void){
@@ -676,12 +678,14 @@ static int kfc_cli_print_palette_color_property_names(void){
   if (ctx.debug_mode) {
     fprintf(stderr, "%lu color prop names\n", vector_size(props));
   }
+  return(EXIT_SUCCESS);
 }
 
 static int kfc_cli_print_color_boxes(void){
   char *s = get_color_boxes();
 
   printf("%s", s);
+  return(EXIT_SUCCESS);
 }
 
 int main(int argc, char **argv) {
