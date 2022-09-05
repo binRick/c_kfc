@@ -1,4 +1,5 @@
 #pragma once
+#define KFC_LOG_DEFAULT    KFC_LOG_INFO
 ////////////////////////////////////
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils.h"
@@ -15,7 +16,6 @@ enum kfc_utils_mode {
   KFC_LOG_DEBUG,
   KFC_LOG_QTY,
 };
-#define KFC_LOG_DEFAULT    KFC_LOG_INFO
 
 // Module Type Interface
 module(kfc_utils) {

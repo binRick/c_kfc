@@ -1,10 +1,8 @@
 kfc_cli_srcs = [
   'kfc-cli.c',
-  'kfc-cli.h',
 ]
 kfc_include_dirs = [
   '.',
-  '../kfc-utils',
   inc,
 ]
 kfc_include_cargs = [
@@ -12,18 +10,12 @@ kfc_include_cargs = [
   ]
 kfc_cli_deps = [
   cargs_dep,
-  tempdir_dep,
-  rgba_dep,
-  vt100utils_dep,
   kfc_utils_dep,
   bytes_dep,
-  hsluv_c_dep,
-  logh_dep,
+  log_dep,
   ms_dep,
   c_stringfn_dep,
   ansi_rgb_utils_dep,
-  reproc_dep,
-  #//debug_memory_dep,
 ]
 if get_option('enable-binaries')
   kfc_cli_exec = executable('kfc',
@@ -36,18 +28,8 @@ if get_option('enable-binaries')
 
   )
   if get_option('enable-binary-clis')
-  if get_option('enable-scc-report')
-    test('Source Report', scc_program,
-      workdir:meson.current_source_dir()+'/../../',
-      args: [
-        '-i','c','--not-match','./submodules/*',
-        '--by-file','--wide','--exclude-dir','submodules',
-        '--not-match','backup','--not-match','kfc-utils/.kfc-utils-palettes.c',
-      ],
-      )
-  endif
     test('KFC Help', kfc_cli_exec, args: ['--help'])
-#    test('KFC List Palettes', kfc_cli_exec, args: ['-l'])
+    test('KFC List Palettes', kfc_cli_exec, args: ['-l'])
     test('KFC Test Colors', kfc_cli_exec, args: ['--test-colors'])
     test('KFC Test Kitty Socket', kfc_cli_exec, args: ['--test-kitty-socket'])
     test('KFC Color Demo', kfc_cli_exec, args: ['-R'])
@@ -60,10 +42,10 @@ if get_option('enable-binaries')
     test('KFC Very Dark Background Palettes', kfc_cli_exec, args: ['--dark-backgrounds','-B','98'])
     test('KFC Bright Background Palettes', kfc_cli_exec, args: ['--bright-backgrounds'])
     test('KFC Very Bright Background Palettes', kfc_cli_exec, args: ['--bright-backgrounds','-B','2'])
-#    test('KFC Render Palettes Template', kfc_cli_exec, args: ['-u'], workdir:meson.current_source_dir()+'/../', )
+    test('KFC Render Palettes Template', kfc_cli_exec, args: ['-u'], workdir:meson.current_source_dir()+'/../', )
     test('KFC Random Palette Sequence', kfc_cli_exec, args: ['--random-palette','--print-palette-sequence'])
-#    test('KFC Random Palette Data', kfc_cli_exec, args: ['--random-palette','--print-palette-data'])
+    test('KFC Random Palette Data', kfc_cli_exec, args: ['--random-palette','--print-palette-data'])
     test('KFC Palette History', kfc_cli_exec, args: ['--random-palette','--print-palette-history'])
-#    test('KFC Random Palette Properties Table', kfc_cli_exec, args: ['--random-palette','--palette-properties-table'])
+    test('KFC Random Palette Properties Table', kfc_cli_exec, args: ['--random-palette','--palette-properties-table'])
   endif
 endif

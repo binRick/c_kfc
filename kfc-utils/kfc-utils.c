@@ -110,12 +110,11 @@ char *kfc_utils_get_palette_name_sequence(const char *PALETTE_NAME);
 static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME);
 static char *kfc_utils_get_translated_palette_property_name(const char *PALETTE_PROPERTY_NAME);
 static void __kfc_utils_constructor(void) __attribute__((constructor));
-static void __kfc_utils_destructor(void) __attribute__((destructor));
+static void __attribute((unused)) __kfc_utils_destructor(void) __attribute__((destructor));
 static char *kfc_utils_get_cache_ymd();
 static char *kfc_utils_get_palette_history_file();
 static char *kfc_utils_render_palettes_template(struct Vector *__template_palettes_v);
 static void kfc_utils_test_local_kitty_socket();
-static int32_t kfc_utils_random_int32(uint8_t *out, size_t outlen);
 static char *normalize_hex_color(const char *COLOR);
 static bool kfc_utils_get_color_is_brightness_type(const float BRIGHTNESS, const int BACKGROUND_BRIGHTNESS_TYPE, const double BRIGHTNESS_THRESHOLD);
 static void __kfc_utils_at_exit(void);
@@ -123,7 +122,6 @@ static char *kfc_utils_apply_sequence(char *SEQ, char *STR);
 
 /////////////////////////////////////
 static bool                KFC_UTILS_DEBUG_MODE = false;
-static char                *PALETTES_CACHE_FILE = NULL;
 static module(kfc_utils) * KFC;
 static struct djbhash      palette_properties_h, valid_palette_property_names_h, invalid_palette_property_names_h;
 static struct djbhash_node *hash_item;
@@ -132,18 +130,11 @@ static bool                __kfc_utils_palette_loaded = false;
 enum palette_cache_items_t { PALETTES_TABLE,
                              PALETTES_CACHE_QTY,
 };
-static struct kfc_utils_cache_files_t { char *name; char *path; }             PALETTE_CACHE_FILES[] = {
+static struct kfc_utils_cache_files_t { char *name; char *path; } PALETTE_CACHE_FILES[] = {
   [PALETTES_TABLE] = { .name = "palettes-table-cache", },
                      { 0 },
 };
-static struct terminal_type_names_t { const char *name, *env_key, *env_val; } terminal_type_names[] = {
-  [TERMINAL_TYPE_KITTY]     = { .name = "kitty",     .env_key = "KITTY_PID",        .env_val = NULL,             },
-  [TERMINAL_TYPE_ALACRITTY] = { .name = "alacritty", .env_key = "ALACRITTY_SOCKET", .env_val = NULL,             },
-  [TERMINAL_TYPE_ITERM2]    = { .name = "iterm2",    .env_key = "TERM_PROGRAM",     .env_val = "iTerm.app",      },
-  [TERMINAL_TYPE_TERMINAL]  = { .name = "terminal",  .env_key = "TERM_PROGRAM",     .env_val = "Apple_Terminal", },
-                              { 0 },
-};
-static struct palette_name_translations_t                                     palette_name_translations[] = {
+static struct palette_name_translations_t                         palette_name_translations[] = {
   { .src = "color0",          .dst = "color00",         },
   { .src = "color1",          .dst = "color01",         },
   { .src = "color2",          .dst = "color02",         },
@@ -160,27 +151,18 @@ static struct palette_name_translations_t                                     pa
   { .src = "save_palette",    .dst = "save-palette",    },
   { 0 },
 };
-static struct kitty_cmd_items_t                                               kitty_cmd_items[] = {
-  { .desc = "Set Window Title",       .key = "window-title",       .cmd = "@set-window-title",       .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT, },
-  { .desc = "Set Tab Title",          .key = "tab-title",          .cmd = "@set-tab-title",          .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT & KITTY_CMD_TYPE_SOCKET },
-  { .desc = "Set Font Size",          .key = "font-size",          .cmd = "@set-font-size",          .valid_value_regex = "*[0-9][0-9]$", .types = KITTY_CMD_TYPE_AT, },
-  { .desc = "Set Tab Color",          .key = "tab-color",          .cmd = "@set-tab-color",          .valid_value_regex = "*#",           .types = KITTY_CMD_TYPE_AT, },
-  { .desc = "Set Background Opacity", .key = "background-opacity", .cmd = "@set-background-opacity", .valid_value_regex = "*[0-9]",       .types = KITTY_CMD_TYPE_AT, },
-  { .desc = "Send Text",              .key = "send-text",          .cmd = "@send-text",              .valid_value_regex = ".*",           .types = KITTY_CMD_TYPE_AT, },
-  { 0 },
-};
-struct kitty_cmd_key_translations_t                                           kitty_cmd_key_translations[] = {
+struct kitty_cmd_key_translations_t                               kitty_cmd_key_translations[] = {
   { .src = "tabtitle",  .dst = "tab-title", },
   { .src = "tab_title", .dst = "tab-title", },
   { .src = "TABTITLE",  .dst = "tab-title", },
   { 0 },
 };
-struct kitty_cmd_value_translations_t                                         kitty_cmd_value_translations[] = {
+struct kitty_cmd_value_translations_t                             kitty_cmd_value_translations[] = {
   { .src = "off",   .dst = "", },
   { .src = "clear", .dst = "", },
   { 0 },
 };
-static char                                                                   *palette_color_properties[] = {
+static char                                                       *palette_color_properties[] = {
   "background",
   "foreground",
   "color00",
@@ -214,7 +196,7 @@ static char                                                                   *p
   "selection_foreground",
   0,
 };
-static struct palette_code_value_translations_t                               palette_code_value_translations[] = {
+static struct palette_code_value_translations_t                   palette_code_value_translations[] = {
   { .name = "cursorstyle",     .src = "under",     .dst = "3 q", },
   { .name = "cursorstyle",     .src = "block",     .dst = "1 q", },
   { .name = "cursorstyle",     .src = "bar",       .dst = "5 q", },
@@ -246,7 +228,7 @@ static struct palette_code_value_translations_t                               pa
   { .name = "save-palette",    .src = "on",        .dst = "001", },
   { 0 },
 };
-static struct palette_code_t                                                  palette_codes[] = {
+static struct palette_code_t                                      palette_codes[] = {
   { .name = "color00",              .code = "]4;0;#",              },
   { .name = "color01",              .code = "]4;1;#",              },
   { .name = "color02",              .code = "]4;2;#",              },
@@ -745,8 +727,7 @@ char *kfc_utils_get_palettes_table() {
     }
   }
 
-  long unsigned table_start = timestamp();
-  ft_table_t    *table      = ft_create_table();
+  ft_table_t *table = ft_create_table();
 
   ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
   ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
@@ -806,7 +787,6 @@ char *kfc_utils_get_palettes_table() {
                  );
 
     size_t qty = vector_size(pp);
-    table_start = timestamp();
     if (p->size > 600) {
       ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
     }else if (p->size < 100) {
@@ -832,8 +812,6 @@ char *kfc_utils_get_palettes_table() {
     stringfn_release_strings_struct(sp);
     vector_release(pp);
   }
-
-  table_start = timestamp();
 
   char *table_s = ft_to_string(table);
 
@@ -1285,17 +1263,12 @@ bool kfc_utils_test_kitty_socket(){
     fprintf(stdout, "connecting to> %s:%d\n", KLO->host, KLO->port);
     char              *BACKGROUND_COLOR = kitty_get_color("background", KLO->host, KLO->port);
 
-//    char              *kitty_query_terminal = kitty_tcp_cmd((const char *)KLO->host, KLO->port, KITTY_QUERY_TERMINAL_CMD);
-//  fprintf(stdout,"query terminal: %s\n", kitty_query_terminal);
     fprintf(stdout,
             AC_RESETALL AC_BLUE "Listen on #%lu/%lu: %s\n" AC_RESETALL,
             i + 1, vector_size(kitty_listen_ons),
             (char *)vector_get(kitty_listen_ons, i)
             );
     fprintf(stdout, "bg color:%s\n", BACKGROUND_COLOR);
-    //fprintf(stdout,"query terminal: %s\n", kitty_query_terminal);
-    //  char *kitty_ls_colors = kitty_tcp_cmd((const char *)KLO->host, KLO->port, __KITTY_GET_COLORS_CMD__);
-//    printf("kitty colors: %s\n", kitty_ls_colors);
   }
   vector_release(get_kitty_listen_ons);
   return(true);
@@ -1880,8 +1853,8 @@ static char *kfc_utils_render_palettes_template(struct Vector *__template_palett
 struct rendered_template_result_t *kfc_utils_get_rendered_template(void){
   struct rendered_template_result_t *res = malloc(sizeof(struct rendered_template_result_t));
 
-  res->palette_file_bytes = 0;
-  res->palette_file_lines = 0;
+  res->palette_file_bytes      = 0;
+  res->palette_file_lines      = 0;
   res->palette_file_properties = 0;
 
   res->started       = timestamp();
@@ -1921,8 +1894,8 @@ struct rendered_template_result_t *kfc_utils_get_rendered_template(void){
     tmp->name    = strdup(tmp->file);
     tmp->content = fsio_read_text_file(tmp->path);
     struct StringFNStrings lines = stringfn_split_lines_and_trim(tmp->content);
-    tmp->lines_qty           = lines.count;
-    tmp->data_name           = stringfn_replace(tmp->file, '-', '_');
+    tmp->lines_qty = lines.count;
+    tmp->data_name = stringfn_replace(tmp->file, '-', '_');
     asprintf(&tmp->data_fullname, "inc_palette_%s_data", tmp->data_name);
     for (size_t ii = 0; ii < (size_t)lines.count; ii++) {
       struct StringFNStrings _tss = stringfn_split(lines.strings[ii], '=');

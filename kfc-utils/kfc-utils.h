@@ -7,18 +7,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-//////////////////////////////////////////
-#define INCBIN_SILENCE_BITCODE_WARNING
-#define INCBIN_STYLE     INCBIN_STYLE_SNAKE
-#define INCBIN_PREFIX    inc_palette_
 ///////////////////////////////////////////////////////////////////
 #include "rgba/src/rgba.h"
+//////////////////////////////////////////
+#define INCBIN_SILENCE_BITCODE_WARNING
+#define INCBIN_STYLE                            INCBIN_STYLE_SNAKE
+#define INCBIN_PREFIX                           inc_palette_
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
-#define ANSI_ESC_CODE    "\x1b"
-#define CODE_PREFIX      ANSI_ESC_CODE ""
-#define CODE_SUFFIX      ANSI_ESC_CODE "\\"
-#define CODES_SUFFIX     ANSI_ESC_CODE "[21D"
+#define ANSI_ESC_CODE                           "\x1b"
+#define CODE_PREFIX                             ANSI_ESC_CODE ""
+#define CODE_SUFFIX                             ANSI_ESC_CODE "\\"
+#define CODES_SUFFIX                            ANSI_ESC_CODE "[21D"
+#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/.kfc-utils-palettes.c"
+#define KFC_UTILS_PALETTE_TEMPLATE_FILE         "etc/kfc-utils-palettes.c.j2"
+#define debug_malloc                            "malloc"
+#define debug_free                              "free"
+#define debug_strdup                            "strdup"
 #define FREE_PALETTE_PROPERTIES(pp)    do { \
     if (pp) {                               \
       if (pp->name) {                       \
@@ -36,6 +41,21 @@
       free(pp);                             \
     }                                       \
 } while (0)
+#define INC_PALETTE_T()     \
+  struct inc_palette_t {    \
+    const size_t size;      \
+    const size_t lines_qty; \
+    const size_t keys_qty;  \
+    char         *keys_csv; \
+    const char   *name;     \
+    const char   *file;     \
+    const char   *data;     \
+    const char   *dir;      \
+  };
+#define INC_PALETTE_T_DEFINED
+#define ___S(s)                        #s
+#define __S(s)                         ___S(s)
+#define INC_PALETTE_T_STRING()         __S(INC_PALETTE_T())
 ///////////////////////////////////////////////////////////////////
 enum kitty_cmd_types_t {
   KITTY_CMD_TYPE_SOCKET = 0,
@@ -79,7 +99,6 @@ struct palette_property_color_t {
   char   *red_s; char *green_s; char *blue_s;
   char   *sequence;
   char   *escaped_sequence;
-//  void   (*apply_sequence)(char *SEQUENCE, char *STRING);
 };
 struct palette_property_t {
   char                            *name;
@@ -101,27 +120,6 @@ struct palette_property_t {
   bool                            is_color;
   struct palette_property_color_t *color_t;
 };
-#define KFC_UTILS_RENDERED_PALETTE_COPY_PATH    "kfc-utils/.kfc-utils-palettes.c"
-#define KFC_UTILS_PALETTE_TEMPLATE_FILE         "etc/kfc-utils-palettes.c.j2"
-#define debug_malloc                            "malloc"
-#define debug_free                              "free"
-#define debug_strdup                            "strdup"
-
-#define INC_PALETTE_T()     \
-  struct inc_palette_t {    \
-    const size_t size;      \
-    const size_t lines_qty; \
-    const size_t keys_qty;  \
-    char         *keys_csv; \
-    const char   *name;     \
-    const char   *file;     \
-    const char   *data;     \
-    const char   *dir;      \
-  };
-#define INC_PALETTE_T_DEFINED
-#define ___S(s)                   #s
-#define __S(s)                    ___S(s)
-#define INC_PALETTE_T_STRING()    __S(INC_PALETTE_T())
 INC_PALETTE_T()
 ///////////////////////////////////////////////////////////////////
 extern const struct inc_palette_t palette_t_list[];

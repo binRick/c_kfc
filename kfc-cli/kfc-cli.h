@@ -1,25 +1,13 @@
 #pragma once
-#include <stdio.h>
-
-#include "module/def.h"
-#include "module/module.h"
-#include "module/require.h"
 ////////////////////////////////////////////////////////
+#include "c_ansi/ansi-codes/ansi-codes.h"
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
-#include "submodules/c_deps/submodules/c_ansi/ansi-codes/ansi-codes.h"
-#include "submodules/c_deps/submodules/c_fsio/include/fsio.h"
-#include "submodules/c_deps/submodules/c_string_buffer/include/stringbuffer.h"
-#include "submodules/c_deps/submodules/c_stringfn/include/stringfn.h"
-#include "submodules/c_deps/submodules/c_stringfn/include/stringfn.h"
-#include "submodules/c_deps/submodules/c_timer/include/c_timer.h"
-#include "submodules/c_deps/submodules/c_vector/vector/vector.h"
-#include "submodules/c_deps/submodules/tiny-regex-c/re.h"
 ////////////////////////////////////////////////////////
-////////////////////////////////////////////
 #define DEFAULT_MAX_BRIGHTNESS         "20.0"
 #define DEFAULT_MAX_BRIGHTNESS_VERY    "5.0"
+////////////////////////////////////////////////////////
 enum kfc_mode_t {
   KFC_CLI_MODE_PRINT_USAGE,
   KFC_CLI_MODE_LIST_PALETTES,

@@ -11,7 +11,7 @@ const size_t PALETTES_QTY   =   {{palettes_qty}};
 {%endfor%}
 const struct inc_palette_t palette_t_list[{{ palettes_qty+1 }}] = {{LEFT_CURLY}}
 {% for i in palette_t_list %}
-  {{LEFT_CURLY}} .name = "{{i.inc_name}}", .size = {{i.size}}, .file = "{{i.name}}", .data = inc_palette_{{i.inc_name}}_data, {{RIGHT_CURLY}},{% endfor %}
+  {{LEFT_CURLY}} .name = "{{i.name}}", .size = {{i.size}}, .file = "{{i.name}}", .data = inc_palette_{{i.inc_name}}_data, {{RIGHT_CURLY}},{% endfor %}
   {{LEFT_CURLY}} 0 {{RIGHT_CURLY}},
 {{RIGHT_CURLY}};
 #endif

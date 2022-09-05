@@ -1,18 +1,11 @@
-#define DEBUG_MODE         false
-#define KFC_CLI_VERSION    "0.0.1"
-////////////////////////////////////////////
-#include <dirent.h>
-#include <getopt.h>
-#include <libgen.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 ////////////////////////////////////////////
+#define KFC_CLI_VERSION        "0.0.1"
 #define IS_DEBUG_MODE          (KFC->mode >= KFC_LOG_DEBUG || ctx.debug_mode == true)
 #define MAX_BRIGHTNESS_DESC    "Brightness Threshold\n\t\t\t\t\t\t(0.00 - 100) (Default: " DEFAULT_MAX_BRIGHTNESS ")"
 #define OPTION_MODE_COLOR      AC_BRIGHT_YELLOW AC_BOLD
@@ -24,24 +17,24 @@
 ////////////////////////////////////////////
 #include "ansi-rgb-utils/ansi-rgb-utils.h"
 #include "bytes/bytes.h"
+#include "c_fsio/include/fsio.h"
+#include "c_string_buffer/include/stringbuffer.h"
 #include "c_stringfn/include/stringfn.h"
+#include "c_stringfn/include/stringfn.h"
+#include "c_timer/include/c_timer.h"
+#include "c_vector/vector/vector.h"
 #include "cargs/include/cargs.h"
 #include "exec-fzf/exec-fzf.h"
 #include "hsluv-c/src/hsluv.h"
-#include "kfc-cli/kfc-cli-vt100-utils.h"
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-colors.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
 #include "log.h/log.h"
 #include "ms/ms.h"
-#include "process/process.h"
-#include "rgba/src/rgba.h"
 #include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
-#include "vt100utils/tuibox-vec.h"
-#include "vt100utils/tuibox.h"
-#include "vt100utils/vt100utils.h"
+#include "tiny-regex-c/re.h"
 ////////////////////////////////////////////
 #define KFC    ctx.kfc_utils
 ////////////////////////////////////////////
@@ -202,8 +195,7 @@ static struct cag_option options[] = {
 struct kfc_mode_handlers_t {
   int  (*handler)(void *);
   char identifier;
-};
-static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
+} static kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_LIST_PALETTES]                        = { .handler = kfc_cli_list_palettes,                        .identifier = 'l', },
   [KFC_CLI_MODE_LOAD_PALETTE]                         = { .handler = kfc_cli_load_palette,                         .identifier = 'L', },
   [KFC_CLI_MODE_PRINT_PALETTES_TABLE]                 = { .handler = kfc_cli_print_palettes_table,                 .identifier = 't', },
@@ -235,16 +227,16 @@ static struct kfc_mode_handlers_t kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_PRINT_PALETTE_COLORED_PROPERTY_NAMES] = { .handler = kfc_cli_print_palette_colored_property_names, .identifier = 'o', },
   [KFC_CLI_MODE_PRINT_COLOR_BOXES]                    = { .handler = kfc_cli_print_color_boxes,                    .identifier = 'H', },
 };
-void __attribute__((constructor)) __kfc_cli_constructor(){
+static void __attribute__((constructor)) __kfc_cli_constructor(){
   ctx.max_brightness = atof(DEFAULT_MAX_BRIGHTNESS);
   ctx.modes          = vector_new();
   KFC                = require(kfc_utils);
 }
 
-void __attribute__((destructor)) __kfc_cli_destructor(){
+static void __attribute__((destructor)) __kfc_cli_destructor(){
   clib_module_free(KFC);
   if (IS_DEBUG_MODE) {
-    log_info("<%d> [%s] OK", getpid(), __FUNCTION__);
+    log_info("<%d> [%s] Destructor", getpid(), __FUNCTION__);
   }
 }
 
@@ -416,69 +408,6 @@ static int kfc_cli_test_kitty_socket(void){
   fprintf(stdout, "ok:%d\n", ok);
   return(EXIT_SUCCESS);
 }
-
-char *exec_file(const char *argv0){
-  if (fsio_file_exists(argv0)) {
-    return(argv0);
-  }
-
-  char                   *p = getenv("PATH");
-  log_info("exec_path p: %s", p);
-  struct StringFNStrings paths = stringfn_split(p, ':');
-  for (int i = 0; i < paths.count; i++) {
-    log_info("%s", paths.strings[i]);
-    char *_e;
-    asprintf(&_e, "%s/%s", paths.strings[i], argv0);
-    if (fsio_file_exists(_e)) {
-      log_info("found: %s", _e);
-    }
-  }
-
-  return(NULL);
-}
-
-char *exec_path(const char *argv0){
-  char *ef = exec_file(argv0);
-
-  if (ef[0] == '/') {
-    return(ef);
-  }
-  char *ep, *cwd = kfc_utils_get_cwd();
-
-  asprintf(&ep, "%s/%s", cwd, ef);
-  return(ep);
-}
-
-char * app_path(char *path, const char *argv0){
-  char buf[PATH_MAX];
-
-  if (argv0[0] == '/') { // run with absolute path
-    strcpy(buf, argv0);
-  } else {               // run with relative path
-    if (NULL == getcwd(buf, PATH_MAX)) {
-      perror("getcwd error");
-      return(NULL);
-    }
-    strcat(buf, "/");
-    strcat(buf, argv0);
-  }
-  if (NULL == realpath(buf, path)) {
-    perror("realpath error");
-    return(NULL);
-  }
-  return(path);
-}
-
-int main(int argc, char **argv) {
-  parse_args(argc, argv);
-  size_t modes_qty = vector_size(ctx.modes);
-  int    res       = 1;
-  for (size_t i = 0; i < modes_qty; i++) {
-    res = kfc_mode_handlers[(enum kfc_mode_t)(size_t)vector_get(ctx.modes, i)].handler((void *)&ctx);
-    assert(res == 0);
-  }
-  return(res);
-} /* main */
 
 static int kfc_cli_test_colors(void){
   log_debug("max_brightness: %f", ctx.max_brightness);
@@ -653,9 +582,9 @@ static char *kfc_cli_get_bright_colors_demo_string(void){
   struct StringBuffer *sb  = stringbuffer_new();
   size_t              cqty = 0;
 
-  for (size_t i = 0; i < 5; i++) {
+  for (size_t i = 0; i < 30; i++) {
     bright_color_init(i);
-    for (int x = 0; x < 5; x++) {
+    for (int x = 0; x < 10; x++) {
       float  *c = calloc(4, sizeof(float));
       bright_color(x, c);
       char   s[1024];
@@ -708,96 +637,11 @@ static int kfc_cli_render_bright_colors_demo(void){
 static int kfc_cli_render_bright_colors_vt100utils_demo(void){
   char *bright_colors = kfc_cli_get_bright_colors_demo_string();
 
-  fprintf(stdout, AC_ALT_SCREEN_ON);
   fprintf(stdout, "%s\n", bright_colors);
-  fprintf(stdout, AC_ALT_SCREEN_OFF);
-  return(EXIT_SUCCESS);
-
-  struct vt100_node_t *tmp;
-  int                 x;
-  int                 y;
-
-  head = vt100_decode(bright_colors);
-  ui_new(0, &u);
-
-  x   = (u.ws.ws_col - 50) / 2;
-  y   = (u.ws.ws_row - 10) / 2;
-  tmp = head->next;
-
-  while (tmp != NULL) {
-    ui_add(
-      x, y,
-      tmp->len, 1,
-      0,
-      NULL, 0,
-      draw,
-      click,
-      NULL,
-      tmp,
-      NULL,
-      &u
-      );
-    x += tmp->len;
-    if (x > (u.ws.ws_col + 50) / 2) {
-      x  = (u.ws.ws_col - 50) / 2;
-      y += 2;
-    }
-    tmp = tmp->next;
-  }
-
-  ui_key("q", stop, &u);
-
-  ui_draw(&u);
-
-  ui_loop(&u) {
-    ui_update(&u);
-  }
-
-  printf("kk\n");
   return(EXIT_SUCCESS);
 } /* kfc_cli_render_bright_colors_vt100utils_demo */
 
 static int kfc_cli_vt100utils_demo(void){
-  struct vt100_node_t *tmp;
-  int                 x;
-  int                 y;
-
-  head = vt100_decode("\x1B[38;5;100mClick\x1B[38;5;101many\x1B[38;5;102mword\x1B[38;5;103mto\x1B[38;5;104mchange\x1B[38;5;105mits\x1B[38;5;106mcolor!\x1B[38;5;107mThis\x1B[38;5;108mis\x1B[38;5;109ma\x1B[38;5;110mlong\x1B[38;5;111mparagraph\x1B[38;5;112mof\x1B[38;5;113mtext,\x1B[38;5;114mand\x1B[38;5;115mevery\x1B[38;5;116mword\x1B[38;5;117mcan\x1B[38;5;118mbe\x1B[38;5;119mclicked.\x1B[38;5;120mWhile\x1B[38;5;121mbehavior\x1B[38;5;122mlike\x1B[38;5;123mthis\x1B[38;5;124mis\x1B[38;5;125mpossible\x1B[38;5;126mwith\x1B[38;5;127mstandalone\x1B[38;5;128mtuibox\x1B[38;5;129m(or\x1B[38;5;130mother\x1B[38;5;131mlibraries),\x1B[38;5;132mit\x1B[38;5;133mwould\x1B[38;5;134mbe\x1B[38;5;135mincredibly\x1B[38;5;136mchallenging\x1B[38;5;137mand\x1B[38;5;138mcumbersome.\x1B[38;5;139mThis\x1B[38;5;140mdemo\x1B[38;5;141mis\x1B[38;5;142mwritten\x1B[38;5;143min\x1B[38;5;144mless\x1B[38;5;145mthan\x1B[38;5;146m100\x1B[38;5;147mlines\x1B[38;5;148mof\x1B[38;5;149mcode.");
-
-  ui_new(0, &u);
-
-  x = (u.ws.ws_col - 50) / 2;
-  y = (u.ws.ws_row - 10) / 2;
-
-  tmp = head->next;
-  while (tmp != NULL) {
-    ui_add(
-      x, y,
-      tmp->len, 1,
-      0,
-      NULL, 0,
-      draw,
-      click,
-      NULL,
-      tmp,
-      NULL,
-      &u
-      );
-    x += tmp->len;
-    if (x > (u.ws.ws_col + 50) / 2) {
-      x  = (u.ws.ws_col - 50) / 2;
-      y += 2;
-    }
-    tmp = tmp->next;
-  }
-
-  ui_key("q", stop, &u);
-
-  ui_draw(&u);
-
-  ui_loop(&u) {
-    ui_update(&u);
-  }
   return(EXIT_SUCCESS);
 } /* kfc_cli_vt100utils_demo */
 
@@ -839,4 +683,15 @@ static int kfc_cli_print_color_boxes(void){
 
   printf("%s", s);
 }
+
+int main(int argc, char **argv) {
+  parse_args(argc, argv);
+  size_t modes_qty = vector_size(ctx.modes);
+  int    res       = 1;
+  for (size_t i = 0; i < modes_qty; i++) {
+    res = kfc_mode_handlers[(enum kfc_mode_t)(size_t)vector_get(ctx.modes, i)].handler((void *)&ctx);
+    assert(res == 0);
+  }
+  return(res);
+} /* main */
 #undef KFC
