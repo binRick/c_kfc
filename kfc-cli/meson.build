@@ -6,15 +6,15 @@ kfc_include_dirs = [
   inc,
 ]
 kfc_include_cargs = [
-  '-D__PALETTES_HASH__="'+palettes_hash+'"',
+  #  '-D__PALETTES_HASH__="'+palettes_hash+'"',
   ]
 kfc_cli_deps = [
   cargs_dep,
-  kfc_utils_dep,
+  kfc_utils_dep,b64_dep,rgba_dep,
   bytes_dep,
   log_dep,
   ms_dep,
-  fort_dep,
+  fort_dep,which_dep,
   c_stringfn_dep,
   ansi_rgb_utils_dep,
 ]

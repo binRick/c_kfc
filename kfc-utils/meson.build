@@ -1,12 +1,12 @@
 kfc_utils_srcs = [
   '.kfc-utils-palettes.c',
-  'kfc-utils-colors.c',
+  '.kfc-utils-colors.c',
   'kfc-utils-module.c',
   'kfc-utils.c',
 ]
 kfc_utils_link_flags = []
 kfc_utils_c_args = [
-  '-D__PALETTES_HASH__="'+palettes_hash+'"',
+  '-Wno-gcc-compat',
 ]
 kfc_utils_deps = [
   ansi_codes_dep,
@@ -14,7 +14,6 @@ kfc_utils_deps = [
   djbhash_dep,
   termpaint_dep,
   tinydir_dep,
-  kitty_dep,
   c_stringfn_dep,
   module_dep,
   c_string_buffer_dep,

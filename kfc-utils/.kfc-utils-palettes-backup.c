@@ -665,7 +665,6 @@ INCTXT(thehulk, "palettes/load/thehulk");
 INCTXT(firefoxdev, "palettes/load/firefoxdev");
 INCTXT(nocturnalwinter, "palettes/load/nocturnalwinter");
 
-
 const struct inc_palette_t palette_t_list[659] = {
   { .name = "modusvivendifaint",              .size = 537, .file = "modusvivendifaint",              .data = inc_palette_modusvivendifaint_data,              },
   { .name = "wild-cherry",                    .size = 304, .file = "wild-cherry",                    .data = inc_palette_wild_cherry_data,                    },

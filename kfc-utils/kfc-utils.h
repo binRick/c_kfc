@@ -57,14 +57,6 @@
 #define __S(s)                         ___S(s)
 #define INC_PALETTE_T_STRING()         __S(INC_PALETTE_T())
 ///////////////////////////////////////////////////////////////////
-enum kitty_cmd_types_t {
-  KITTY_CMD_TYPE_SOCKET = 0,
-  KITTY_CMD_TYPE_AT     = 1,
-  KITTY_CMD_TYPES_QTY,
-};
-struct kitty_cmd_items_t { char *desc; char *key; char *cmd_prefix; char *cmd_suffix; char *valid_value_regex; char *cmd; int types; };
-struct kitty_cmd_key_translations_t { char *src; char *dst; };
-struct kitty_cmd_value_translations_t { char *src; char *dst; };
 struct palette_name_translations_t { char *src; char *dst; };
 struct palette_code_value_translations_t { char *name; char *src; char *dst; };
 struct palette_code_t { char *name; char *code; };
@@ -182,11 +174,6 @@ bool kfc_utils_palette_property_is_color(const char *PALETTE_PROPERTY_NAME);
 ///     terminal utilities
 ///////////////////////////////////////////////////////////////////
 char *kfc_utils_detect_terminal_type();
-
-///////////////////////////////////////////////////////////////////
-///     kitty utilities
-///////////////////////////////////////////////////////////////////
-bool kfc_utils_test_kitty_socket();
 
 ///////////////////////////////////////////////////////////////////
 #define PALETTE    "\

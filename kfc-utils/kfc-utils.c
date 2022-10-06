@@ -37,11 +37,11 @@ INCTXT(EmbeddedKfcUtilsPaletteTemplate, KFC_UTILS_PALETTE_TEMPLATE_FILE);
 #define DEBUG_PALETTES                            false
 #define DEBUG_PALETTE_CODES                       false
 #define PALETTES_QTY_LIMIT                        999
-#ifndef __PALETTES_HASH__
-#define PALETTES_HASH                             ""
-#else
-#define PALETTES_HASH                             __PALETTES_HASH__
-#endif
+//#ifndef __PALETTES_HASH__
+#define PALETTES_HASH                             "xxxxxxxxxxx"
+//#else
+//#define PALETTES_HASH                             __PALETTES_HASH__
+//#endif
 const char *FZF_UTILS_DEFAULT_HISTORY_FILE = "/tmp/.fzf-utils-history.txt";
 const char          *HOMEDIR;
 const char          *kfc_utils_storage_dir;
@@ -72,7 +72,6 @@ INCTXT(palettes_template_c, "etc/kfc-utils-palettes.c.j2");
 #include "submodules/tinydir/tinydir.h"
 /////////////////////////////////////
 #include "ansi-rgb-utils/ansi-rgb-utils.h"
-#include "kitty/kitty.h"
 #include "process/process.h"
 /////////////////////////////////////
 #include "bench/bench.h"
@@ -114,7 +113,6 @@ static void __attribute((unused)) __kfc_utils_destructor(void) __attribute__((de
 static char *kfc_utils_get_cache_ymd();
 static char *kfc_utils_get_palette_history_file();
 static char *kfc_utils_render_palettes_template(struct Vector *__template_palettes_v);
-static void kfc_utils_test_local_kitty_socket();
 static char *normalize_hex_color(const char *COLOR);
 static bool kfc_utils_get_color_is_brightness_type(const float BRIGHTNESS, const int BACKGROUND_BRIGHTNESS_TYPE, const double BRIGHTNESS_THRESHOLD);
 static void __kfc_utils_at_exit(void);
@@ -149,17 +147,6 @@ static struct palette_name_translations_t                         palette_name_t
   { .src = "load-palette",    .dst = "restore-palette", },
   { .src = "restore_palette", .dst = "restore-palette", },
   { .src = "save_palette",    .dst = "save-palette",    },
-  { 0 },
-};
-struct kitty_cmd_key_translations_t                               kitty_cmd_key_translations[] = {
-  { .src = "tabtitle",  .dst = "tab-title", },
-  { .src = "tab_title", .dst = "tab-title", },
-  { .src = "TABTITLE",  .dst = "tab-title", },
-  { 0 },
-};
-struct kitty_cmd_value_translations_t                             kitty_cmd_value_translations[] = {
-  { .src = "off",   .dst = "", },
-  { .src = "clear", .dst = "", },
   { 0 },
 };
 static char                                                       *palette_color_properties[] = {
@@ -1249,29 +1236,6 @@ struct Vector *kfc_utils_get_unique_palette_property_names(){
     }
   }
   return(v);
-}
-
-static __attribute__((unused)) void kfc_utils_test_local_kitty_socket(){
-}
-
-bool kfc_utils_test_kitty_socket(){
-  struct Vector *kitty_listen_ons = get_kitty_listen_ons();
-
-  for (size_t i = 0; i < vector_size(kitty_listen_ons); i++) {
-    char              *LO  = vector_get(kitty_listen_ons, i);
-    kitty_listen_on_t *KLO = parse_kitten_listen_on(LO);
-    fprintf(stdout, "connecting to> %s:%d\n", KLO->host, KLO->port);
-    char              *BACKGROUND_COLOR = kitty_get_color("background", KLO->host, KLO->port);
-
-    fprintf(stdout,
-            AC_RESETALL AC_BLUE "Listen on #%lu/%lu: %s\n" AC_RESETALL,
-            i + 1, vector_size(kitty_listen_ons),
-            (char *)vector_get(kitty_listen_ons, i)
-            );
-    fprintf(stdout, "bg color:%s\n", BACKGROUND_COLOR);
-  }
-  vector_release(get_kitty_listen_ons);
-  return(true);
 }
 
 static char *kfc_utils_get_cache_ymd(){

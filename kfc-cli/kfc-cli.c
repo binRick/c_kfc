@@ -30,7 +30,7 @@
 #include "kfc-utils/kfc-utils-colors.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
-#include "log.h/log.h"
+#include "log/log.h"
 #include "ms/ms.h"
 #include "rgba/src/rgba.h"
 #include "tempdir.c/tempdir.h"
@@ -49,7 +49,6 @@ static int kfc_cli_print_palette_properties_table(void);
 static int kfc_cli_print_invalid_palette_properties(void);
 static int kfc_cli_print_unique_palette_properties(void);
 static int kfc_cli_detect_terminal_type(void);
-static int kfc_cli_test_kitty_socket(void);
 static int kfc_cli_test_colors(void);
 static int kfc_cli_bright_backgrounds(void);
 static int kfc_cli_dark_backgrounds(void);
@@ -150,9 +149,6 @@ static struct cag_option options[] = {
   { .identifier  = 'C', .access_letters = "C",
     .access_name = "test-colors", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Test Colors"), },
-  { .identifier  = 'K', .access_letters = "K",
-    .access_name = "test-kitty-socket", .value_name = NULL,
-    .description = KFC_CLI_OPTION_MODE_COLORIZED("Test Kitty Socket"), },
   { .identifier  = 'D', .access_letters = "D",
     .access_name = "detect-terminal", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Detect Terminal Type"), },
@@ -205,7 +201,6 @@ struct kfc_mode_handlers_t {
   [KFC_CLI_MODE_PRINT_UNIQUE_PALETTE_PROPERTIES]      = { .handler = kfc_cli_print_unique_palette_properties,      .identifier = 'U', },
   [KFC_CLI_MODE_PRINT_INVALID_PALETTE_PROPERTIES]     = { .handler = kfc_cli_print_invalid_palette_properties,     .identifier = 'I', },
   [KFC_CLI_MODE_DETECT_TERMINAL_TYPE]                 = { .handler = kfc_cli_detect_terminal_type,                 .identifier = 'D', },
-  [KFC_CLI_MODE_TEST_KITTY_SOCKET]                    = { .handler = kfc_cli_test_kitty_socket,                    .identifier = 'K', },
   [KFC_CLI_MODE_PRINT_USAGE]                          = { .handler = kfc_cli_print_usage,                          .identifier = 'h', },
   [KFC_CLI_MODE_TEST_COLORS]                          = { .handler = kfc_cli_test_colors,                          .identifier = 'C' },
   [KFC_CLI_MODE_BRIGHT_BACKGROUNDS]                   = { .handler = kfc_cli_bright_backgrounds,                   .identifier = 'b', },
@@ -400,13 +395,6 @@ static int kfc_cli_detect_terminal_type(void){
   char *terminal_type = kfc_utils_detect_terminal_type();
 
   printf("%s\n", terminal_type);
-  return(EXIT_SUCCESS);
-}
-
-static int kfc_cli_test_kitty_socket(void){
-  fprintf(stdout, "Testing kitty socket\n");
-  bool ok = kfc_utils_test_kitty_socket();
-  fprintf(stdout, "ok:%d\n", ok);
   return(EXIT_SUCCESS);
 }
 

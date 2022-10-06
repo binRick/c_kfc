@@ -20,3 +20,6 @@ write-palette-includes-c:
 
 palettes-hash:
 	@(grep '^INCTXT(' kfc-utils/.kfc-utils-palettes.c |cut -d'"' -f2|xargs md5sum; md5sum kfc*/*.c kfc*/*.h meson.build */meson.build|md5sum)|md5sum|cut -d' ' -f1
+
+install:
+	rsync build/kfc-cli/kfc /usr/local/bin

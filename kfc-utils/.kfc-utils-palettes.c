@@ -2,7 +2,7 @@
 #include "kfc-utils.h"
 #ifndef INC_PALETTES_DEFINED
 #define INC_PALETTES_DEFINED
-const size_t PALETTES_QTY   =   668;
+const size_t PALETTES_QTY   =   669;
 #ifndef INC_PALETTE_T_DEFINED
 #define INC_PALETTE_T_DEFINED
 struct inc_palette_t { const size_t size; const size_t lines_qty; const size_t keys_qty; char *keys_csv; const char *name; const char *file; const char *data; const char *dir; };
@@ -130,6 +130,7 @@ INCTXT(ultradark, "palettes/load/ultradark");
 INCTXT(seashells, "palettes/load/seashells");
 INCTXT(coffeetheme, "palettes/load/coffeetheme");
 INCTXT(dkeg_amiox, "palettes/load/dkeg-amiox");
+INCTXT(c_darwin_old, "palettes/load/c_darwin_old");
 INCTXT(base16_helios, "palettes/load/base16-helios");
 INCTXT(tangohalfadapted, "palettes/load/tangohalfadapted");
 INCTXT(icebergdark, "palettes/load/icebergdark");
@@ -676,7 +677,7 @@ INCTXT(thehulk, "palettes/load/thehulk");
 INCTXT(firefoxdev, "palettes/load/firefoxdev");
 INCTXT(nocturnalwinter, "palettes/load/nocturnalwinter");
 
-const struct inc_palette_t palette_t_list[669] = {
+const struct inc_palette_t palette_t_list[670] = {
 
   { .name = "modusvivendifaint", .size = 537, .file = "modusvivendifaint", .data = inc_palette_modusvivendifaint_data, },
   { .name = "wild-cherry", .size = 304, .file = "wild-cherry", .data = inc_palette_wild_cherry_data, },
@@ -801,6 +802,7 @@ const struct inc_palette_t palette_t_list[669] = {
   { .name = "seashells", .size = 336, .file = "seashells", .data = inc_palette_seashells_data, },
   { .name = "coffeetheme", .size = 336, .file = "coffeetheme", .data = inc_palette_coffeetheme_data, },
   { .name = "dkeg-amiox", .size = 290, .file = "dkeg-amiox", .data = inc_palette_dkeg_amiox_data, },
+  { .name = "c_darwin_old", .size = 455, .file = "c_darwin_old", .data = inc_palette_c_darwin_old_data, },
   { .name = "base16-helios", .size = 290, .file = "base16-helios", .data = inc_palette_base16_helios_data, },
   { .name = "tangohalfadapted", .size = 336, .file = "tangohalfadapted", .data = inc_palette_tangohalfadapted_data, },
   { .name = "icebergdark", .size = 336, .file = "icebergdark", .data = inc_palette_icebergdark_data, },
@@ -1308,7 +1310,7 @@ const struct inc_palette_t palette_t_list[669] = {
   { .name = "restore-palette-2", .size = 20, .file = "restore-palette-2", .data = inc_palette_restore_palette_2_data, },
   { .name = "builtinpasteldark", .size = 336, .file = "builtinpasteldark", .data = inc_palette_builtinpasteldark_data, },
   { .name = "rosepine", .size = 498, .file = "rosepine", .data = inc_palette_rosepine_data, },
-  { .name = "c_darwin", .size = 453, .file = "c_darwin", .data = inc_palette_c_darwin_data, },
+  { .name = "c_darwin", .size = 367, .file = "c_darwin", .data = inc_palette_c_darwin_data, },
   { .name = "peppermint", .size = 336, .file = "peppermint", .data = inc_palette_peppermint_data, },
   { .name = "belafonteday", .size = 336, .file = "belafonteday", .data = inc_palette_belafonteday_data, },
   { .name = "espresso", .size = 477, .file = "espresso", .data = inc_palette_espresso_data, },
