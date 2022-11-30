@@ -2,7 +2,7 @@
 #include "kfc-utils.h"
 #ifndef INC_PALETTES_DEFINED
 #define INC_PALETTES_DEFINED
-const size_t PALETTES_QTY   =   669;
+const size_t PALETTES_QTY   =   677;
 #ifndef INC_PALETTE_T_DEFINED
 #define INC_PALETTE_T_DEFINED
 struct inc_palette_t { const size_t size; const size_t lines_qty; const size_t keys_qty; char *keys_csv; const char *name; const char *file; const char *data; const char *dir; };
@@ -147,6 +147,7 @@ INCTXT(dkeg_stv, "palettes/load/dkeg-stv");
 INCTXT(dkeg_blok, "palettes/load/dkeg-blok");
 INCTXT(darktooth, "palettes/load/darktooth");
 INCTXT(sexy_visibone, "palettes/load/sexy-visibone");
+INCTXT(c_kfc, "palettes/load/c_kfc");
 INCTXT(japanesque, "palettes/load/japanesque");
 INCTXT(dkeg_kit, "palettes/load/dkeg-kit");
 INCTXT(cobalt2, "palettes/load/cobalt2");
@@ -388,6 +389,7 @@ INCTXT(oceanicmaterial, "palettes/load/oceanicmaterial");
 INCTXT(sourcerer, "palettes/load/sourcerer");
 INCTXT(atomonelight, "palettes/load/atomonelight");
 INCTXT(sexy_phrak1, "palettes/load/sexy-phrak1");
+INCTXT(c_bat, "palettes/load/c_bat");
 INCTXT(fairyfloss, "palettes/load/fairyfloss");
 INCTXT(laser, "palettes/load/laser");
 INCTXT(dkeg_raild, "palettes/load/dkeg-raild");
@@ -431,6 +433,7 @@ INCTXT(dkeg_vans, "palettes/load/dkeg-vans");
 INCTXT(base16_one, "palettes/load/base16-one");
 INCTXT(tokyonightnight, "palettes/load/tokyonightnight");
 INCTXT(materialdark, "palettes/load/materialdark");
+INCTXT(c_deps, "palettes/load/c_deps");
 INCTXT(dkeg_squares, "palettes/load/dkeg-squares");
 INCTXT(base16_atelier_heath, "palettes/load/base16-atelier-heath");
 INCTXT(kaolinbreeze, "palettes/load/kaolinbreeze");
@@ -467,6 +470,7 @@ INCTXT(base16_atelier_cave, "palettes/load/base16-atelier-cave");
 INCTXT(doomone, "palettes/load/doomone");
 INCTXT(mathias, "palettes/load/mathias");
 INCTXT(bluematrix, "palettes/load/bluematrix");
+INCTXT(c_colors, "palettes/load/c_colors");
 INCTXT(base16_tomorrow, "palettes/load/base16-tomorrow");
 INCTXT(arthur, "palettes/load/arthur");
 INCTXT(base16_black_metal_venom, "palettes/load/base16-black-metal-venom");
@@ -493,13 +497,16 @@ INCTXT(base16_decaf, "palettes/load/base16-decaf");
 INCTXT(monokaivivid, "palettes/load/monokaivivid");
 INCTXT(zenburned, "palettes/load/zenburned");
 INCTXT(seti, "palettes/load/seti");
+INCTXT(kitty_gh, "palettes/load/kitty-gh");
 INCTXT(base16_solarflare, "palettes/load/base16-solarflare");
 INCTXT(blueberrypie, "palettes/load/blueberrypie");
+INCTXT(chess, "palettes/load/chess");
 INCTXT(sexy_mikado, "palettes/load/sexy-mikado");
 INCTXT(jetbrainsdarcula, "palettes/load/jetbrainsdarcula");
 INCTXT(fahrenheit, "palettes/load/fahrenheit");
 INCTXT(citylights, "palettes/load/citylights");
 INCTXT(dkeg_corduroy, "palettes/load/dkeg-corduroy");
+INCTXT(c_fzf, "palettes/load/c_fzf");
 INCTXT(sexy_tartan, "palettes/load/sexy-tartan");
 INCTXT(breeze, "palettes/load/breeze");
 INCTXT(campbell, "palettes/load/campbell");
@@ -564,6 +571,7 @@ INCTXT(base16_macintosh, "palettes/load/base16-macintosh");
 INCTXT(blazer, "palettes/load/blazer");
 INCTXT(base16_outrun, "palettes/load/base16-outrun");
 INCTXT(alucard, "palettes/load/alucard");
+INCTXT(c_vector, "palettes/load/c_vector");
 INCTXT(mouse_cursor_light_green, "palettes/load/mouse-cursor-light-green");
 INCTXT(grape, "palettes/load/grape");
 INCTXT(spacegrayeightiesdull, "palettes/load/spacegrayeightiesdull");
@@ -677,7 +685,7 @@ INCTXT(thehulk, "palettes/load/thehulk");
 INCTXT(firefoxdev, "palettes/load/firefoxdev");
 INCTXT(nocturnalwinter, "palettes/load/nocturnalwinter");
 
-const struct inc_palette_t palette_t_list[670] = {
+const struct inc_palette_t palette_t_list[678] = {
 
   { .name = "modusvivendifaint", .size = 537, .file = "modusvivendifaint", .data = inc_palette_modusvivendifaint_data, },
   { .name = "wild-cherry", .size = 304, .file = "wild-cherry", .data = inc_palette_wild_cherry_data, },
@@ -819,6 +827,7 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "dkeg-blok", .size = 290, .file = "dkeg-blok", .data = inc_palette_dkeg_blok_data, },
   { .name = "darktooth", .size = 455, .file = "darktooth", .data = inc_palette_darktooth_data, },
   { .name = "sexy-visibone", .size = 290, .file = "sexy-visibone", .data = inc_palette_sexy_visibone_data, },
+  { .name = "c_kfc", .size = 290, .file = "c_kfc", .data = inc_palette_c_kfc_data, },
   { .name = "japanesque", .size = 336, .file = "japanesque", .data = inc_palette_japanesque_data, },
   { .name = "dkeg-kit", .size = 290, .file = "dkeg-kit", .data = inc_palette_dkeg_kit_data, },
   { .name = "cobalt2", .size = 336, .file = "cobalt2", .data = inc_palette_cobalt2_data, },
@@ -1060,6 +1069,7 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "sourcerer", .size = 336, .file = "sourcerer", .data = inc_palette_sourcerer_data, },
   { .name = "atomonelight", .size = 336, .file = "atomonelight", .data = inc_palette_atomonelight_data, },
   { .name = "sexy-phrak1", .size = 289, .file = "sexy-phrak1", .data = inc_palette_sexy_phrak1_data, },
+  { .name = "c_bat", .size = 336, .file = "c_bat", .data = inc_palette_c_bat_data, },
   { .name = "fairyfloss", .size = 353, .file = "fairyfloss", .data = inc_palette_fairyfloss_data, },
   { .name = "laser", .size = 336, .file = "laser", .data = inc_palette_laser_data, },
   { .name = "dkeg-raild", .size = 290, .file = "dkeg-raild", .data = inc_palette_dkeg_raild_data, },
@@ -1103,6 +1113,7 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "base16-one", .size = 290, .file = "base16-one", .data = inc_palette_base16_one_data, },
   { .name = "tokyonightnight", .size = 529, .file = "tokyonightnight", .data = inc_palette_tokyonightnight_data, },
   { .name = "materialdark", .size = 336, .file = "materialdark", .data = inc_palette_materialdark_data, },
+  { .name = "c_deps", .size = 290, .file = "c_deps", .data = inc_palette_c_deps_data, },
   { .name = "dkeg-squares", .size = 290, .file = "dkeg-squares", .data = inc_palette_dkeg_squares_data, },
   { .name = "base16-atelier-heath", .size = 290, .file = "base16-atelier-heath", .data = inc_palette_base16_atelier_heath_data, },
   { .name = "kaolinbreeze", .size = 537, .file = "kaolinbreeze", .data = inc_palette_kaolinbreeze_data, },
@@ -1139,6 +1150,7 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "doomone", .size = 537, .file = "doomone", .data = inc_palette_doomone_data, },
   { .name = "mathias", .size = 336, .file = "mathias", .data = inc_palette_mathias_data, },
   { .name = "bluematrix", .size = 336, .file = "bluematrix", .data = inc_palette_bluematrix_data, },
+  { .name = "c_colors", .size = 336, .file = "c_colors", .data = inc_palette_c_colors_data, },
   { .name = "base16-tomorrow", .size = 290, .file = "base16-tomorrow", .data = inc_palette_base16_tomorrow_data, },
   { .name = "arthur", .size = 336, .file = "arthur", .data = inc_palette_arthur_data, },
   { .name = "base16-black-metal-venom", .size = 290, .file = "base16-black-metal-venom", .data = inc_palette_base16_black_metal_venom_data, },
@@ -1165,13 +1177,16 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "monokaivivid", .size = 336, .file = "monokaivivid", .data = inc_palette_monokaivivid_data, },
   { .name = "zenburned", .size = 481, .file = "zenburned", .data = inc_palette_zenburned_data, },
   { .name = "seti", .size = 336, .file = "seti", .data = inc_palette_seti_data, },
+  { .name = "kitty-gh", .size = 336, .file = "kitty-gh", .data = inc_palette_kitty_gh_data, },
   { .name = "base16-solarflare", .size = 290, .file = "base16-solarflare", .data = inc_palette_base16_solarflare_data, },
   { .name = "blueberrypie", .size = 376, .file = "blueberrypie", .data = inc_palette_blueberrypie_data, },
+  { .name = "chess", .size = 336, .file = "chess", .data = inc_palette_chess_data, },
   { .name = "sexy-mikado", .size = 290, .file = "sexy-mikado", .data = inc_palette_sexy_mikado_data, },
   { .name = "jetbrainsdarcula", .size = 336, .file = "jetbrainsdarcula", .data = inc_palette_jetbrainsdarcula_data, },
   { .name = "fahrenheit", .size = 336, .file = "fahrenheit", .data = inc_palette_fahrenheit_data, },
   { .name = "citylights", .size = 756, .file = "citylights", .data = inc_palette_citylights_data, },
   { .name = "dkeg-corduroy", .size = 290, .file = "dkeg-corduroy", .data = inc_palette_dkeg_corduroy_data, },
+  { .name = "c_fzf", .size = 336, .file = "c_fzf", .data = inc_palette_c_fzf_data, },
   { .name = "sexy-tartan", .size = 290, .file = "sexy-tartan", .data = inc_palette_sexy_tartan_data, },
   { .name = "breeze", .size = 336, .file = "breeze", .data = inc_palette_breeze_data, },
   { .name = "campbell", .size = 308, .file = "campbell", .data = inc_palette_campbell_data, },
@@ -1236,6 +1251,7 @@ const struct inc_palette_t palette_t_list[670] = {
   { .name = "blazer", .size = 336, .file = "blazer", .data = inc_palette_blazer_data, },
   { .name = "base16-outrun", .size = 290, .file = "base16-outrun", .data = inc_palette_base16_outrun_data, },
   { .name = "alucard", .size = 336, .file = "alucard", .data = inc_palette_alucard_data, },
+  { .name = "c_vector", .size = 336, .file = "c_vector", .data = inc_palette_c_vector_data, },
   { .name = "mouse-cursor-light-green", .size = 14, .file = "mouse-cursor-light-green", .data = inc_palette_mouse_cursor_light_green_data, },
   { .name = "grape", .size = 336, .file = "grape", .data = inc_palette_grape_data, },
   { .name = "spacegrayeightiesdull", .size = 336, .file = "spacegrayeightiesdull", .data = inc_palette_spacegrayeightiesdull_data, },

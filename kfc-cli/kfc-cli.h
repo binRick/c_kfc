@@ -4,6 +4,9 @@
 #include "kfc-cli/kfc-cli.h"
 #include "kfc-utils/kfc-utils-module.h"
 #include "kfc-utils/kfc-utils.h"
+#include "module/def.h"
+#include "module/module.h"
+#include "module/require.h"
 ////////////////////////////////////////////////////////
 #define DEFAULT_MAX_BRIGHTNESS         "20.0"
 #define DEFAULT_MAX_BRIGHTNESS_VERY    "5.0"
@@ -11,6 +14,8 @@
 enum kfc_mode_t {
   KFC_CLI_MODE_PRINT_USAGE,
   KFC_CLI_MODE_LIST_PALETTES,
+  KFC_CLI_MODE_PRINT_LAST_LOADED_PALETTE_NAME,
+  KFC_CLI_MODE_PRINT_PALETTE_BACKGROUND,
   KFC_CLI_MODE_LOAD_PALETTE,
   KFC_CLI_MODE_PRINT_PALETTES_TABLE,
   KFC_CLI_MODE_PRINT_PALETTE_PROPERTIES_TABLE,

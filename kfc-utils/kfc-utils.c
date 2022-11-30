@@ -1,4 +1,5 @@
 #pragma once
+#include "ansi-utils/ansi-utils.h"
 #include "kfc-utils/kfc-utils.h"
 /////////////////////////////////////
 #ifndef INCBIN_PREFIX
@@ -11,7 +12,9 @@
 #define INCBIN_SILENCE_BITCODE_WARNING
 #endif
 #include "incbin/incbin.h"
+#include "log/log.h"
 INCTXT(EmbeddedKfcUtilsPaletteTemplate, KFC_UTILS_PALETTE_TEMPLATE_FILE);
+INCTXT(NICE_PALETTES_LIST, "../etc/nice_palettes.txt");
 /////////////////////////////////////
 #include <assert.h>
 #include <dirent.h>
@@ -28,7 +31,6 @@ INCTXT(EmbeddedKfcUtilsPaletteTemplate, KFC_UTILS_PALETTE_TEMPLATE_FILE);
 #include <unistd.h>
 #include <unistd.h>
 /////////////////////////////////////
-#include "incbin/incbin.h"
 #include "timestamp/timestamp.h"
 /////////////////////////////////////
 #define KFC_CLI_STORAGE_DIR                       "%s/.kfc"
@@ -45,7 +47,6 @@ INCTXT(EmbeddedKfcUtilsPaletteTemplate, KFC_UTILS_PALETTE_TEMPLATE_FILE);
 const char *FZF_UTILS_DEFAULT_HISTORY_FILE = "/tmp/.fzf-utils-history.txt";
 const char          *HOMEDIR;
 const char          *kfc_utils_storage_dir;
-const char          *kfc_utils_palettes_history_file;
 static const size_t PALETTES_QTY_LIMIT_LOAD   = 2000;
 static const char   PALETTES_JINJA_TEMPLATE[] = "etc/kfc-utils-palettes.c.j2";
 static const char   PALETTES_LOAD_DIR[]       = "palettes/load";
@@ -72,7 +73,6 @@ INCTXT(palettes_template_c, "etc/kfc-utils-palettes.c.j2");
 #include "submodules/tinydir/tinydir.h"
 /////////////////////////////////////
 #include "ansi-rgb-utils/ansi-rgb-utils.h"
-#include "process/process.h"
 /////////////////////////////////////
 #include "bench/bench.h"
 #include "bytes/bytes.h"
@@ -266,13 +266,12 @@ static struct palette_code_t                                      palette_codes[
 };
 
 static void __kfc_utils_at_exit(){
-  if (__kfc_utils_exited == true) {
+  if (__kfc_utils_exited == true)
     return(0);
-  }
+
   __kfc_utils_exited = true;
-  if (__kfc_utils_palette_loaded == false) {
+  if (__kfc_utils_palette_loaded == false)
     fprintf(stdout, AC_SHOW_CURSOR);
-  }
   exit(0);
 }
 
@@ -283,30 +282,26 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   atexit(__kfc_utils_at_exit);
   struct passwd *pw = getpwuid(getuid());
   HOMEDIR = pw->pw_dir;
-  if (fsio_dir_exists(HOMEDIR) == true) {
+  if (fsio_dir_exists(HOMEDIR) == true)
     kfc_utils_storage.homedir = HOMEDIR;
-  }else{
+  else
     kfc_utils_storage.homedir = getenv("HOME");
-  }
   if (kfc_utils_storage.dir_template != NULL) {
     asprintf(&kfc_utils_storage_dir, kfc_utils_storage.dir_template, kfc_utils_storage.homedir);
-    if (false == fsio_dir_exists(KFC_UTILS_STORAGE_DIR)) {
+    if (false == fsio_dir_exists(KFC_UTILS_STORAGE_DIR))
       fsio_mkdirs(KFC_UTILS_STORAGE_DIR, 0700);
-    }
     asprintf(&kfc_utils_palettes_history_file, KFC_CLI_PALETTES_HISTORY_PATH_TEMPLATE,
              kfc_utils_storage_dir, "palettes-history.log"
              );
   }
 
-  if (getenv("DEBUG_MODE") != NULL) {
+  if (getenv("DEBUG_MODE") != NULL)
     KFC_UTILS_DEBUG_MODE = true;
-  }
 
   if (fsio_dir_exists(kfc_utils_storage.homedir) == true) {
     asprintf(&kfc_utils_storage.dir, "%s/%s/%s", kfc_utils_storage.homedir, ".config", "kfc");
-    if (fsio_dir_exists(kfc_utils_storage.dir) == false) {
+    if (fsio_dir_exists(kfc_utils_storage.dir) == false)
       fsio_mkdirs(kfc_utils_storage.dir, FSIO_MODE_ALL);
-    }
   }
 
   djbhash_init(&palette_properties_h);
@@ -315,14 +310,13 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
   KFC       = require(kfc_utils);
   KFC->mode = (KFC_UTILS_DEBUG_MODE == true) ? KFC_LOG_DEBUG : KFC_LOG_DEFAULT;
 
-  if (KFC_UTILS_DEBUG_MODE == true) {
+  if (KFC_UTILS_DEBUG_MODE == true)
     log_debug("<%d> [%s] palettes qty:%lu",
               getpid(),
               __FUNCTION__,
               KFC->get_palettes_qty()
               );
-  }
-  if (false) {
+  if (false)
     if (strcmp(PALETTES_HASH, "") != 0) {
       char *ymd = kfc_utils_get_cache_ymd();
       for (size_t i = 0; i < PALETTES_CACHE_QTY; i++) {
@@ -333,14 +327,12 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
                  ymd,
                  PALETTES_HASH
                  );
-        if (KFC_UTILS_DEBUG_MODE == true) {
+        if (KFC_UTILS_DEBUG_MODE == true)
           log_debug("palettes table hash %s|%s", PALETTES_HASH, PALETTE_CACHE_FILES[PALETTES_TABLE].path);
-        }
       }
     }
-  }
   kfc_utils_storage.is_valid = (fsio_dir_exists(kfc_utils_storage.dir) == true) ? true : false;
-  if (KFC_UTILS_DEBUG_MODE == true) {
+  if (KFC_UTILS_DEBUG_MODE == true)
     log_debug("<%d> "
               "\nkfc_utils_storage.dir: %s"
               "\nkfc_utils_storage.is_valid: %s"
@@ -349,7 +341,6 @@ static void __attribute__((constructor)) __kfc_utils_constructor(){
               kfc_utils_storage.dir,
               (kfc_utils_storage.is_valid == true) ? "Yes" : "No"
               );
-  }
 } /* __kfc_utils_constructor */
 
 static void __attribute__((destructor)) __kfc__utils_destructor(){
@@ -364,9 +355,9 @@ char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME){
   struct StringBuffer       *sb                   = stringbuffer_new();
   struct palette_property_t *palette_properties_v = kfc_utils_get_palette_name_properties_v(PALETTE_NAME);
 
-  if (vector_size(palette_properties_v) < 1) {
+  if (vector_size(palette_properties_v) < 1)
     return("No properties found");
-  }
+
 
   ft_table_t *table = ft_create_table();
 
@@ -474,9 +465,9 @@ char *kfc_utils_get_palette_colors_table(const char *PALETTE_NAME){
 char *kfc_utils_get_palette_properties_table(const char *PALETTE_NAME){
   struct palette_property_t *palette_properties_v = kfc_utils_get_palette_name_properties_v(PALETTE_NAME);
 
-  if (vector_size(palette_properties_v) < 1) {
+  if (vector_size(palette_properties_v) < 1)
     return("No properties found");
-  }
+
   ft_table_t *table = ft_create_table();
 
   ft_set_border_style(table, FT_SOLID_ROUND_STYLE);
@@ -586,7 +577,7 @@ struct Vector *kfc_utils_get_palette_names_by_brightness_type(int BACKGROUND_BRI
     bool found = false;
     for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
       pp = vector_get(palette_properties_v, i);
-      if (found == false && strcmp("background", pp->name) == 0) {
+      if (found == false && strcmp("background", pp->name) == 0)
         switch (BACKGROUND_BRIGHTNESS_TYPE) {
         case BACKGROUND_BRIGHTNESS_DARK:
           if (kfc_utils_palette_background_is_brightness_type(pp->translated_value, BACKGROUND_BRIGHTNESS_DARK, BRIGHTNESS_THRESHOLD)) {
@@ -604,7 +595,6 @@ struct Vector *kfc_utils_get_palette_names_by_brightness_type(int BACKGROUND_BRI
           log_error("Invalid brightness type");
           break;
         }
-      }
       FREE_PALETTE_PROPERTIES(pp);
     }
   }
@@ -649,11 +639,10 @@ float kfc_utils_get_color_brightness(const char *COLOR){
 static char *normalize_hex_color(const char *COLOR){
   char *hex = NULL;
 
-  if (false == stringfn_starts_with(COLOR, "#")) {
+  if (false == stringfn_starts_with(COLOR, "#"))
     asprintf(&hex, "#%s", COLOR);
-  }else{
+  else
     asprintf(&hex, "%s", COLOR);
-  }
   return(hex);
 }
 
@@ -666,13 +655,12 @@ bool kfc_utils_palette_background_is_brightness_type(char *BACKGROUND_COLOR, int
   rgba_t  _rgba = rgba_new(val);
 
   rgb2hsluv(_rgba.r, _rgba.g, _rgba.b, &hsluv[0], &hsluv[2], &hsluv[2]);
-  if (false) {
+  if (false)
     log_info("[rgb2hsluv] <type:%d> %s [r:%f|g:%f|b:%f-]-> hue: %f, saturation: %f, lightness: %f|threshold:%f|",
              BACKGROUND_BRIGHTNESS_TYPE,
              hex,
              _rgba.r, _rgba.g, _rgba.b,
              hsluv[0], hsluv[2], hsluv[2], BRIGHTNESS_THRESHOLD);
-  }
   switch (BACKGROUND_BRIGHTNESS_TYPE) {
   case BACKGROUND_BRIGHTNESS_DARK:
     return((hsluv[2] <= BRIGHTNESS_THRESHOLD) ? true : false);
@@ -694,25 +682,22 @@ bool kfc_utils_palette_background_is_brightness_type(char *BACKGROUND_COLOR, int
 char *kfc_utils_get_palettes_table() {
   char *cache_file = PALETTE_CACHE_FILES[PALETTES_TABLE].path;
 
-  if (false) {
-    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+  if (false)
+    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0)
       if (fsio_file_exists(cache_file)) {
         size_t cache_file_size = fsio_file_size(cache_file);
         if (cache_file_size > 0) {
           char *cache_file_content = fsio_read_text_file(cache_file);
           if (cache_file_content != NULL) {
-            if (KFC_UTILS_DEBUG_MODE) {
+            if (KFC_UTILS_DEBUG_MODE)
               log_info("<%d> [%s] returning %s cached table from cache file: %s",
                        getpid(), __FUNCTION__,
                        bytes_to_string(cache_file_size),
                        cache_file);
-            }
             return(cache_file_content);
           }
         }
       }
-    }
-  }
 
   ft_table_t *table = ft_create_table();
 
@@ -774,16 +759,14 @@ char *kfc_utils_get_palettes_table() {
                  );
 
     size_t qty = vector_size(pp);
-    if (p->size > 600) {
+    if (p->size > 600)
       ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
-    }else if (p->size < 100) {
+    else if (p->size < 100)
       ft_set_cell_prop(table, i + 1, 1, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
-    }
-    if (qty > 30) {
+    if (qty > 30)
       ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_RED);
-    }else if (qty < 10) {
+    else if (qty < 10)
       ft_set_cell_prop(table, i + 1, 2, FT_CPROP_CONT_FG_COLOR, FT_COLOR_YELLOW);
-    }
 
     if (is_very_dark) {
       ft_set_cell_prop(table, i + 1, 3, FT_CPROP_CONT_FG_COLOR, FT_COLOR_BLUE);
@@ -804,11 +787,9 @@ char *kfc_utils_get_palettes_table() {
 
   ft_destroy_table(table);
 
-  if (false) {
-    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0) {
+  if (false)
+    if (cache_file != NULL && strcmp(PALETTES_HASH, "") != 0)
       fsio_write_text_file(cache_file, table_s);
-    }
-  }
   return(table_s);
 } /* get_palettes_table */
 
@@ -841,12 +822,10 @@ struct Vector *kfc_utils_get_palette_name_properties_v(const char *PALETTE_NAME)
 
   for (size_t i = 0; i < (size_t)lines.count; i++) {
     struct StringFNStrings items = stringfn_split(lines.strings[i], '=');
-    if (items.count < 2) {
+    if (items.count < 2)
       continue;
-    }
-    if (strlen(items.strings[0]) == 0) {
+    if (strlen(items.strings[0]) == 0)
       continue;
-    }
     struct palette_property_t *pp = malloc(sizeof(struct palette_property_t));
     pp->name             = strdup(items.strings[0]);
     pp->value            = strdup(items.strings[1]);
@@ -883,9 +862,8 @@ struct Vector *kfc_utils_get_palette_name_properties_v(const char *PALETTE_NAME)
                );
       pp->color_t->escaped_sequence = strdup_escaped(pp->color_t->sequence);
     }
-    if (strlen(pp->translated_value) == 0) {
+    if (strlen(pp->translated_value) == 0)
       pp->sequence = "";
-    }
     {
       pp->escaped_code             = pp->code ? strdup_escaped(pp->code) : "";
       pp->escaped_sequence         = is_valid_palette_item_name(pp->translated_name) ? strdup_escaped(pp->sequence) : "";
@@ -904,9 +882,8 @@ size_t kfc_utils_get_palettes_data_bytes(){
   size_t               s    = 0;
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++)
     s += (size_t)strlen(tmp->data);
-  }
   return(s);
 }
 
@@ -914,9 +891,8 @@ struct Vector *kfc_utils_get_palette_names_v(){
   struct Vector        *v   = vector_new();
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++)
     vector_push(v, (char *)tmp->name);
-  }
   return(v);
 }
 
@@ -924,9 +900,8 @@ struct Vector *kfc_utils_get_palettes_v(){
   struct Vector        *v   = vector_new();
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL && i < PALETTES_QTY_LIMIT; tmp++, i++) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL && i < PALETTES_QTY_LIMIT; tmp++, i++)
     vector_push(v, (void *)tmp);
-  }
   return(v);
 }
 
@@ -950,9 +925,8 @@ int kfc_utils_module_test(void) {
          (KFC->get_palette_t_by_index(i))->name,
          KFC->get_palette_t_by_name(name)->name
          );
-  if (name) {
+  if (name)
     free(name);
-  }
 
   clib_module_free(KFC);
   return(0);
@@ -963,36 +937,33 @@ int kfc_utils_module_test(void) {
 static char *kfc_utils_get_translated_palette_property_name(const char *PALETTE_PROPERTY_NAME){
   struct palette_name_translations_t *tmp = palette_name_translations;
 
-  for (size_t i = 0; tmp->src != NULL && tmp->dst != NULL && tmp != NULL; tmp++, i++) {
-    if (strcmp(PALETTE_PROPERTY_NAME, tmp->src) == 0) {
+  for (size_t i = 0; tmp->src != NULL && tmp->dst != NULL && tmp != NULL; tmp++, i++)
+    if (strcmp(PALETTE_PROPERTY_NAME, tmp->src) == 0)
       return(strdup(tmp->dst));
-    }
-  }
+
   return(strdup(PALETTE_PROPERTY_NAME));
 }
 
 bool kfc_utils_palette_item_name_is_translated(const char *ITEM_NAME){
   struct palette_code_value_translations_t *tmp = palette_code_value_translations;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
-    if (strcmp(ITEM_NAME, tmp->name) == 0) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++)
+    if (strcmp(ITEM_NAME, tmp->name) == 0)
       return(true);
-    }
-  }
+
   return(false);
 }
 
 char *kfc_utils_translate_palette_item_value(const char *ITEM_NAME, const char *ITEM_VALUE){
-  if (false == kfc_utils_palette_item_name_is_translated(ITEM_NAME)) {
+  if (false == kfc_utils_palette_item_name_is_translated(ITEM_NAME))
     return(strdup(ITEM_VALUE));
-  }
+
 
   struct palette_code_value_translations_t *tmp = palette_code_value_translations;
-  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
-    if (strcmp(ITEM_NAME, tmp->name) == 0 && strcmp(ITEM_VALUE, tmp->src) == 0) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++)
+    if (strcmp(ITEM_NAME, tmp->name) == 0 && strcmp(ITEM_VALUE, tmp->src) == 0)
       return(strdup(tmp->dst));
-    }
-  }
+
 
   return(strdup(ITEM_VALUE));
 }
@@ -1015,18 +986,16 @@ size_t kfc_utils_random_dark_palette_index(float MAX_DARKNESS_VALUE){
     pp_v = kfc_utils_get_palette_name_properties_v(p->name);
     for (size_t i = 0; i < vector_size(pp_v); i++) {
       pp = vector_get(pp_v, i);
-      if (strcmp(pp->translated_name, "background") == 0) {
+      if (strcmp(pp->translated_name, "background") == 0)
         background_is_dark = kfc_utils_palette_background_is_brightness_type(
           pp->translated_value,
           BACKGROUND_BRIGHTNESS_DARK,
           MAX_DARKNESS_VALUE
           );
-      }
     }
   }
-  if (pp) {
+  if (pp)
     FREE_PALETTE_PROPERTIES(pp);
-  }
   return((size_t)r);
 }
 
@@ -1041,22 +1010,20 @@ struct inc_palette_t *kfc_utils_get_palette_t_by_index(const size_t INDEX){
 struct inc_palette_t *kfc_utils_get_palette_t_by_name(const char *PALETTE_NAME){
   struct inc_palette_t *tmp = palette_t_list;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++) {
-    if (strcmp(PALETTE_NAME, tmp->name) == 0) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->data != NULL; tmp++, i++)
+    if (strcmp(PALETTE_NAME, tmp->name) == 0)
       return(tmp);
-    }
-  }
+
   return(NULL);
 }
 
 static bool is_valid_palette_item_name(const char *PALETTE_ITEM_NAME){
   struct palette_code_t *tmp = palette_codes;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
-    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++)
+    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0)
       return(true);
-    }
-  }
+
 
   return(false);
 }
@@ -1098,11 +1065,10 @@ static char *kfc_utils_get_palette_item_sequence(const struct palette_property_t
 char *kfc_utils_get_palette_item_code(const char *PALETTE_ITEM_NAME){
   struct palette_code_t *tmp = palette_codes;
 
-  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++) {
-    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0) {
+  for (size_t i = 0; i < PALETTES_QTY && tmp->name != NULL; tmp++, i++)
+    if (strcmp(tmp->name, PALETTE_ITEM_NAME) == 0)
       return(tmp->code);
-    }
-  }
+
 
   return(NULL);
 }
@@ -1163,17 +1129,16 @@ void null_callback(void *ctx, termpaint_event *event) {
 }
 
 char *kfc_utils_detect_terminal_type(){
-  if (getenv("ALACRITTY_SOCKET") != NULL) {
+  if (getenv("ALACRITTY_SOCKET") != NULL)
     return("Alacritty");
-  }else if (getenv("ALACRITTY_LOG") != NULL) {
+  else if (getenv("ALACRITTY_LOG") != NULL)
     return("Alacritty");
-  }else if (getenv("KITTY_PID") != NULL) {
+  else if (getenv("KITTY_PID") != NULL)
     return("Kitty");
-  }else if (getenv("TERM_PROGRAM") != NULL) {
+  else if (getenv("TERM_PROGRAM") != NULL) {
     char *tp = getenv("TERM_PROGRAM");
-    if (strcmp(tp, "Apple_Terminal") == 0) {
+    if (strcmp(tp, "Apple_Terminal") == 0)
       return("Terminal");
-    }
   }
   char                  *t           = "UNKNOWN";
   termpaint_integration *integration = termpaintx_full_integration("+kbdsigint +kbdsigtstp");
@@ -1191,9 +1156,8 @@ char *kfc_utils_detect_terminal_type(){
                                                           "Terminal auto detection is taking unusually long, press space to abort.");
   char buff[1000];
   termpaint_terminal_auto_detect_result_text(terminal, buff, sizeof(buff));
-  if (termpaint_terminal_self_reported_name_and_version(terminal)) {
+  if (termpaint_terminal_self_reported_name_and_version(terminal))
     t = strdup_escaped(termpaint_terminal_self_reported_name_and_version(terminal));
-  }
   termpaint_terminal_free_with_restore(terminal);
   return(t);
 }
@@ -1209,9 +1173,8 @@ struct Vector *kfc_utils_get_invalid_palette_property_names(){
     if (is_valid_palette_item_name(n) == false) {
       djbhash_set(&invalid_palette_property_names_h, n, n, DJBHASH_STRING);
       vector_push(v, strdup(n));
-    }else{
+    }else
       djbhash_set(&valid_palette_property_names_h, n, n, DJBHASH_STRING);
-    }
     free(n);
   }
   return(v);
@@ -1271,12 +1234,11 @@ void kfc_utils_setup_fzf_exec(struct fzf_exec_t *fe){
 
   if (fsio_file_exists(env_path)) {
     char pathbuf[PATH_MAX];
-    if (fsio_file_exists(pathbuf)) {
+    if (fsio_file_exists(pathbuf))
       asprintf(&fe->preview_cmd, "%s -i '%s' -T -p {}",
                env_path,
                pathbuf
                );
-    }
   }
   fe->preview_type    = "bottom";
   fe->preview_size    = 80;
@@ -1299,12 +1261,11 @@ char *kfc_utils_select_apply_palette(void){
     char *env_path = (char *)which_path("env", getenv("PATH"));
     if (fsio_file_exists(env_path)) {
       char pathbuf[PATH_MAX];
-      if (fsio_file_size(pathbuf)) {
+      if (fsio_file_size(pathbuf))
         asprintf(&fe->preview_cmd, "%s -i %s -p {} >/dev/tty 2>/dev/null",
                  env_path,
                  pathbuf
                  );
-      }
       fe->preview_type = "bottom";
       fe->preview_size = 0;
       fe->height       = 50;
@@ -1313,18 +1274,16 @@ char *kfc_utils_select_apply_palette(void){
     }
     fe->header          = AC_RESETALL AC_UNDERLINE AC_BOLD AC_GREEN "Select Palettes" AC_RESETALL;
     fe->select_multiple = false;
-    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+    for (size_t i = 0; i < vector_size(palette_names_v); i++)
       vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
-    }
   }
   kfc_utils_color_report();
   fprintf(stdout, "%s", AC_HIDE_CURSOR);
   int res = exec_fzf(fe);
 
   assert(res == 0);
-  if (vector_size(fe->selected_options) == 1) {
+  if (vector_size(fe->selected_options) == 1)
     selected_palette = (char *)vector_get(fe->selected_options, 0);
-  }
   exec_fzf_release(fe);
   fprintf(stdout, "%s", AC_SHOW_CURSOR);
   return(selected_palette);
@@ -1338,11 +1297,10 @@ char *kfc_utils_select_palette(void *CTX){
   assert(fe != NULL);
   {
     kfc_utils_setup_fzf_exec(fe);
-    if ((char *)(((struct ctx_t *)CTX)->palette_name) != NULL) {
+    if ((char *)(((struct ctx_t *)CTX)->palette_name) != NULL)
       fe->query_s = (char *)(((struct ctx_t *)CTX)->palette_name);
-    }else{
+    else
       fe->query_s = "";
-    }
     fe->select_multiple = false;
     {
       fe->header = AC_RESETALL AC_UNDERLINE AC_BOLD AC_GREEN "Select Palette" AC_RESETALL;
@@ -1629,15 +1587,13 @@ char *kfc_utils_select_palette(void *CTX){
     }
   }
 
-  for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+  for (size_t i = 0; i < vector_size(palette_names_v); i++)
     vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
-  }
   int res = exec_fzf(fe);
 
   assert(res == 0);
-  if (vector_size(fe->selected_options) == 1) {
+  if (vector_size(fe->selected_options) == 1)
     selected_palette = (char *)vector_get(fe->selected_options, 0);
-  }
   exec_fzf_release(fe);
   return(selected_palette);
 } /* kfc_utils_select_palette */
@@ -1655,18 +1611,16 @@ struct Vector *kfc_utils_select_palettes(void){
     fe->height          = 100;
     fe->preview_size    = 40;
     fe->preview_type    = "top";
-    for (size_t i = 0; i < vector_size(palette_names_v); i++) {
+    for (size_t i = 0; i < vector_size(palette_names_v); i++)
       vector_push(fe->input_options, (char *)vector_get(palette_names_v, i));
-    }
   }
 
   int res = exec_fzf(fe);
 
   assert(res == 0);
 
-  for (size_t i = 0; i < vector_size(fe->selected_options); i++) {
+  for (size_t i = 0; i < vector_size(fe->selected_options); i++)
     vector_push(v, (char *)vector_get(fe->selected_options, i));
-  }
   exec_fzf_release(fe);
   return(v);
 }
@@ -1679,18 +1633,18 @@ int kfc_utils_color_report(void){
 }
 
 static char *kfc_utils_get_palette_history_file(){
-  if (!fsio_file_exists(FZF_UTILS_DEFAULT_HISTORY_FILE)) {
+  if (!fsio_file_exists(FZF_UTILS_DEFAULT_HISTORY_FILE))
     return(NULL);
-  }
+
   return(FZF_UTILS_DEFAULT_HISTORY_FILE);
 }
 
 char *kfc_utils_get_palette_history(){
   char *f = kfc_utils_get_palette_history_file();
 
-  if (!fsio_file_exists(f)) {
+  if (!fsio_file_exists(f))
     return(NULL);
-  }
+
   char *s = stringfn_mut_trim(fsio_read_text_file(f));
 
   return(s);
@@ -1727,9 +1681,8 @@ struct vector *kfc_utils_load_palettes(const char *PATH){
       //  asprintf(&f,"%s%s.j2",gettempdir(),"embedded_palettes.j2");
       //    fsio_write_text_file(f,inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
 //      vector_push(pf, f);
-    }else{
+    }else
       goto bail;
-    }
   }
 
   while (dir.has_next) {
@@ -1781,15 +1734,14 @@ static char *kfc_utils_render_palettes_template(struct Vector *__template_palett
     roscha_hmap_set_new(i0, "dir", t->dir);
     roscha_hmap_set_new(i0, "size", (int)t->bytes);
     roscha_hmap_set_new(i0, "dir", t->dir);
-    roscha_vector_push_object(palette_t_list, i0);
+    _roscha_vector_push(palette_t_list, i0);
     roscha_hmap_set(env->vars, "palette_t_list", palette_t_list);
     roscha_hmap_set_new(env->vars, "palettes_qty", (int)(size_t)vector_size(__template_palettes_v));
     roscha_hmap_set_new(env->vars, "LEFT_CURLY", "{");
     roscha_hmap_set_new(env->vars, "RIGHT_CURLY", "}");
     roscha_hmap_set_new(env->vars, "inc_palette_t_struct", INC_PALETTE_T_STRING());
-    if (KFC_UTILS_DEBUG_MODE == true) {
+    if (KFC_UTILS_DEBUG_MODE == true)
       log_debug("added palette # %lu :: %s", i, t->name);
-    }
   }
 
   if (fsio_file_exists(PALETTES_JINJA_TEMPLATE) == 0) {
@@ -1797,14 +1749,12 @@ static char *kfc_utils_render_palettes_template(struct Vector *__template_palett
     asprintf(&TEMPLATE_s, "%s", inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
     log_debug(AC_RESETALL AC_RED_BLACK "template_s :\n%s\n", TEMPLATE_s);
   }else{
-    if (false) {
+    if (false)
       fprintf(stderr, AC_RESETALL AC_GREEN_BLACK "Template File does exist. Reading from it." AC_RESETALL "\n");
-    }
     TEMPLATE_s = fsio_read_text_file(PALETTES_JINJA_TEMPLATE);
   }
-  if (strlen(TEMPLATE_s) == 0) {
+  if (strlen(TEMPLATE_s) == 0)
     TEMPLATE_s = strdup(inc_palette_EmbeddedKfcUtilsPaletteTemplate_data);
-  }
   roscha_env_add_template(env, strdup("test"), TEMPLATE_s);
   sds RENDERED_ROSCHA_TEMPLATE = roscha_env_render(env, "test");
 
@@ -1829,29 +1779,24 @@ struct rendered_template_result_t *kfc_utils_get_rendered_template(void){
   struct Vector *__template_palettes_v = vector_new();
   struct Vector *palette_file_paths    = vector_new();
 
-  for (size_t i = 0; i < vector_size(pfiles); i++) {
+  for (size_t i = 0; i < vector_size(pfiles); i++)
     vector_push(palette_file_paths, (char *)vector_get(pfiles, i));
-  }
 
   for (size_t i = 0; i < vector_size(palette_file_paths) && i < PALETTES_QTY_LIMIT_LOAD; i++) {
     char *pf = (char *)vector_get(palette_file_paths, i);
-    if (pf == NULL) {
+    if (pf == NULL)
       continue;
-    }
     struct { char *path; } *p = malloc(PATH_MAX);
     p->path = strdup(pf);
-    if (p == NULL || p->path == NULL || strlen(p->path) < 1) {
+    if (p == NULL || p->path == NULL || strlen(p->path) < 1)
       break;
-    }
     struct palette_template_item_t *tmp = malloc(sizeof(struct palette_template_item_t));
     tmp->path = strdup(p->path);
-    if (!fsio_file_exists(tmp->path)) {
+    if (!fsio_file_exists(tmp->path))
       continue;
-    }
     tmp->bytes = fsio_file_size(tmp->path);
-    if (tmp->bytes < 2) {
+    if (tmp->bytes < 2)
       continue;
-    }
     tmp->keys_v  = vector_new();
     tmp->dir     = dirname(tmp->path);
     tmp->file    = basename(tmp->path);
@@ -1887,12 +1832,11 @@ bool kfc_utils_palette_property_is_color(const char *PALETTE_PROPERTY_NAME){
   bool          is_color = false;
   struct Vector *props   = kfc_utils_get_palette_property_color_names_v();
 
-  for (size_t i = 0; i < vector_size(props); i++) {
+  for (size_t i = 0; i < vector_size(props); i++)
     if (strcmp(PALETTE_PROPERTY_NAME, (char *)vector_get(props, i)) == 0) {
       is_color = true;
       goto done;
     }
-  }
 done:
   vector_release(props);
   return(is_color);
@@ -1913,26 +1857,23 @@ char *kfc_utils_get_palette_colored_properties(const char *PALETTE_NAME){
   struct StringBuffer       *sb                   = stringbuffer_new();
   struct palette_property_t *palette_properties_v = kfc_utils_get_palette_name_properties_v(PALETTE_NAME);
 
-  if (vector_size(palette_properties_v) < 1) {
+  if (vector_size(palette_properties_v) < 1)
     return("No properties found");
-  }
+
   size_t spaces_qty = 1;
 
   for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
     struct palette_property_t *pp = vector_get(palette_properties_v, i);
-    if (strlen(pp->translated_name) > spaces_qty) {
+    if (strlen(pp->translated_name) > spaces_qty)
       spaces_qty = strlen(pp->translated_name);
-    }
   }
   for (size_t i = 0; i < vector_size(palette_properties_v); i++) {
     struct palette_property_t *pp = vector_get(palette_properties_v, i);
-    if (pp->is_color == false) {
+    if (pp->is_color == false)
       continue;
-    }
     stringbuffer_append_string(sb, pp->translated_name);
-    for (size_t si = 0; si < (spaces_qty - strlen(pp->translated_name)) + 10; si++) {
+    for (size_t si = 0; si < (spaces_qty - strlen(pp->translated_name)) + 10; si++)
       stringbuffer_append_string(sb, " ");
-    }
     stringbuffer_append_string(sb,
                                kfc_utils_apply_sequence(
                                  pp->color_t->sequence,

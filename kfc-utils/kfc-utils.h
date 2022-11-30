@@ -11,10 +11,11 @@
 #include "rgba/src/rgba.h"
 //////////////////////////////////////////
 #define INCBIN_SILENCE_BITCODE_WARNING
-#define INCBIN_STYLE                            INCBIN_STYLE_SNAKE
-#define INCBIN_PREFIX                           inc_palette_
+#define INCBIN_STYLE     INCBIN_STYLE_SNAKE
+#define INCBIN_PREFIX    inc_palette_
 #include "submodules/incbin/incbin.h"
 ///////////////////////////////////////////////////////////////////
+const char *kfc_utils_palettes_history_file;
 #define ANSI_ESC_CODE                           "\x1b"
 #define CODE_PREFIX                             ANSI_ESC_CODE ""
 #define CODE_SUFFIX                             ANSI_ESC_CODE "\\"

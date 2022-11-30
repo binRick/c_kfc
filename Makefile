@@ -2,6 +2,8 @@ default: all
 ##############################################################
 include submodules/c_deps/etc/includes.mk
 ##############################################################
+MESON_DEFAULT_LIBRARY = shared
+MESON_DEFAULT_LIBRARY = static
 TIDIED_FILES = $(shell find */*.c */*.h -type f|egrep -v 'kfc-utils-colors.c|kfc-utils/kfc-utils-palettes-backup.c|kfc-utils/kfc-utils-palettes-backup1.c|kfc-utils/kfc-utils-palettes-rendered.c|kfc-utils/kfc-utils-palettes.backup.c|kfc-utils/.kfc-utils-palettes.c')
 _TIDIED_FILES = \
 			   */*.h */*.c

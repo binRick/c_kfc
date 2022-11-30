@@ -16,6 +16,7 @@
 #define KFC_CLI_OPTION_VALUE_COLORIZED(OPTION_VALUE_NAME)    AC_RESETALL OPTION_VALUE_COLOR OPTION_VALUE_NAME AC_RESETALL
 ////////////////////////////////////////////
 #include "ansi-rgb-utils/ansi-rgb-utils.h"
+#include "ansi-utils/ansi-utils.h"
 #include "bytes/bytes.h"
 #include "c_fsio/include/fsio.h"
 #include "c_string_buffer/include/stringbuffer.h"
@@ -40,6 +41,8 @@
 ////////////////////////////////////////////
 static int kfc_cli_load_palette(void);
 static int kfc_cli_list_palettes(void);
+static int kfc_cli_print_last_palette_name(void);
+static int kfc_cli_print_palette_background(void);
 static int kfc_cli_print_usage(void);
 static int kfc_cli_print_palettes_table(void);
 static int kfc_cli_print_palette_table(void);
@@ -86,6 +89,12 @@ static struct cag_option options[] = {
   { .identifier  = 'c', .access_letters = "c",
     .access_name = "palette-colors-table", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Palette Colors Table"), },
+  { .identifier  = 'N', .access_letters = "N",
+    .access_name = "palette-background", .value_name = NULL,
+    .description = KFC_CLI_OPTION_MODE_COLORIZED("Last Loaded Palette Name"), },
+  { .identifier  = 'O', .access_letters = "O",
+    .access_name = "last-palette-name", .value_name = NULL,
+    .description = KFC_CLI_OPTION_MODE_COLORIZED("Last Loaded Palette Name"), },
   { .identifier  = 'T', .access_letters = "T",
     .access_name = "palette-properties-table", .value_name = NULL,
     .description = KFC_CLI_OPTION_MODE_COLORIZED("Print Palette Properties Table"), },
@@ -193,6 +202,8 @@ struct kfc_mode_handlers_t {
   char identifier;
 } static kfc_mode_handlers[KFC_CLI_MODES_QTY] = {
   [KFC_CLI_MODE_LIST_PALETTES]                        = { .handler = kfc_cli_list_palettes,                        .identifier = 'l', },
+  [KFC_CLI_MODE_PRINT_LAST_LOADED_PALETTE_NAME]       = { .handler = kfc_cli_print_last_palette_name,              .identifier = 'O', },
+  [KFC_CLI_MODE_PRINT_PALETTE_BACKGROUND]             = { .handler = kfc_cli_print_palette_background,             .identifier = 'N', },
   [KFC_CLI_MODE_LOAD_PALETTE]                         = { .handler = kfc_cli_load_palette,                         .identifier = 'L', },
   [KFC_CLI_MODE_PRINT_PALETTES_TABLE]                 = { .handler = kfc_cli_print_palettes_table,                 .identifier = 't', },
   [KFC_CLI_MODE_PRINT_PALETTE_TABLE]                  = { .handler = kfc_cli_print_palette_table,                  .identifier = 'T', },
@@ -230,9 +241,8 @@ static void __attribute__((constructor)) __kfc_cli_constructor(){
 
 static void __attribute__((destructor)) __kfc_cli_destructor(){
   clib_module_free(KFC);
-  if (IS_DEBUG_MODE) {
+  if (IS_DEBUG_MODE)
     log_info("<%d> [%s] Destructor", getpid(), __FUNCTION__);
-  }
 }
 
 static int kfc_cli_print_invalid_palette_properties(void){
@@ -266,9 +276,9 @@ static int kfc_cli_print_unique_palette_properties(void){
 }
 
 static int add_mode_to_ctx_modes(enum kfc_mode_t MODE){
-  if (MODE >= KFC_CLI_MODES_QTY) {
+  if (MODE >= KFC_CLI_MODES_QTY)
     return(-1);
-  }
+
   vector_push(ctx.modes, (void *)MODE);
   return(0);
 }
@@ -288,20 +298,16 @@ static int parse_args(int argc, char *argv[]){
     case 'P': ctx.palette_property   = cag_option_get_value(&context); break;
     case 'V': ctx.palette_value      = cag_option_get_value(&context); break;
     }
-    for (size_t i = 0; i < (sizeof(options) / sizeof(options[0])); i++) {
-      for (size_t ii = 0; ii < KFC_CLI_MODES_QTY && ii < (sizeof(kfc_mode_handlers) / sizeof(kfc_mode_handlers[0])); ii++) {
-        if (kfc_mode_handlers[ii].identifier != 0 && options[i].identifier == identifier && options[i].identifier == kfc_mode_handlers[ii].identifier) {
+    for (size_t i = 0; i < (sizeof(options) / sizeof(options[0])); i++)
+      for (size_t ii = 0; ii < KFC_CLI_MODES_QTY && ii < (sizeof(kfc_mode_handlers) / sizeof(kfc_mode_handlers[0])); ii++)
+        if (kfc_mode_handlers[ii].identifier != 0 && options[i].identifier == identifier && options[i].identifier == kfc_mode_handlers[ii].identifier)
           add_mode_to_ctx_modes(ii);
-        }
-      }
-    }
   }
   if (vector_size(ctx.modes) == 0) {
-    if (ctx.palette_name != NULL) {
+    if (ctx.palette_name != NULL)
       add_mode_to_ctx_modes(KFC_CLI_MODE_LOAD_PALETTE);
-    }else{
+    else
       add_mode_to_ctx_modes(KFC_CLI_MODE_PRINT_USAGE);
-    }
   }
   return(EXIT_SUCCESS);
 } /* parse_args */
@@ -327,12 +333,10 @@ static int kfc_cli_print_version(void){
 }
 
 static int kfc_cli_print_palette_properties_table(void){
-  if (ctx.palette_name == NULL) {
+  if (ctx.palette_name == NULL)
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
-  }
-  if (ctx.debug_mode == true) {
+  if (ctx.debug_mode == true)
     log_debug("Printing Palette %s Properties Table", ctx.palette_name);
-  }
   char *tbl = KFC->get_palette_properties_table(ctx.palette_name);
   printf("%s", tbl);
 
@@ -340,30 +344,78 @@ static int kfc_cli_print_palette_properties_table(void){
 }
 
 static int kfc_cli_print_palette_table(void){
-  if (ctx.debug_mode == true) {
+  if (ctx.debug_mode == true)
     log_debug("Printing Palette Table");
-  }
   return(0);
 }
 
 static int kfc_cli_print_palettes_table(void){
-  if (ctx.debug_mode == true) {
+  if (ctx.debug_mode == true)
     log_debug("Printing Palettes Table");
-  }
   fprintf(stdout, "%s", KFC->get_palettes_table());
   return(0);
 }
 
-static int kfc_cli_list_palettes(void){
-  if (ctx.debug_mode == true) {
-    log_debug("Listing embedded");
+static int kfc_cli_print_palette_background(void){
+  struct inc_palette_t *P;
+
+  if (ctx.palette_name == NULL)
+    ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
+  if (!(P = kfc_utils_get_palette_t_by_name(ctx.palette_name))) {
+    fprintf(stderr, AC_RESETALL AC_RED "Palette '%s' not found" AC_RESETALL "\n", ctx.palette_name);
+    return(EXIT_FAILURE);
   }
+  int                       ansi_code;
+  struct palette_property_t *p = kfc_utils_get_palette_name_properties_v(ctx.palette_name);
+  struct palette_property_t *pp;
+
+  for (size_t i = 0; i < vector_size(p); i++)
+    if ((pp = vector_get(p, i)) && (strcmp("background", pp->name) == 0))
+      if ((ansi_code = au_hex_ansicode(pp->translated_value)) >= 0)
+        Dbg(ansi_code, %d);
+//      Ds(pp->translated_value);
+  //Ds(pp->escaped_code);
+
+  log_info("%s bg", ctx.palette_name);
+  return(EXIT_SUCCESS);
+}
+
+static int kfc_cli_print_last_palette_name(void){
+  char                   *name;
+  char                   *history = fsio_read_text_file(kfc_utils_palettes_history_file);
+  struct StringFNStrings lines    = stringfn_split_lines_and_trim(history);
+
+  free(history);
+  char *last_line;
+
+  if (!(last_line = lines.strings[lines.count - 2])) {
+    log_error("Failed to read last history line");
+    return(EXIT_FAILURE);
+  }
+  struct StringFNStrings split = stringfn_split(last_line, ':');
+
+  if (split.count < 4) {
+    log_error("Failed to read valid last history line");
+    return(EXIT_FAILURE);
+  }
+  if (!(name = split.strings[1]) || strlen(name) < 1) {
+    log_error("Failed to read valid last name");
+    return(EXIT_FAILURE);
+  }
+  fprintf(stdout, "%s\n", name);
+  stringfn_release_strings_struct(lines);
+  stringfn_release_strings_struct(split);
+  return(EXIT_SUCCESS);
+}
+
+static int kfc_cli_list_palettes(void){
+  if (ctx.debug_mode == true)
+    log_debug("Listing embedded");
   struct inc_palette_t *p;
   for (size_t i = 0; i < vector_size(KFC->palettes_v); i++) {
     p = vector_get(KFC->palettes_v, i);
-    if (p->name && strlen(p->name) > 0) {
+    if (p->name && strlen(p->name) > 0)
       printf("%s\n", p->name);
-    }
   }
   return(EXIT_SUCCESS);
 }
@@ -379,9 +431,8 @@ static int kfc_cli_load_palette(void){
     fprintf(stderr, AC_RESETALL AC_RED "Palette '%s' not found" AC_RESETALL "\n", ctx.palette_name);
     return(1);
   }
-  if (ctx.debug_mode == true) {
+  if (ctx.debug_mode == true)
     fprintf(stderr, AC_RESETALL AC_GREEN "Loading embedded palette %s of %s" AC_RESETALL "\n", P->name, bytes_to_string(P->size));
-  }
   size_t written_bytes = kfc_utils_load_palette_name(P->name);
   if (written_bytes < 1) {
     fprintf(stderr, "Failed to write %s palette sequence\n", P->name);
@@ -431,9 +482,8 @@ static int kfc_cli_bright_backgrounds(void){
     free(pn);
   }
   vector_release(v);
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode)
     fprintf(stderr, AC_RESETALL AC_YELLOW AC_REVERSED "%lu bright palettes\n" AC_RESETALL, qty);
-  }
   return(EXIT_SUCCESS);
 }
 
@@ -447,9 +497,8 @@ static int kfc_cli_dark_backgrounds(void){
     free(pn);
   }
   vector_release(v);
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode)
     fprintf(stderr, AC_RESETALL AC_YELLOW AC_REVERSED "%lu dark palettes\n" AC_RESETALL, qty);
-  }
   return(EXIT_SUCCESS);
 }
 
@@ -460,9 +509,8 @@ static int kfc_cli_select_palette(void *CTX){
     kfc_utils_load_palette_name(palette_name);
     fflush(stdout);
     fprintf(stderr, "%s\n", palette_name);
-  }else{
+  }else
     fprintf(stdout, "Selected no Palette\n");
-  }
   return(EXIT_SUCCESS);
 }
 
@@ -470,9 +518,8 @@ static int kfc_cli_select_palettes(void){
   struct Vector *selected_palettes = kfc_utils_select_palettes();
 
   log_info("Selected %lu options", vector_size(selected_palettes));
-  for (size_t i = 0; i < vector_size(selected_palettes); i++) {
+  for (size_t i = 0; i < vector_size(selected_palettes); i++)
     log_info(" - %s", (char *)vector_get(selected_palettes, i));
-  }
   return(EXIT_SUCCESS);
 }
 
@@ -483,9 +530,8 @@ static int kfc_cli_select_apply_palette(void){
     kfc_utils_load_palette_name(palette_name);
     fprintf(stderr, " \n");
     fprintf(stderr, "%s\n", palette_name);
-  }else{
+  }else
     fprintf(stdout, "Selected no Palette\n");
-  }
 
   return(EXIT_SUCCESS);
 }
@@ -496,29 +542,25 @@ static int kfc_cli_color_report(void){
 }
 
 static int kfc_cli_print_escaped_sequence(void){
-  if (ctx.palette_name == NULL) {
+  if (ctx.palette_name == NULL)
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
-  }
   char *s     = kfc_utils_get_palette_name_sequence(ctx.palette_name);
   char *s_esc = strdup_escaped(s);
 
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode)
     fprintf(stderr, "%s\n", ctx.palette_name);
-  }
   fprintf(stdout, "%s\n", s_esc);
   return(EXIT_SUCCESS);
 }
 
 static int kfc_cli_print_palette_data(void){
-  if (ctx.palette_name == NULL) {
+  if (ctx.palette_name == NULL)
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
-  }
   char *pd = kfc_utils_get_palette_name_data(ctx.palette_name);
 
   if (pd != NULL) {
-    if (ctx.debug_mode) {
+    if (ctx.debug_mode)
       fprintf(stderr, "%s\n", ctx.palette_name);
-    }
     fprintf(stdout, "%s\n", pd);
   }
   return(EXIT_SUCCESS);
@@ -539,12 +581,11 @@ static int kfc_cli_render_palettes_template(void){
   char                              *msg;
   struct rendered_template_result_t *res = kfc_utils_get_rendered_template();
 
-  if (!res) {
+  if (!res)
     return(-1);
-  }
-  if (ctx.debug_mode) {
+
+  if (ctx.debug_mode)
     log_debug("kfc_utils_get_rendered_template returned %lub\n", res->qty);
-  }
 
   asprintf(&msg,
            "Rendered " AC_YELLOW "%s" AC_RESETALL " " AC_RED "%s" AC_RESETALL
@@ -636,22 +677,19 @@ static int kfc_cli_vt100utils_demo(void){
 } /* kfc_cli_vt100utils_demo */
 
 static int kfc_cli_print_palette_colors_table(void){
-  if (ctx.palette_name == NULL) {
+  if (ctx.palette_name == NULL)
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
-  }
   char *palette_colors_table = kfc_utils_get_palette_colors_table(ctx.palette_name);
   printf("%s\n", palette_colors_table);
   return(EXIT_SUCCESS);
 }
 
 static int kfc_cli_print_palette_colored_property_names(void){
-  if (ctx.palette_name == NULL) {
+  if (ctx.palette_name == NULL)
     ctx.palette_name = kfc_utils_get_palette_name_by_index(kfc_utils_random_palette_index());
-  }
   char *s = kfc_utils_get_palette_colored_properties(ctx.palette_name);
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode)
     fprintf(stderr, AC_RESETALL AC_YELLOW "%s" AC_RESETALL "\n", ctx.palette_name);
-  }
   fprintf(stdout, "%s\n", s);
   return(EXIT_SUCCESS);
 }
@@ -663,9 +701,8 @@ static int kfc_cli_print_palette_color_property_names(void){
     char *p = vector_get(props, i);
     printf("%s\n", p);
   }
-  if (ctx.debug_mode) {
+  if (ctx.debug_mode)
     fprintf(stderr, "%lu color prop names\n", vector_size(props));
-  }
   return(EXIT_SUCCESS);
 }
 

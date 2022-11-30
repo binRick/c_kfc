@@ -19,6 +19,7 @@ kfc_utils_deps = [
   c_string_buffer_dep,
   c_vector_dep,
   ansi_utils_dep,
+  log_dep,
   c_fsio_dep,  
   exec_fzf_dep,  
   ansi_rgb_utils_dep,  

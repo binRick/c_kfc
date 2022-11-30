@@ -8,6 +8,19 @@ kfc_include_dirs = [
 kfc_include_cargs = [
   #  '-D__PALETTES_HASH__="'+palettes_hash+'"',
   ]
+kfc_cli_link_whole = [
+  asprintf_lib_static,
+  bytes_lib_static,
+  c_fsio_lib_static,
+  c_string_buffer_lib_static,
+  c_stringfn_lib_static,
+  c_vector_lib_static,
+  log_lib_static,
+  ms_lib_static,
+  tempdir_lib_static,
+  timestamp_lib_static,
+  which_lib_static,
+  ]
 kfc_cli_deps = [
   cargs_dep,
   kfc_utils_dep,b64_dep,rgba_dep,
@@ -17,6 +30,8 @@ kfc_cli_deps = [
   fort_dep,which_dep,
   c_stringfn_dep,
   ansi_rgb_utils_dep,
+  c_vector_dep,
+  ansi_utils_dep,
 ]
 if get_option('enable-binaries')
   kfc_cli_exec = executable('kfc',
@@ -25,6 +40,7 @@ if get_option('enable-binaries')
      include_directories: kfc_include_dirs,
      c_args: kfc_include_cargs,
      install_dir: '/usr/local/bin',
+     link_whole: kfc_cli_link_whole,
      install: true,
 
   )
